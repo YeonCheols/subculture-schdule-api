@@ -30,8 +30,12 @@ async function renderUrls(urls) {
   const directory = await mkdtemp(path.join(tmpdir(), 'schedule-api-forum-'));
   const input = path.join(directory, 'input.json'); const output = path.join(directory, 'output.json');
   await writeFile(input, JSON.stringify(urls));
-  const chromiumArgs = process.env.CI || process.env.GITHUB_ACTIONS ? ['--no-sandbox', '--disable-setuid-sandbox'] : [];
-  await execFileAsync(electronPath, [...chromiumArgs, path.join(import.meta.dirname, 'render-browser.cjs'), input, output], { timeout: timeoutMs * Math.max(2, urls.length) });
+  const isCi = Boolean(process.env.CI || process.env.GITHUB_ACTIONS);
+  const chromiumArgs = isCi ? ['--no-sandbox', '--disable-setuid-sandbox'] : [];
+  await execFileAsync(electronPath, [path.join(import.meta.dirname, 'render-browser.cjs'), input, output, ...chromiumArgs], {
+    timeout: timeoutMs * Math.max(2, urls.length),
+    env: { ...process.env, ...(isCi ? { ELECTRON_DISABLE_SANDBOX: '1' } : {}) },
+  });
   return JSON.parse(await readFile(output, 'utf8'));
 }
 
