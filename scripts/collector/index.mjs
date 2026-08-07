@@ -111,4 +111,6 @@ async function atomicJson(name, value) {
 await Promise.all([atomicJson('events.json', events), atomicJson('collection-status.json', status)]);
 
 console.log(`Collected ${collectedEvents.length} events, retained ${events.length}, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
-if (status.sources.some((source) => !source.ok)) process.exitCode = 1;
+const failedSources = status.sources.filter((source) => !source.ok);
+for (const source of failedSources) console.error(`Source ${source.id} failed: ${source.error}`);
+if (failedSources.length) process.exitCode = 1;
