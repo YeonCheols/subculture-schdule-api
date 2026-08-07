@@ -1,0 +1,38 @@
+[
+  {
+    "id": "monster-forum",
+    "gameId": "monster",
+    "locale": "ko-KR",
+    "kind": "netmarble-forum",
+    "url": "https://forum.netmarble.com/stardive_ko/list/2/1",
+    "urls": [
+      "https://forum.netmarble.com/stardive_ko/list/2/1",
+      "https://forum.netmarble.com/stardive_ko/list/6/1"
+    ],
+    "allowedHosts": ["forum.netmarble.com"],
+    "detailPattern": "/stardive_ko/view/",
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "픽업", "방송"]
+  },
+  {
+    "id": "wuthering-naver-official",
+    "gameId": "wuthering",
+    "locale": "ko-KR",
+    "kind": "naver-lounge-pins",
+    "url": "https://comm-api.game.naver.com/nng_main/v1/community/lounge/WutheringWaves/feed/pins",
+    "canonicalBase": "https://game.naver.com/lounge/WutheringWaves/board/detail/",
+    "allowedHosts": ["game.naver.com", "comm-api.game.naver.com"],
+    "officialNickname": "GM 연구소",
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "튜닝", "방송"]
+  },
+  {
+    "id": "genshin-official",
+    "gameId": "genshin",
+    "locale": "ko-KR",
+    "kind": "hoyoverse-content",
+    "url": "https://sg-public-api-static.hoyoverse.com/content_v2_user/app/a1b1f9d3315447cc/getContentList?iAppId=32&iChanId=395&iPageSize=30&iPage=1&sLangKey=ko-kr",
+    "canonicalBase": "https://genshin.hoyoverse.com/ko/news/detail/",
+    "allowedHosts": ["genshin.hoyoverse.com"],
+    "detailPattern": "/news/detail/",
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "기원", "특별 방송"]
+  }
+]
