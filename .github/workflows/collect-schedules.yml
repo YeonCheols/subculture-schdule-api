@@ -21,7 +21,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:collector
-      - name: Collect and publish at 00:10 KST
+      - name: Download current event history
         env:
-          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-        run: xvfb-run -a npm run collect:publish
+          SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
+        run: npm run api:pull
+      - name: Collect at 00:10 KST
+        run: xvfb-run -a npm run collect
+      - name: Publish through the authenticated API
+        env:
+          SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+        run: npm run api:publish

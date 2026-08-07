@@ -43,18 +43,22 @@ curl http://localhost:5000/api/v1/collection-status
 ## Vercel 및 자동 수집 설정
 
 1. 이 저장소를 Vercel 프로젝트로 연결합니다.
-2. Vercel Storage에서 **private Blob store**를 생성하고 프로젝트에 연결합니다.
-3. Vercel이 발급한 `BLOB_READ_WRITE_TOKEN`을 이 GitHub 저장소의 Actions Secret에도 등록합니다.
-4. Vercel 환경 변수에 `INGEST_TOKEN`을 등록합니다. 이는 선택적인 수동 import API용입니다.
-5. Actions의 `Collect and publish official schedules`를 한 번 수동 실행해 최초 데이터를 적재합니다.
+2. Vercel Storage에서 **private Blob store**를 생성하고 프로젝트에 연결합니다. Vercel Function은 OIDC로 Blob에 접근합니다.
+3. `openssl rand -hex 32`로 수집 업로드용 비밀 값을 생성합니다.
+4. 생성한 값을 Vercel 환경 변수와 GitHub Actions Secret 양쪽에 `INGEST_TOKEN`으로 등록합니다.
+5. GitHub Actions Secret `SCHEDULE_API_URL`에 배포 주소를 등록합니다. 예: `https://subculture-schdule-api.vercel.app`
+6. 환경 변수를 적용해 Vercel을 재배포합니다.
+7. Actions의 `Collect and publish official schedules`를 한 번 수동 실행해 최초 데이터를 적재합니다.
 
 이후 `.github/workflows/collect-schedules.yml`이 매일 다음 명령을 실행합니다.
 
 ```bash
-xvfb-run -a npm run collect:publish
+npm run api:pull
+xvfb-run -a npm run collect
+npm run api:publish
 ```
 
-`collect:publish`는 기존 Blob 데이터를 읽어 이력을 병합한 뒤 `schedule-api/events.json`과 `schedule-api/collection-status.json`을 덮어씁니다. Vercel 재배포는 필요하지 않습니다.
+예약 작업은 API에서 기존 이력을 내려받고 새 수집 결과를 병합한 다음, 인증된 import API로 전송합니다. GitHub Actions는 Blob 토큰을 가지지 않으며 Vercel Function만 Blob을 읽고 씁니다. 데이터 갱신 시 Vercel 재배포는 필요하지 않습니다.
 
 ## 수동 import
 

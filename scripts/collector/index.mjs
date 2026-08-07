@@ -5,14 +5,12 @@ import { mkdir, mkdtemp, readFile, rename, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { get, put } from '@vercel/blob';
 import electronPath from 'electron';
 import { USER_AGENT, collectText, decodeHtml, deduplicate, extractNetmarbleForumLinks, extractPage, mergeEventHistory, normalize } from './lib.mjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '../..');
 const dryRun = process.argv.includes('--dry-run');
-const publish = process.argv.includes('--publish');
 const sources = JSON.parse(await readFile(path.join(root, 'config/sources.json'), 'utf8'));
 const retrievedAt = new Date().toISOString();
 const timeoutMs = Number(process.env.COLLECT_TIMEOUT_MS || 15000);
@@ -83,10 +81,6 @@ async function collectSource(source) {
 }
 
 async function readExistingEvents() {
-  if (publish && process.env.BLOB_READ_WRITE_TOKEN) {
-    const result = await get('schedule-api/events.json', { access: 'private' });
-    if (result && result.statusCode !== 304) return JSON.parse(await new Response(result.stream).text());
-  }
   try { return JSON.parse(await readFile(path.join(dataDirectory, 'events.json'), 'utf8')); } catch { return []; }
 }
 
@@ -116,13 +110,5 @@ async function atomicJson(name, value) {
 }
 await Promise.all([atomicJson('events.json', events), atomicJson('collection-status.json', status)]);
 
-if (publish) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('BLOB_READ_WRITE_TOKEN is required with --publish');
-  await Promise.all([
-    put('schedule-api/events.json', JSON.stringify(events, null, 2), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json; charset=utf-8' }),
-    put('schedule-api/collection-status.json', JSON.stringify(status, null, 2), { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json; charset=utf-8' }),
-  ]);
-}
-
-console.log(`Collected ${collectedEvents.length} events, retained ${events.length}, published=${publish}, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
+console.log(`Collected ${collectedEvents.length} events, retained ${events.length}, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
 if (status.sources.some((source) => !source.ok)) process.exitCode = 1;
