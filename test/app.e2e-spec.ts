@@ -43,5 +43,19 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/v1/collection-status').expect(200).expect(({ body }) => expect(body.eventCount).toBe(1));
   });
 
+  it('does not cache a missing dataset response', async () => {
+    const originalDirectory = process.env.LOCAL_DATA_DIR;
+    process.env.LOCAL_DATA_DIR = `${dataDirectory}/missing`;
+    // StorageService captured its directory during bootstrap, so a new app is used for this case.
+    const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const missingApp = module.createNestApplication();
+    await missingApp.init();
+    const response = await request(missingApp.getHttpServer()).get('/api/v1/events').expect(404);
+    expect(response.headers['cache-control']).toBeUndefined();
+    await missingApp.close();
+    if (originalDirectory === undefined) delete process.env.LOCAL_DATA_DIR;
+    else process.env.LOCAL_DATA_DIR = originalDirectory;
+  });
+
   it('rejects unsupported query values', () => request(app.getHttpServer()).get('/api/v1/events?gameId=unknown').expect(400));
 });
