@@ -16,7 +16,7 @@ app.whenReady().then(async () => {
   for (const url of urls) {
     try {
       await window.loadURL(url);
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, Number(process.env.RENDER_WAIT_MS || 2500)));
       const body = await window.webContents.executeJavaScript('document.documentElement.outerHTML');
       results.push({ url, finalUrl: window.webContents.getURL(), body });
     } catch (error) {

@@ -84,6 +84,18 @@ https://YOUR_PROJECT.vercel.app/api/v1/collection-status
 
 네트워크 오류 시 마지막 성공 캐시, 설치 파일 JSON 순서로 fallback하는 구성을 권장합니다.
 
+## 과거 일정 백필
+
+일일 수집기와 별도로 공식 게시물의 과거 페이지를 순회할 수 있습니다. 기본 실행은 결과 요약만 출력하며,
+`--write`를 지정해야 기존 `events.json`과 병합해 저장합니다.
+
+```bash
+npm run collect:backfill -- --from=2026-04-08 --to=2026-08-08
+npm run collect:backfill -- --from=2026-04-08 --to=2026-08-08 --write
+```
+
+`BACKFILL_MAX_PAGES`(기본 50), `BACKFILL_PAGE_SIZE`(기본 30), `COLLECT_TIMEOUT_MS`로 실행 범위를 조정할 수 있습니다.
+
 ## 검증
 
 ```bash

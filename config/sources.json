@@ -22,6 +22,7 @@
     "canonicalBase": "https://game.naver.com/lounge/WutheringWaves/board/detail/",
     "allowedHosts": ["game.naver.com", "comm-api.game.naver.com"],
     "officialNickname": "GM 연구소",
+    "backfillBoardIds": [1, 28, 3],
     "keywords": ["공지", "이벤트", "업데이트", "점검", "튜닝", "방송"]
   },
   {
