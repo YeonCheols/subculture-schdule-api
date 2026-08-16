@@ -8,6 +8,7 @@
     "collect": "node scripts/collector/index.mjs",
     "collect:dry": "node scripts/collector/index.mjs --dry-run",
     "collect:backfill": "node scripts/collector/backfill.mjs",
+    "collect:characters": "node scripts/collector/characters.mjs",
     "api:pull": "node scripts/api-sync.mjs pull",
     "api:publish": "node scripts/api-sync.mjs push",
     "dev": "nest start --watch",

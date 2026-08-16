@@ -29,6 +29,20 @@ describe('schedule API', () => {
     sourceTitle: '공식 방송', sourceUrl: 'https://game.naver.com/lounge/WutheringWaves/board/detail/1', sourceLocale: 'ko-KR',
     imageUrl: 'https://nng-phinf.pstatic.net/code.png', mediaType: 'official-image', ocrText: '리딤 코드: WAVE2026', discoveredAt: '2026-08-16T14:00:00Z',
   };
+  const nteEvent = {
+    ...event,
+    id: 'nte-test-1',
+    gameId: 'nte',
+    title: '이환 테스트 이벤트',
+    sourceTitle: '이환 테스트 이벤트',
+    sourceUrl: 'https://game.naver.com/lounge/nte/board/detail/8063606',
+  };
+  const nteCharacter = {
+    id: 'nte-character-test', gameId: 'nte', name: '잔홍', sourceTitle: '캐릭터 파일 소개丨잔홍',
+    sourceUrl: 'https://game.naver.com/lounge/nte/board/detail/8059055', sourceLocale: 'ko-KR',
+    publishedAt: '2026-08-14T13:00:34+09:00', summary: '공식 캐릭터 소개',
+    imageUrls: ['https://nng-phinf.pstatic.net/zanhong.jpg'], retrievedAt: '2026-08-17T00:00:00Z',
+  };
 
   beforeAll(async () => {
     dataDirectory = await mkdtemp(join(tmpdir(), 'schedule-api-'));
@@ -89,6 +103,23 @@ describe('schedule API', () => {
   });
 
   it('rejects unsupported query values', () => request(app.getHttpServer()).get('/api/v1/events?gameId=unknown').expect(400));
+
+  it('accepts and filters NTE schedules without changing existing games', async () => {
+    await request(app.getHttpServer()).post('/api/internal/events/import').set('Authorization', 'Bearer test-token').send([event, nteEvent]).expect(201);
+    await request(app.getHttpServer()).get('/api/v1/events?gameId=nte').expect(200)
+      .expect(({ body }) => expect(body).toEqual([nteEvent]));
+    await request(app.getHttpServer()).get('/api/v1/events?gameId=genshin').expect(200)
+      .expect(({ body }) => expect(body).toEqual([event]));
+  });
+
+  it('protects, imports, and filters character profiles independently', async () => {
+    await request(app.getHttpServer()).post('/api/internal/characters/import').send([nteCharacter]).expect(401);
+    await request(app.getHttpServer()).post('/api/internal/characters/import').set('Authorization', 'Bearer test-token').send([nteCharacter]).expect(201);
+    await request(app.getHttpServer()).get('/api/v1/characters?gameId=nte').expect(200, [nteCharacter]);
+    await request(app.getHttpServer()).get('/api/v1/characters?gameId=unknown').expect(400);
+    await request(app.getHttpServer()).post('/api/internal/characters/import').set('Authorization', 'Bearer test-token')
+      .send([{ ...nteCharacter, sourceUrl: 'http://unsafe.example', imageUrls: ['http://unsafe.example/image.png'] }]).expect(400);
+  });
 
   it('protects, validates, imports, and filters redemption codes', async () => {
     const todayInKorea = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, collectText, decodeHtml, deduplicate, extractImageUrls, extractNetmarbleForumLinks, extractPage, mergeEventHistory, normalize } from './lib.mjs';
+import { USER_AGENT, collectText, createNaverFeedUrl, decodeHtml, deduplicate, extractImageUrls, extractNetmarbleForumLinks, extractPage, isOfficialNaverAuthor, mergeEventHistory, normalize } from './lib.mjs';
 import { enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -119,14 +119,13 @@ async function collectWuthering(source) {
   let candidates = 0;
   for (const boardId of source.backfillBoardIds || [1, 28, 3]) {
     for (let page = 0; page < maxPages; page += 1) {
-      const url = new URL('https://comm-api.game.naver.com/nng_main/v1/community/lounge/WutheringWaves/feed');
-      url.search = new URLSearchParams({ offset: String(page * pageSize), limit: String(pageSize), order: 'NEW', boardId: String(boardId), buffFilteringYN: 'N' });
+      const url = createNaverFeedUrl(source, { offset: page, limit: pageSize, boardId });
       const payload = await requestJson(url);
       const content = payload.content;
       if (payload.code !== 200 || !Array.isArray(content?.feeds)) throw new Error(`Invalid Naver Lounge response for board ${boardId}`);
       if (!content.feeds.length) break;
       for (const item of content.feeds) {
-        if (item.user?.nickname !== source.officialNickname) continue;
+        if (!isOfficialNaverAuthor(item, source)) continue;
         const published = naverDate(item.feed?.createdDate);
         if (!inPublicationRange(published)) continue;
         let document = {};

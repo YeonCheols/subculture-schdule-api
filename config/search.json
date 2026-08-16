@@ -4,6 +4,7 @@
   "queries": [
     { "gameId": "monster", "locale": "ko-KR", "query": "몬길 STAR DIVE 리딤 코드 쿠폰" },
     { "gameId": "wuthering", "locale": "ko-KR", "query": "명조 워더링 웨이브 리딤 코드" },
-    { "gameId": "genshin", "locale": "ko-KR", "query": "원신 리딤 코드 redeem code" }
+    { "gameId": "genshin", "locale": "ko-KR", "query": "원신 리딤 코드 redeem code" },
+    { "gameId": "nte", "locale": "ko-KR", "query": "이환 NTE 캐릭터 리딤 코드 쿠폰" }
   ]
 }

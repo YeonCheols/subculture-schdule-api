@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classify, collectText, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
+import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
 import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
 import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
 
@@ -21,6 +21,14 @@ test('extracts spaced Korean month and day ranges used by Netmarble posts', () =
   assert.deepEqual(extractTime('이벤트 진행 기간 - 8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59(KST)', 2026), {
     startsAt: '2026-08-12T09:00:00+09:00', endsAt: '2026-08-19T08:59:00+09:00',
     sourceTimeText: '8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59',
+  });
+});
+
+test('extracts an official same-day NTE maintenance range before later event dates', () => {
+  assert.deepEqual(extractTime('점검 기간: 2026년 5월 13일 07:00 ~ 12:00(KST)\n이벤트 기간: 5월 27일 13:00 ~ 6월 3일 05:59', 2026), {
+    startsAt: '2026-05-13T07:00:00+09:00',
+    endsAt: '2026-05-13T12:00:00+09:00',
+    sourceTimeText: '2026년 5월 13일 07:00 ~ 12:00',
   });
 });
 
@@ -258,6 +266,39 @@ test('discovers configured Naver board posts beyond current pins and keeps offic
   assert.equal(pages.length, 1);
   assert.equal(pages[0].canonical, 'https://game.naver.com/lounge/WutheringWaves/board/detail/7917001');
   assert.match(pages[0].text, /F5F4D3B2A2/);
+});
+
+test('builds paginated Naver feed URLs from each configured lounge', () => {
+  const url = createNaverFeedUrl({ loungeId: 'nte' }, { offset: 2, limit: 30, boardId: 17 });
+  assert.equal(url.pathname, '/nng_main/v1/community/lounge/nte/feed');
+  assert.equal(url.searchParams.get('offset'), '2');
+  assert.equal(url.searchParams.get('boardId'), '17');
+});
+
+test('accepts only the configured official NTE manager and ignores malformed feeds', () => {
+  const nteSource = {
+    gameId: 'nte', locale: 'ko-KR', canonicalBase: 'https://game.naver.com/lounge/nte/board/detail/',
+    officialNickname: '이 환', officialUserRoleCode: 'game_manager',
+  };
+  const official = { user: { nickname: '이 환', userRoleCode: 'game_manager' }, feed: { feedId: 8063606, createdDate: '20260815140035', title: '이환 이벤트 안내', contents: '{"value":"2026년 8월 21일 10:00 ~ 8월 25일 20:00"}' } };
+  const sameNicknameWithoutRole = { ...official, user: { nickname: '이 환', userRoleCode: 'user' }, feed: { ...official.feed, feedId: 2 } };
+
+  const pages = extractNaverOfficialPages([[official, sameNicknameWithoutRole, {}, { user: null, feed: null }]], nteSource);
+  assert.equal(pages.length, 1);
+  assert.equal(pages[0].canonical, 'https://game.naver.com/lounge/nte/board/detail/8063606');
+  assert.match(pages[0].text, /2026년 8월 21일/);
+});
+
+test('extracts and merges official NTE character profiles separately from schedules', () => {
+  const nteSource = { gameId: 'nte', locale: 'ko-KR', canonicalBase: 'https://game.naver.com/lounge/nte/board/detail/', officialNickname: '이 환', officialUserRoleCode: 'game_manager', characters: { titlePattern: '캐릭터 파일 소개丨' } };
+  const item = { user: { nickname: '이 환', userRoleCode: 'game_manager' }, feed: { feedId: 8059055, createdDate: '20260814130034', title: '캐릭터 파일 소개丨잔홍', repImageUrl: 'https://nng-phinf.pstatic.net/zanhong.jpg', contents: '{"value":"잔홍 공식 캐릭터 소개"}' } };
+  const [character] = extractNaverCharacters([item], nteSource, '2026-08-17T00:00:00Z');
+  assert.equal(character.name, '잔홍');
+  assert.equal(character.summary, '잔홍 공식 캐릭터 소개');
+  assert.equal(character.publishedAt, '2026-08-14T13:00:34+09:00');
+  assert.deepEqual(character.imageUrls, ['https://nng-phinf.pstatic.net/zanhong.jpg']);
+  assert.equal(mergeCharacterHistory([{ ...character, summary: 'old' }], [character])[0].summary, character.summary);
+  assert.deepEqual(extractNaverCharacters([{ ...item, user: { nickname: '일반 사용자', userRoleCode: 'user' } }], nteSource, '2026-08-17T00:00:00Z'), []);
 });
 
 test('extracts banner text and complete images from official Naver HTML contents', () => {

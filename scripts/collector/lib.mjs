@@ -17,6 +17,16 @@ export function collectText(value, output = []) {
   return output.join('\n');
 }
 
+function collectNaverDocumentText(value, output = []) {
+  if (Array.isArray(value)) for (const item of value) collectNaverDocumentText(item, output);
+  else if (value && typeof value === 'object') {
+    if (typeof value.value === 'string') output.push(value.value);
+    else if (value.value !== undefined) collectNaverDocumentText(value.value, output);
+    for (const [key, item] of Object.entries(value)) if (key !== 'value') collectNaverDocumentText(item, output);
+  }
+  return output.join('\n');
+}
+
 export function extractImageUrls(value = '') {
   const urls = new Set();
   for (const match of String(value).matchAll(/https:\/\/[^\s"'<>\\]+\.(?:png|jpe?g|webp)(?:\?[^\s"'<>\\]*)?/gi)) {
@@ -28,10 +38,23 @@ export function extractImageUrls(value = '') {
   return [...urls];
 }
 
+export function isOfficialNaverAuthor(item, source) {
+  if (!item?.user || !source?.officialNickname) return false;
+  if (item.user.nickname !== source.officialNickname) return false;
+  return !source.officialUserRoleCode || item.user.userRoleCode === source.officialUserRoleCode;
+}
+
+export function createNaverFeedUrl(source, { offset = 0, limit = 30, boardId }) {
+  const loungeId = source.loungeId || 'WutheringWaves';
+  const url = new URL(`https://comm-api.game.naver.com/nng_main/v1/community/lounge/${loungeId}/feed`);
+  url.search = new URLSearchParams({ offset: String(offset), limit: String(limit), order: 'NEW', boardId: String(boardId), buffFilteringYN: 'N' });
+  return url;
+}
+
 export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
   const byId = new Map();
   for (const item of feedGroups.flat()) {
-    if (item.user?.nickname !== source.officialNickname || !item.feed?.feedId) continue;
+    if (!isOfficialNaverAuthor(item, source) || !item.feed?.feedId) continue;
     byId.set(String(item.feed.feedId), item);
   }
   return [...byId.values()]
@@ -48,6 +71,34 @@ export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
       const imageSource = `${contents}\n${item.feed.repImageUrl || ''}`;
       return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text, imageUrls: extractImageUrls(imageSource) };
     });
+}
+
+export function extractNaverCharacters(items, source, retrievedAt) {
+  const marker = source.characters?.titlePattern || '캐릭터 파일 소개丨';
+  const characters = [];
+  for (const item of items) {
+    if (!isOfficialNaverAuthor(item, source) || !item.feed?.feedId || !item.feed.title?.startsWith(marker)) continue;
+    const name = decodeHtml(item.feed.title.slice(marker.length)).trim();
+    if (!name) continue;
+    let document = {};
+    try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
+    const text = decodeHtml(collectNaverDocumentText(document)).replace(/\s+/g, ' ').trim();
+    const created = item.feed.createdDate;
+    const publishedAt = /^\d{14}$/.test(created || '') ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
+    const sourceUrl = `${source.canonicalBase}${item.feed.feedId}`;
+    characters.push({
+      id: `${source.gameId}-character-${createHash('sha256').update(sourceUrl).digest('hex').slice(0, 14)}`,
+      gameId: source.gameId, name, sourceTitle: decodeHtml(item.feed.title), sourceUrl, sourceLocale: source.locale,
+      publishedAt, summary: text.slice(0, 1000), imageUrls: extractImageUrls(`${item.feed.contents || ''}\n${item.feed.repImageUrl || ''}`), retrievedAt,
+    });
+  }
+  return characters;
+}
+
+export function mergeCharacterHistory(existing, collected) {
+  const byCharacter = new Map(existing.map((character) => [`${character.gameId}:${character.name}`, character]));
+  for (const character of collected) byCharacter.set(`${character.gameId}:${character.name}`, character);
+  return [...byCharacter.values()].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 }
 
 export function absoluteUrl(value, base) {
@@ -262,8 +313,17 @@ export function extractBannerInfo(page) {
 }
 
 export function extractTime(text, referenceYear = null) {
-  const range = text.match(/(20\d{2})[.년\-/]\s*(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?\s*(?:부터|~|～|—|–|-)[\s\S]{0,80}?(?:(20\d{2})[.년\-/]\s*)?(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?/);
   const iso = (y, m, d, h, min) => `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${h.padStart(2, '0')}:${min.padStart(2, '0')}:00+09:00`;
+  const sameDayRange = text.match(/(20\d{2})[.년\-/]\s*(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?\s*(?:부터|~|～|—|–|-)\s*(\d{1,2})[:시]\s*(\d{2})?/);
+  if (sameDayRange) {
+    const [, year, month, day, startHour, startMinute = '00', endHour, endMinute = '00'] = sameDayRange;
+    return {
+      startsAt: iso(year, month, day, startHour, startMinute),
+      endsAt: iso(year, month, day, endHour, endMinute),
+      sourceTimeText: sameDayRange[0],
+    };
+  }
+  const range = text.match(/(20\d{2})[.년\-/]\s*(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?\s*(?:부터|~|～|—|–|-)[\s\S]{0,80}?(?:(20\d{2})[.년\-/]\s*)?(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?/);
   if (range) {
     const [, sy, sm, sd, sh, smin = '00', ey = sy, em, ed, eh, emin = '00'] = range;
     return { startsAt: iso(sy, sm, sd, sh, smin), endsAt: iso(ey, em, ed, eh, emin), sourceTimeText: range[0] };

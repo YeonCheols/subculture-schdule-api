@@ -107,5 +107,41 @@
       "redemptionUrlTemplate": "https://genshin.hoyoverse.com/ko/gift?code={code}"
     },
     "keywords": ["Redeem Code"]
+  },
+  {
+    "id": "nte-naver-official",
+    "gameId": "nte",
+    "locale": "ko-KR",
+    "kind": "naver-lounge-pins",
+    "loungeId": "nte",
+    "url": "https://comm-api.game.naver.com/nng_main/v1/community/lounge/nte/feed/pins",
+    "canonicalBase": "https://game.naver.com/lounge/nte/board/detail/",
+    "allowedHosts": ["game.naver.com", "comm-api.game.naver.com"],
+    "officialNickname": "이 환",
+    "officialUserRoleCode": "game_manager",
+    "redemptionCodes": {
+      "enabled": true
+    },
+    "dailyBoardIds": [1, 8, 15, 16, 17],
+    "dailyPageSize": 30,
+    "dailyMaxPosts": 150,
+    "backfillBoardIds": [1, 8, 15, 16, 17],
+    "characters": {
+      "boardId": 12,
+      "dailyPageSize": 30,
+      "backfillMaxPages": 10,
+      "titlePattern": "캐릭터 파일 소개丨"
+    },
+    "keywords": [
+      "공지",
+      "이벤트",
+      "업데이트",
+      "패치",
+      "점검",
+      "픽업",
+      "캐릭터",
+      "방송",
+      "리딤"
+    ]
   }
 ]

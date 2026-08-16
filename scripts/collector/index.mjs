@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
+import { USER_AGENT, createNaverFeedUrl, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
 import { collectRedemptionOcrCandidates, enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 import { discoverUnofficialRedemptionCandidates } from './search-discovery.mjs';
 
@@ -88,17 +88,23 @@ async function collectSource(source) {
     if (payload.code !== 200 || !Array.isArray(payload.content)) throw new Error('Invalid Naver Lounge official feed response');
     const pageSize = Math.min(Number(source.dailyPageSize || 30), 50);
     const boardPayloads = await Promise.all((source.dailyBoardIds || []).map(async (boardId) => {
-      const url = new URL('https://comm-api.game.naver.com/nng_main/v1/community/lounge/WutheringWaves/feed');
-      url.search = new URLSearchParams({ offset: '0', limit: String(pageSize), order: 'NEW', boardId: String(boardId), buffFilteringYN: 'N' });
+      const url = createNaverFeedUrl(source, { limit: pageSize, boardId });
       const boardPayload = JSON.parse((await request(url)).body);
       if (boardPayload.code !== 200 || !Array.isArray(boardPayload.content?.feeds)) throw new Error(`Invalid Naver Lounge response for board ${boardId}`);
       return boardPayload.content.feeds;
     }));
     const pages = await enrichBannerPagesWithOcr(source, extractNaverOfficialPages([payload.content, ...boardPayloads], source, Number(source.dailyMaxPosts || maxDetails)));
+    let characters = [];
+    if (source.characters?.boardId) {
+      const characterUrl = createNaverFeedUrl(source, { limit: Math.min(Number(source.characters.dailyPageSize || 30), 50), boardId: source.characters.boardId });
+      const characterPayload = JSON.parse((await request(characterUrl)).body);
+      if (characterPayload.code !== 200 || !Array.isArray(characterPayload.content?.feeds)) throw new Error('Invalid Naver character feed response');
+      characters = extractNaverCharacters(characterPayload.content.feeds, source, retrievedAt);
+    }
     const events = pages.map((page) => normalize(source, page, retrievedAt)).filter(isCollectableEvent);
     const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
     const redemptionCodeCandidates = await collectRedemptionOcrCandidates(source, pages, retrievedAt);
-    return { source, events, redemptionCodes, redemptionCodeCandidates, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: pages.length };
+    return { source, events, characters, redemptionCodes, redemptionCodeCandidates, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: pages.length };
   }
 
   if (source.kind === 'hoyoverse-content') {
@@ -129,11 +135,17 @@ async function readExistingRedemptionCodeCandidates() {
   try { return JSON.parse(await readFile(path.join(dataDirectory, 'redemption-code-candidates.json'), 'utf8')); } catch { return []; }
 }
 
+async function readExistingCharacters() {
+  try { return JSON.parse(await readFile(path.join(dataDirectory, 'characters.json'), 'utf8')); } catch { return []; }
+}
+
 const results = await Promise.allSettled(sources.map(collectSource));
 const searchDiscovery = await discoverUnofficialRedemptionCandidates(searchConfig, retrievedAt);
 await terminateOcrWorker();
 const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter(isCollectableEvent));
 const events = mergeEventHistory(await readExistingEvents(), collectedEvents);
+const collectedCharacters = results.flatMap((result) => result.status === 'fulfilled' ? (result.value.characters || []) : []);
+const characters = mergeCharacterHistory(await readExistingCharacters(), collectedCharacters);
 const collectedRedemptionCodes = mergeRedemptionCodeHistory([], results.flatMap((result) => result.status === 'fulfilled' ? result.value.redemptionCodes : []));
 const redemptionCodes = mergeRedemptionCodeHistory(await readExistingRedemptionCodes(), collectedRedemptionCodes);
 const collectedRedemptionCodeCandidates = [
@@ -154,7 +166,7 @@ const status = {
 };
 
 if (dryRun) {
-  console.log(JSON.stringify({ status, events, redemptionCodes, redemptionCodeCandidates }, null, 2));
+  console.log(JSON.stringify({ status: { ...status, characterCount: characters.length, collectedCharacterCount: collectedCharacters.length }, events, characters, redemptionCodes, redemptionCodeCandidates }, null, 2));
   process.exit(status.sources.some((source) => !source.ok) ? 1 : 0);
 }
 
@@ -167,7 +179,7 @@ async function atomicJson(name, value) {
   const target = path.join(dataDirectory, name); const temporary = `${target}.tmp`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`); await rename(temporary, target);
 }
-await Promise.all([atomicJson('events.json', events), atomicJson('redemption-codes.json', redemptionCodes), atomicJson('redemption-code-candidates.json', redemptionCodeCandidates), atomicJson('collection-status.json', status)]);
+await Promise.all([atomicJson('events.json', events), atomicJson('characters.json', characters), atomicJson('redemption-codes.json', redemptionCodes), atomicJson('redemption-code-candidates.json', redemptionCodeCandidates), atomicJson('collection-status.json', { ...status, characterCount: characters.length, collectedCharacterCount: collectedCharacters.length })]);
 
 console.log(`Collected ${collectedEvents.length} events and ${collectedRedemptionCodes.length} redemption codes, retained ${events.length} events and ${redemptionCodes.length} redemption codes, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
 const failedSources = status.sources.filter((source) => !source.ok);

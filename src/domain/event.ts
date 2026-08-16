@@ -1,4 +1,4 @@
-export const GAME_IDS = ['monster', 'wuthering', 'genshin'] as const;
+export const GAME_IDS = ['monster', 'wuthering', 'genshin', 'nte'] as const;
 export const EVENT_TYPES = ['event', 'update', 'maintenance', 'banner', 'broadcast', 'notice'] as const;
 export const EVENT_STATUSES = ['upcoming', 'active', 'ended', 'unknown'] as const;
 export const CONFIDENCES = ['confirmed', 'probable', 'unverified'] as const;
