@@ -19,6 +19,7 @@ const retrievedAt = new Date().toISOString();
 const timeoutMs = Number(process.env.COLLECT_TIMEOUT_MS || 15000);
 const maxDetails = Number(process.env.COLLECT_MAX_DETAILS || 30);
 const dataDirectory = path.join(root, 'data', 'schedule-api');
+const isCollectableEvent = (event) => Boolean(event.startsAt || event.endsAt || (event.gameId === 'monster' && event.banners?.length));
 
 async function request(url) {
   const response = await fetch(url, {
@@ -94,7 +95,7 @@ async function collectSource(source) {
       return boardPayload.content.feeds;
     }));
     const pages = await enrichBannerPagesWithOcr(source, extractNaverOfficialPages([payload.content, ...boardPayloads], source, Number(source.dailyMaxPosts || maxDetails)));
-    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter((event) => event.startsAt || event.endsAt);
+    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter(isCollectableEvent);
     const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
     const redemptionCodeCandidates = await collectRedemptionOcrCandidates(source, pages, retrievedAt);
     return { source, events, redemptionCodes, redemptionCodeCandidates, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: pages.length };
@@ -131,7 +132,7 @@ async function readExistingRedemptionCodeCandidates() {
 const results = await Promise.allSettled(sources.map(collectSource));
 const searchDiscovery = await discoverUnofficialRedemptionCandidates(searchConfig, retrievedAt);
 await terminateOcrWorker();
-const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter((event) => event.startsAt || event.endsAt));
+const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter(isCollectableEvent));
 const events = mergeEventHistory(await readExistingEvents(), collectedEvents);
 const collectedRedemptionCodes = mergeRedemptionCodeHistory([], results.flatMap((result) => result.status === 'fulfilled' ? result.value.redemptionCodes : []));
 const redemptionCodes = mergeRedemptionCodeHistory(await readExistingRedemptionCodes(), collectedRedemptionCodes);
@@ -148,7 +149,7 @@ const status = {
   redemptionCodeCandidateCount: redemptionCodeCandidates.length, collectedRedemptionCodeCandidateCount: collectedRedemptionCodeCandidates.length,
   searchDiscovery: { skipped: searchDiscovery.skipped, candidateCount: searchDiscovery.candidates.length, errors: searchDiscovery.errors },
   sources: results.map((result, index) => result.status === 'fulfilled'
-    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt || event.endsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length, collectedRedemptionCodeCandidateCount: result.value.redemptionCodeCandidates.length, ocrErrors: result.value.redemptionCodeCandidates.errors || [], ...(result.value.candidateDiagnostics ? { candidateDiagnostics: result.value.candidateDiagnostics } : {}) }
+    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter(isCollectableEvent).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length, collectedRedemptionCodeCandidateCount: result.value.redemptionCodeCandidates.length, ocrErrors: result.value.redemptionCodeCandidates.errors || [], ...(result.value.candidateDiagnostics ? { candidateDiagnostics: result.value.candidateDiagnostics } : {}) }
     : { id: sources[index].id, ok: false, error: result.reason?.message || String(result.reason) }),
 };
 

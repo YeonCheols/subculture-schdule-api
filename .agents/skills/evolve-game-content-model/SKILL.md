@@ -7,7 +7,9 @@ description: Design and implement new official game-information types such as re
 
 ## Choose the model boundary
 
-Start from consumer needs and source semantics. Use `ScheduleEvent` only for information whose main identity is a scheduled interval. Model redemption codes separately when fields such as code, region, redemption URL, validity, usage limits, or availability state are first-class. Model collaborations as events only when the official source provides a dated interval; otherwise use a separate content record.
+Start from consumer needs and source semantics. Use `ScheduleEvent` for scheduled intervals and for verified official pickup/banner information that must be returned by the unified events API. A timeless official pickup uses null schedule bounds and `status: unknown`; never invent dates. Model redemption codes separately when fields such as code, region, redemption URL, validity, usage limits, or availability state are first-class. Model collaborations as events only when the official source provides a dated interval; otherwise use a separate public content record.
+
+Do not create a permanent candidate backlog for information already verified from an allowed official source and author. Persist it directly in its public domain model. Keep candidate diagnostics only as collection telemetry, and reject unofficial or ambiguous values rather than storing them as pending facts.
 
 Do not mix user-specific redemption state, accounts, or credentials into shared event JSON. Such data requires a separate model, authorization boundary, and storage design.
 

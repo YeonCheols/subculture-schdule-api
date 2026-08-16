@@ -57,6 +57,18 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/v1/collection-status').expect(200).expect(({ body }) => expect(body.eventCount).toBe(1));
   });
 
+  it('serves timeless Monster pickups from the public events endpoint', async () => {
+    const monsterPickup = {
+      ...event,
+      id: 'monster-pickup-mina', gameId: 'monster', type: 'banner', title: '운명의 힘을 품은 구미호, 미나 등장!',
+      sourceTitle: '운명의 힘을 품은 구미호, 미나 등장!', sourceUrl: 'https://forum.netmarble.com/stardive_ko/view/20/2268',
+      startsAt: null, endsAt: null, sourceTimeText: '', status: 'unknown', confidence: 'probable',
+      banners: [{ name: '운명의 힘을 품은 구미호', kind: 'character', phase: 'unknown', featuredCharacters: [{ name: '미나', rarity: null }], featuredWeapons: [], sourceImageUrls: ['https://hedwig-cf.netmarble.com/mina.jpg'] }],
+    };
+    await request(app.getHttpServer()).post('/api/internal/events/import').set('Authorization', 'Bearer test-token').send([monsterPickup]).expect(201);
+    await request(app.getHttpServer()).get('/api/v1/events?gameId=monster').expect(200, [monsterPickup]);
+  });
+
   it('rejects malformed banner metadata', () => request(app.getHttpServer()).post('/api/internal/events/import')
     .set('Authorization', 'Bearer test-token')
     .send([{ ...event, banners: [{ ...event.banners[0], kind: 'artifact', featuredCharacters: [{ name: '', rarity: 6 }] }] }])

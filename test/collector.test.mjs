@@ -196,6 +196,20 @@ test('exposes an official Monster character showcase as a pickup candidate', () 
   }]);
 });
 
+test('retains an official timeless Monster pickup as a public banner event', () => {
+  const event = normalize({ gameId: 'monster', locale: 'ko-KR' }, {
+    title: '운명의 힘을 품은 구미호, 미나 등장! - 몬길: STAR DIVE',
+    canonical: 'https://forum.netmarble.com/stardive_ko/view/20/2268',
+    published: '2026-04-29T10:03:00+09:00', text: '', description: '',
+    imageUrls: ['https://hedwig-cf.netmarble.com/mina.jpg'],
+  }, '2026-08-16T00:00:00Z');
+
+  assert.equal(event.type, 'banner');
+  assert.equal(event.startsAt, null);
+  assert.equal(event.status, 'unknown');
+  assert.deepEqual(mergeEventHistory([], [event]), [event]);
+});
+
 test('selects Netmarble candidates fairly across official boards', () => {
   const shared = { url: 'https://forum.netmarble.com/stardive_ko/view/2/1', title: '고정 공지' };
   const groups = [
@@ -223,15 +237,15 @@ test('prioritizes official Monster character showcases within the daily detail l
   assert.ok(selected.some((candidate) => candidate.title.includes('에스데 등장!')));
 });
 
-test('reports why an official Netmarble banner candidate was excluded', () => {
+test('reports an official timeless Netmarble banner as collected', () => {
   const banners = [{ name: '별빛의 약속', kind: 'mixed', phase: 'unknown', featuredCharacters: [], featuredWeapons: [] }];
   assert.deepEqual(diagnoseNetmarbleCandidate(
     { title: '업데이트 안내', url: 'https://forum.netmarble.com/stardive_ko/view/3/1', finalUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1' },
-    { startsAt: null, endsAt: null, banners },
+    { gameId: 'monster', startsAt: null, endsAt: null, banners },
     { text: '신규 이벤트 [모집] 「별빛의 약속」이 추가됩니다.' },
   ), {
     title: '업데이트 안내', sourceUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1',
-    outcome: 'excluded', reason: 'missing-explicit-schedule-time', banners,
+    outcome: 'collected', banners,
   });
 });
 

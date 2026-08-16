@@ -112,8 +112,8 @@ export function diagnoseNetmarbleCandidate(candidate, event = null, page = null)
     ? ['possible-banner-without-structured-pickups'] : [];
   return {
     title: candidate.title, sourceUrl: candidate.finalUrl || candidate.url,
-    outcome: event?.startsAt || event?.endsAt ? 'collected' : 'excluded',
-    ...(event?.startsAt || event?.endsAt ? {} : { reason: 'missing-explicit-schedule-time' }),
+    outcome: isCollectableEvent(event) ? 'collected' : 'excluded',
+    ...(isCollectableEvent(event) ? {} : { reason: 'missing-explicit-schedule-time' }),
     ...(event?.banners?.length ? { banners: event.banners } : {}),
     ...(warnings.length ? { warnings } : {}),
   };
@@ -287,7 +287,7 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
   const digest = createHash('sha256').update(page.canonical).digest('hex').slice(0, 14);
   const banners = extractBannerInfo(page);
   return {
-    id: `${source.gameId}-${digest}`, gameId: source.gameId, type: classify(page.title),
+    id: `${source.gameId}-${digest}`, gameId: source.gameId, type: banners.length ? 'banner' : classify(page.title),
     title: page.title.replace(/\s*-\s*몬길:\s*STAR DIVE$/i, ''), sourceTitle: page.title, sourceUrl: page.canonical,
     sourceLocale: source.locale, publishedAt: page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null,
     startsAt: timing.startsAt, endsAt: timing.endsAt, sourceTimeText: timing.sourceTimeText,
@@ -295,6 +295,10 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
     version: page.title.match(/(?:버전|Version|v)\s*([0-9]+(?:\.[0-9]+)+)/i)?.[1] || null, summary: page.description.slice(0, 240),
     ...(banners.length ? { banners } : {}),
   };
+}
+
+export function isCollectableEvent(event) {
+  return Boolean(event && (event.startsAt || event.endsAt || (event.gameId === 'monster' && event.banners?.length)));
 }
 
 function koreanInstant(match) {
@@ -416,7 +420,7 @@ export function getEventStatus(event, now = Date.now()) {
 }
 
 export function mergeEventHistory(existingEvents, collectedEvents, now = Date.now()) {
-  return deduplicate([...existingEvents, ...collectedEvents]).filter((event) => event.startsAt || event.endsAt).map((event) => ({
+  return deduplicate([...existingEvents, ...collectedEvents]).filter(isCollectableEvent).map((event) => ({
     ...event,
     title: decodeHtmlEntities(event.title),
     sourceTitle: decodeHtmlEntities(event.sourceTitle),

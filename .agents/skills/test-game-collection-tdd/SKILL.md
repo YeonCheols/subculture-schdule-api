@@ -84,13 +84,20 @@ After deterministic tests pass, run `npm run collect:dry` when network access an
 
 Treat DNS, timeout, rate-limit, browser, and upstream failures as inconclusive until distinguished from parser defects. Use bounded retries only.
 
+## Publish verified information without a candidate backlog
+
+- Do not create or retain a separate candidate dataset for information verified from an allowed official source and author.
+- Persist verified pickup names, featured characters, featured weapons, and official banner images directly as `ScheduleEvent.banners`. When no schedule time is stated, keep `startsAt` and `endsAt` null and use `status: unknown`; never fabricate a timestamp.
+- Treat `candidateDiagnostics` only as per-run discovery and exclusion telemetry. If a diagnostic contains verified structured official information, require the same collector run to include it in the public event dataset.
+- Do not promote search snippets, unofficial authors, or ambiguous OCR text. Record the rejection reason in collection status instead of creating a pending candidate record.
+
 ## Refresh operational data when authorized
 
 Treat a task that explicitly asks to recollect, refresh, publish, or update operational data as authorization for the following data workflow. A verification-only or dry-run request is not production authorization.
 
 1. Confirm `SCHEDULE_API_URL` and `INGEST_TOKEN` are available without printing their values. Stop without changing production when required credentials are absent.
 2. Run `npm run api:pull` first, record the downloaded production event count, and read `${SCHEDULE_API_URL}/api/v1/collection-status` separately because pull downloads events only. Never collect from an empty local baseline when production history should exist.
-3. Run `npm run collect:dry` and require every configured source to succeed. Compare source candidate and collected counts with the pulled baseline; investigate unexplained large drops before writing.
+3. Run `npm run collect:dry` and require every configured source to succeed. Compare source discovery and collected counts with the pulled baseline; investigate unexplained large drops before writing, and verify that structured official diagnostics are also present in the event output.
 4. Run `npm run collect` only after the preview passes. Validate the generated events, unique IDs and URLs, zoned timestamps, ranges, statuses, source errors, history retention, and `eventCount` before publication.
 5. Run the repository checks required by the code or data changes. Do not publish while a relevant check fails.
 6. Run `npm run api:publish` once. Do not deploy, release, change secrets, or rerun a failed publish blindly.
