@@ -1,5 +1,5 @@
 {
-  "retrievedAt": "2026-08-16T14:00:45.991Z",
+  "retrievedAt": "2026-08-16T14:15:01.777Z",
   "eventCount": 56,
   "collectedEventCount": 39,
   "redemptionCodeCount": 6,
@@ -28,8 +28,38 @@
           "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/5339",
           "outcome": "excluded",
           "reason": "missing-explicit-schedule-time",
-          "warnings": [
-            "possible-banner-without-structured-pickups"
+          "banners": [
+            {
+              "name": "현실과 현상을 기록하는 이단 심판관",
+              "kind": "character",
+              "phase": "unknown",
+              "featuredCharacters": [
+                {
+                  "name": "메이벨",
+                  "rarity": 5
+                }
+              ],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/7706dad38d3344f094bd7ec4e22e851f_1785290483410_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/4b3e730d3c0c4e58beced6b298d20c79_1785222601918_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/4125a4aed3ef4369a8dcc43b3ab0eb8e_1785222629536_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/955cc8f432814fa9af4f5dcf85c8c96e_1785221754671_d.jpg"
+              ]
+            },
+            {
+              "name": "권선멸악",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/7706dad38d3344f094bd7ec4e22e851f_1785290483410_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/4b3e730d3c0c4e58beced6b298d20c79_1785222601918_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/4125a4aed3ef4369a8dcc43b3ab0eb8e_1785222629536_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/955cc8f432814fa9af4f5dcf85c8c96e_1785221754671_d.jpg"
+              ]
+            }
           ]
         },
         {
@@ -64,8 +94,102 @@
           "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/4983",
           "outcome": "excluded",
           "reason": "missing-explicit-schedule-time",
-          "warnings": [
-            "possible-banner-without-structured-pickups"
+          "banners": [
+            {
+              "name": "모두의 축제를 꿈꾸는 사랑의 전도사",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/27d5974b7e6a44bfa436179e012db90c_1783405567472_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/16ba1fe38b094e49b4f39730b3755fb4_1783405825074_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/d251f7d999e34ecbbbd5155b4480f339_1783405833663_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/e1a72c67eb3c4021be656dff0fdd593f_1783405854460_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bd76e13e9dd44dd88048fc5f11290a3e_1783405869308_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8d7e7e7b99be48f18a88326753581e54_1783405879837_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6ece842291694bdc9eacac7b352060c5_1783405885907_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bc1b02ae11d44831b6e6121c897fd3c3_1783405904572_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8ebbc10f14de40fe8defc8618e80e6c1_1783415619716_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/36900607490e47129ac24f4e9f6a6351_1783323826068_d.jpg"
+              ]
+            },
+            {
+              "name": "사랑으로 물드는 여름날",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/27d5974b7e6a44bfa436179e012db90c_1783405567472_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/16ba1fe38b094e49b4f39730b3755fb4_1783405825074_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/d251f7d999e34ecbbbd5155b4480f339_1783405833663_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/e1a72c67eb3c4021be656dff0fdd593f_1783405854460_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bd76e13e9dd44dd88048fc5f11290a3e_1783405869308_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8d7e7e7b99be48f18a88326753581e54_1783405879837_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6ece842291694bdc9eacac7b352060c5_1783405885907_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bc1b02ae11d44831b6e6121c897fd3c3_1783405904572_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8ebbc10f14de40fe8defc8618e80e6c1_1783415619716_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/36900607490e47129ac24f4e9f6a6351_1783323826068_d.jpg"
+              ]
+            },
+            {
+              "name": "무더위도 이길 수 없는 불의 소녀",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/27d5974b7e6a44bfa436179e012db90c_1783405567472_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/16ba1fe38b094e49b4f39730b3755fb4_1783405825074_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/d251f7d999e34ecbbbd5155b4480f339_1783405833663_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/e1a72c67eb3c4021be656dff0fdd593f_1783405854460_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bd76e13e9dd44dd88048fc5f11290a3e_1783405869308_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8d7e7e7b99be48f18a88326753581e54_1783405879837_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6ece842291694bdc9eacac7b352060c5_1783405885907_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bc1b02ae11d44831b6e6121c897fd3c3_1783405904572_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8ebbc10f14de40fe8defc8618e80e6c1_1783415619716_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/36900607490e47129ac24f4e9f6a6351_1783323826068_d.jpg"
+              ]
+            },
+            {
+              "name": "정의를 꿈꾸는 불꽃",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/27d5974b7e6a44bfa436179e012db90c_1783405567472_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/16ba1fe38b094e49b4f39730b3755fb4_1783405825074_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/d251f7d999e34ecbbbd5155b4480f339_1783405833663_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/e1a72c67eb3c4021be656dff0fdd593f_1783405854460_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bd76e13e9dd44dd88048fc5f11290a3e_1783405869308_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8d7e7e7b99be48f18a88326753581e54_1783405879837_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6ece842291694bdc9eacac7b352060c5_1783405885907_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bc1b02ae11d44831b6e6121c897fd3c3_1783405904572_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8ebbc10f14de40fe8defc8618e80e6c1_1783415619716_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/36900607490e47129ac24f4e9f6a6351_1783323826068_d.jpg"
+              ]
+            },
+            {
+              "name": "격동하는 심장의 도깨비",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/27d5974b7e6a44bfa436179e012db90c_1783405567472_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/16ba1fe38b094e49b4f39730b3755fb4_1783405825074_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/d251f7d999e34ecbbbd5155b4480f339_1783405833663_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/e1a72c67eb3c4021be656dff0fdd593f_1783405854460_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bd76e13e9dd44dd88048fc5f11290a3e_1783405869308_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8d7e7e7b99be48f18a88326753581e54_1783405879837_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6ece842291694bdc9eacac7b352060c5_1783405885907_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/bc1b02ae11d44831b6e6121c897fd3c3_1783405904572_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8ebbc10f14de40fe8defc8618e80e6c1_1783415619716_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/36900607490e47129ac24f4e9f6a6351_1783323826068_d.jpg"
+              ]
+            }
           ]
         },
         {
@@ -95,8 +219,41 @@
           "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/4763",
           "outcome": "excluded",
           "reason": "missing-explicit-schedule-time",
-          "warnings": [
-            "possible-banner-without-structured-pickups"
+          "banners": [
+            {
+              "name": "백린의 무녀",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c4d6b546643a4d81a3c1d1e77a589100_1781599525690_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/cf16e7271cee4ac09fef88859bf08789_1781599537932_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/0200b567f6da4ad48bf22d46836d9dbb_1781599544452_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/2a575156c4ee457e8b1d9b93584cf0e0_1781599554149_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/fe2e69bcc09a432e9f2a8a1479f80cbc_1781599601017_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/eaf89148c2b14b66aa038a9b12a8945d_1781599559621_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/5c9bf83ef77a418689c938c05debce95_1781599573910_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/696336a290b54c7fbf2c508f9ca5ed94_1781598400578_d.jpg"
+              ]
+            },
+            {
+              "name": "교룡의 백린",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c4d6b546643a4d81a3c1d1e77a589100_1781599525690_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/cf16e7271cee4ac09fef88859bf08789_1781599537932_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/0200b567f6da4ad48bf22d46836d9dbb_1781599544452_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/2a575156c4ee457e8b1d9b93584cf0e0_1781599554149_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/fe2e69bcc09a432e9f2a8a1479f80cbc_1781599601017_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/eaf89148c2b14b66aa038a9b12a8945d_1781599559621_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/5c9bf83ef77a418689c938c05debce95_1781599573910_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/696336a290b54c7fbf2c508f9ca5ed94_1781598400578_d.jpg"
+              ]
+            }
           ]
         },
         {
@@ -126,8 +283,79 @@
           "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/3959",
           "outcome": "excluded",
           "reason": "missing-explicit-schedule-time",
-          "warnings": [
-            "possible-banner-without-structured-pickups"
+          "banners": [
+            {
+              "name": "새벽 이슬의 정기를 타고난 여우 소녀",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/33aaae0260d3401191c4f1b4861072fb_1779794683360_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/14a4ee1c21cf417991d3cfe843cd7c9c_1779794695020_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/deec4ab0958349eb9801a61f6e73d1d9_1779794704237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9af2db62149c4d0490bbd0d98429776b_1779795062236_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8eb1d17c35664c22a9889e4130a3cbad_1779795076881_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a87cbd3f637a4594bfbf406c312479dd_1779795089607_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c464c480bb424aa7af7e3ca6a5e3ec44_1779795101237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/51e8e487b27940cca8c2866e7f675d6a_1779795111024_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a0a27de2685b4514accfa668b511ecda_1779795117897_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9221423e47a7418da276b71f60eb8c17_1779795123951_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c2c5ad8726ba470697e4e08db73b2fab_1779795183295_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6309fe3b5f71440a8bef44113ad18e61_1779795311235_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/fb729741ba8d4f1a9e57f5965e3996cd_1779795319932_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9dfefe57360740dc9ec1b90cb339c996_1779795327859_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/1f5f41b15b8047588a9158ace057889f_1779760495241_d.jpg"
+              ]
+            },
+            {
+              "name": "초원을 수놓은 이슬",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/33aaae0260d3401191c4f1b4861072fb_1779794683360_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/14a4ee1c21cf417991d3cfe843cd7c9c_1779794695020_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/deec4ab0958349eb9801a61f6e73d1d9_1779794704237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9af2db62149c4d0490bbd0d98429776b_1779795062236_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8eb1d17c35664c22a9889e4130a3cbad_1779795076881_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a87cbd3f637a4594bfbf406c312479dd_1779795089607_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c464c480bb424aa7af7e3ca6a5e3ec44_1779795101237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/51e8e487b27940cca8c2866e7f675d6a_1779795111024_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a0a27de2685b4514accfa668b511ecda_1779795117897_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9221423e47a7418da276b71f60eb8c17_1779795123951_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c2c5ad8726ba470697e4e08db73b2fab_1779795183295_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6309fe3b5f71440a8bef44113ad18e61_1779795311235_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/fb729741ba8d4f1a9e57f5965e3996cd_1779795319932_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9dfefe57360740dc9ec1b90cb339c996_1779795327859_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/1f5f41b15b8047588a9158ace057889f_1779760495241_d.jpg"
+              ]
+            },
+            {
+              "name": "기사도를 따르는 자안의 모험가",
+              "kind": "mixed",
+              "phase": "unknown",
+              "featuredCharacters": [],
+              "featuredWeapons": [],
+              "sourceImageUrls": [
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/33aaae0260d3401191c4f1b4861072fb_1779794683360_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/14a4ee1c21cf417991d3cfe843cd7c9c_1779794695020_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/deec4ab0958349eb9801a61f6e73d1d9_1779794704237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9af2db62149c4d0490bbd0d98429776b_1779795062236_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/8eb1d17c35664c22a9889e4130a3cbad_1779795076881_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a87cbd3f637a4594bfbf406c312479dd_1779795089607_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c464c480bb424aa7af7e3ca6a5e3ec44_1779795101237_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/51e8e487b27940cca8c2866e7f675d6a_1779795111024_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/a0a27de2685b4514accfa668b511ecda_1779795117897_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9221423e47a7418da276b71f60eb8c17_1779795123951_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/c2c5ad8726ba470697e4e08db73b2fab_1779795183295_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/6309fe3b5f71440a8bef44113ad18e61_1779795311235_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/fb729741ba8d4f1a9e57f5965e3996cd_1779795319932_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/9dfefe57360740dc9ec1b90cb339c996_1779795327859_d.jpg",
+                "https://hedwig-cf.netmarble.com/forum-common/monster2/stardive_ko/thumbnail/1f5f41b15b8047588a9158ace057889f_1779760495241_d.jpg"
+              ]
+            }
           ]
         },
         {
