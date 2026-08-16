@@ -159,7 +159,10 @@ function bannerKind(title, text) {
 }
 
 function targetName(label) {
-  const withoutElement = label.replace(/\s*\([^)]+\)\s*$/, '').trim();
+  const withoutEditorMetadata = label.split(/\r?\n/).map((value) => value.trim())
+    .filter((value) => value && !/^#(?:[0-9a-f]{3,8})$/i.test(value) && !/^(?:nodeStyle|textNode|SE-[0-9a-f-]+)$/i.test(value))
+    .join(' ');
+  const withoutElement = withoutEditorMetadata.replace(/\s*\([^)]+\)\s*$/, '').trim();
   return withoutElement.split('·').at(-1).trim();
 }
 

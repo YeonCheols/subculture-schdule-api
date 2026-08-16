@@ -68,6 +68,14 @@ test('extracts multiple official character and weapon banners with rarity and ph
   assert.deepEqual(normalize(source, page, '2026-08-12T04:00:00Z').banners, extractBannerInfo(page));
 });
 
+test('removes Naver editor metadata from official pickup names', () => {
+  const banners = extractBannerInfo({
+    title: '[바람의 약속] 캐릭터 이벤트 튜닝',
+    text: '5성 캐릭터 「#000000\nnodeStyle\ntextNode\nSE-abcd\n수수\n#ac9a00\nnodeStyle\ntextNode\nSE-ef12」',
+  });
+  assert.deepEqual(banners[0].featuredCharacters, [{ name: '수수', rarity: 5 }]);
+});
+
 test('keeps text-only banner identity without inventing image-only featured targets', () => {
   const page = {
     title: '[노을에 깃든 이슬] 무기 이벤트 튜닝 · 2차', canonical: 'https://game.naver.com/lounge/WutheringWaves/board/detail/1',
