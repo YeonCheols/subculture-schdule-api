@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: "10 15 * * *"
   workflow_dispatch:
+    inputs:
+      backfill_from:
+        description: Backfill start date (YYYY-MM-DD); leave both dates empty for daily collection
+        required: false
+        type: string
+      backfill_to:
+        description: Backfill end date (YYYY-MM-DD); leave both dates empty for daily collection
+        required: false
+        type: string
 
 concurrency:
   group: collect-official-schedules
@@ -25,8 +34,24 @@ jobs:
         env:
           SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
         run: npm run api:pull
+      - name: Validate backfill inputs
+        if: ${{ (inputs.backfill_from == '') != (inputs.backfill_to == '') }}
+        run: exit 1
       - name: Collect at 00:10 KST
+        if: ${{ inputs.backfill_from == '' && inputs.backfill_to == '' }}
         run: xvfb-run -a npm run collect
+      - name: Preview requested backfill
+        if: ${{ inputs.backfill_from != '' && inputs.backfill_to != '' }}
+        env:
+          BACKFILL_MAX_PAGES: 5
+          BACKFILL_PAGE_SIZE: 30
+        run: xvfb-run -a npm run collect:backfill -- --from=${{ inputs.backfill_from }} --to=${{ inputs.backfill_to }}
+      - name: Write requested backfill
+        if: ${{ inputs.backfill_from != '' && inputs.backfill_to != '' }}
+        env:
+          BACKFILL_MAX_PAGES: 5
+          BACKFILL_PAGE_SIZE: 30
+        run: xvfb-run -a npm run collect:backfill -- --from=${{ inputs.backfill_from }} --to=${{ inputs.backfill_to }} --write
       - name: Publish through the authenticated API
         env:
           SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
