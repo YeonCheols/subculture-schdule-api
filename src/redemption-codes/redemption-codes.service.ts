@@ -30,6 +30,19 @@ export class RedemptionCodesService {
     return codes.filter((code) => code.expiresAt !== null && koreaDate(new Date(code.expiresAt)) === today);
   }
 
+  async findExpiring(query: { gameId?: string; withinHours: number }, now = new Date()): Promise<RedemptionCode[]> {
+    const startsAfter = now.getTime();
+    const endsAt = startsAfter + query.withinHours * 60 * 60 * 1000;
+    const codes = await this.findAll(query);
+    return codes
+      .filter((code) => {
+        if (code.expiresAt === null) return false;
+        const expiresAt = Date.parse(code.expiresAt);
+        return expiresAt > startsAfter && expiresAt <= endsAt;
+      })
+      .sort((left, right) => Date.parse(left.expiresAt!) - Date.parse(right.expiresAt!));
+  }
+
   async import(codes: RedemptionCode[]): Promise<{ redemptionCodeCount: number; retrievedAt: string }> {
     await this.storage.writeJson(REDEMPTION_CODES_PATH, codes);
     const retrievedAt = codes.map((code) => code.retrievedAt).sort().at(-1) ?? new Date().toISOString();

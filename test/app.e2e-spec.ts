@@ -87,13 +87,24 @@ describe('schedule API', () => {
       code: 'TODAY2026',
       expiresAt: `${todayInKorea}T23:59:00+09:00`,
     };
+    const expiringSoon = {
+      ...redemptionCode,
+      id: 'monster-code-soon',
+      gameId: 'monster',
+      code: 'SOON2026',
+      expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+    };
     await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').send([redemptionCode]).expect(401);
-    await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').set('Authorization', 'Bearer test-token').send([redemptionCode, expiringToday]).expect(201);
+    await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').set('Authorization', 'Bearer test-token').send([redemptionCode, expiringToday, expiringSoon]).expect(201);
     const response = await request(app.getHttpServer()).get('/api/v1/redemption-codes?gameId=genshin&status=active').expect(200);
     expect(response.body).toEqual([redemptionCode]);
     await request(app.getHttpServer()).get('/api/v1/redemption-codes/expiring-today?gameId=wuthering').expect(200)
       .expect(({ body }) => expect(body).toEqual([expiringToday]));
     await request(app.getHttpServer()).get('/api/v1/redemption-codes/expiring-today?gameId=unknown').expect(400);
+    await request(app.getHttpServer()).get('/api/v1/redemption-codes/expiring?withinHours=12&gameId=monster').expect(200)
+      .expect(({ body }) => expect(body).toEqual([expiringSoon]));
+    await request(app.getHttpServer()).get('/api/v1/redemption-codes/expiring?withinHours=1&gameId=monster').expect(200, []);
+    await request(app.getHttpServer()).get('/api/v1/redemption-codes/expiring?withinHours=169').expect(400);
     await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').set('Authorization', 'Bearer test-token')
       .send([{ ...redemptionCode, code: 'PERSONAL123', distributionType: 'single-use' }]).expect(400);
   });
