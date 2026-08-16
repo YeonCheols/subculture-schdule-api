@@ -1,11 +1,11 @@
 ---
 name: test-game-collection-tdd
-description: Verify and repair official subculture-game schedule collection with test-driven development. Use when checking whether Monster, Wuthering Waves, or Genshin sources are collected correctly; reproducing parser, discovery, author-filter, pagination, normalization, merge, or source-isolation defects; or adding collector regression tests before changing scripts/collector, config/sources.json, or event data behavior.
+description: Verify, autonomously repair, and optionally refresh production data for official subculture-game schedule collection with test-driven development. Use when checking whether Monster, Wuthering Waves, or Genshin sources are collected correctly; reproducing parser, discovery, author-filter, pagination, normalization, merge, renderer, or source-isolation defects; adding collector regression tests; or explicitly requesting current production schedules to be recollected and published.
 ---
 
 # Test Game Collection with TDD
 
-Prove collector behavior from official-source evidence, reproduce defects with a failing test, make the smallest correction, and preserve the failure as a regression test.
+Prove collector behavior from official-source evidence, autonomously repair reproducible defects with a failing test and the smallest correction, and refresh production data when the user explicitly includes that external mutation in the task.
 
 ## Establish the baseline
 
@@ -33,6 +33,8 @@ Prove collector behavior from official-source evidence, reproduce defects with a
 
 ## Follow red-green-refactor
 
+Continue through repair and verification without waiting for separate instructions when a defect is reproducible from official evidence and the required change stays within the requested collector scope. Fix collector code, source configuration, fixtures, tests, validation, retry bounds, and renderer error reporting as needed. Do not stop after listing remediations that can be safely implemented and tested locally.
+
 ### Red
 
 1. Add the narrowest test to `test/collector.test.mjs`, or a focused fixture under `test/fixtures/` when inline HTML or JSON would obscure the case.
@@ -51,6 +53,14 @@ Prove collector behavior from official-source evidence, reproduce defects with a
 1. Remove duplication only within the proven scope and keep the regression test unchanged.
 2. Run `npm run typecheck` and `npm run build` when TypeScript, shared contracts, configuration, or application behavior changed.
 3. Run `npm run test:e2e` when public filters, validation, import, or storage behavior changed.
+
+### Recheck all sources
+
+1. Run the complete relevant test suite after the focused test turns green.
+2. Run `npm run collect:dry` for all configured sources, even when the defect affected only one game.
+3. If a source fails, preserve successful source results and distinguish deterministic parser defects from bounded transient network, browser, or upstream failures.
+4. Retry a transient live failure once under the same bounded configuration. If the retry succeeds, report the instability and improve retry or error diagnostics only when a deterministic test can prove the change.
+5. Repeat red-green-refactor for each remaining reproducible defect. Stop only when all in-scope sources pass, an external dependency is genuinely unavailable, or official evidence is insufficient under repository policy.
 
 ## Check each supported source
 
@@ -72,8 +82,22 @@ After deterministic tests pass, run `npm run collect:dry` when network access an
 - statuses are recalculated from the current instant;
 - source errors are explicit and `eventCount` matches stored records when files are written by an explicitly authorized workflow.
 
-Treat DNS, timeout, rate-limit, browser, and upstream failures as inconclusive until distinguished from parser defects. Use bounded retries only. Never run `--write`, `api:publish`, deployment, or production import without explicit user authorization.
+Treat DNS, timeout, rate-limit, browser, and upstream failures as inconclusive until distinguished from parser defects. Use bounded retries only.
+
+## Refresh operational data when authorized
+
+Treat a task that explicitly asks to recollect, refresh, publish, or update operational data as authorization for the following data workflow. A verification-only or dry-run request is not production authorization.
+
+1. Confirm `SCHEDULE_API_URL` and `INGEST_TOKEN` are available without printing their values. Stop without changing production when required credentials are absent.
+2. Run `npm run api:pull` first, record the downloaded production event count, and read `${SCHEDULE_API_URL}/api/v1/collection-status` separately because pull downloads events only. Never collect from an empty local baseline when production history should exist.
+3. Run `npm run collect:dry` and require every configured source to succeed. Compare source candidate and collected counts with the pulled baseline; investigate unexplained large drops before writing.
+4. Run `npm run collect` only after the preview passes. Validate the generated events, unique IDs and URLs, zoned timestamps, ranges, statuses, source errors, history retention, and `eventCount` before publication.
+5. Run the repository checks required by the code or data changes. Do not publish while a relevant check fails.
+6. Run `npm run api:publish` once. Do not deploy, release, change secrets, or rerun a failed publish blindly.
+7. Verify the deployed public events and collection status match the validated local count, retrieval time, source results, and representative latest events for every game. Report any mismatch as a failed refresh.
+
+Do not ask for another confirmation after the current task has explicitly authorized this workflow. Keep publication scoped to schedule data and preserve all prior event history. If repair work changed code, commit only the agent-owned validated files under repository policy; never push code merely because production data refresh was authorized.
 
 ## Report proof
 
-Report the initial failing test, its failure reason, the minimal fix, the passing focused and regression commands, dry-run results by source, and any checks not run. Do not claim normal collection solely because unit tests or compilation passed.
+Report the initial failing test, its failure reason, the minimal fix, the passing focused and regression commands, dry-run results by source, operational before/after counts when refreshed, publish verification, and any checks not run. Do not claim normal collection solely because unit tests or compilation passed.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Game Collection TDD"
-  short_description: "공식 게임 수집기를 TDD로 재현하고 검증합니다"
-  default_prompt: "Use $test-game-collection-tdd to verify the official game collectors with a red-green-refactor workflow."
+  short_description: "공식 게임 수집기를 TDD로 보완하고 운영 데이터를 갱신합니다"
+  default_prompt: "Use $test-game-collection-tdd to verify and repair every official game collector, then refresh production schedule data when explicitly authorized."
