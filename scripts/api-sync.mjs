@@ -15,10 +15,11 @@ if (mode === 'pull') {
   for (const dataset of [
     { route: 'events', file: 'events.json', label: 'event', required: true },
     { route: 'redemption-codes', file: 'redemption-codes.json', label: 'redemption code', required: false },
+    { route: 'redemption-code-candidates', file: 'redemption-code-candidates.json', label: 'redemption code candidate', required: false },
   ]) {
     const response = await fetch(`${apiUrl}/api/v1/${dataset.route}`, { signal: AbortSignal.timeout(30_000) });
     if (response.status === 404 && !dataset.required) {
-      console.log('Remote redemption code history is empty; using the repository seed data.');
+      console.log(`Remote ${dataset.label} history is empty; using the repository seed data.`);
       continue;
     }
     if (response.status === 404) {
@@ -37,9 +38,10 @@ if (mode === 'pull') {
 if (mode === 'push') {
   const token = process.env.INGEST_TOKEN;
   if (!token) throw new Error('INGEST_TOKEN is required');
-  const [events, redemptionCodes, collectionStatus] = await Promise.all([
+  const [events, redemptionCodes, redemptionCodeCandidates, collectionStatus] = await Promise.all([
     readFile(path.join(dataDirectory, 'events.json'), 'utf8').then(JSON.parse),
     readFile(path.join(dataDirectory, 'redemption-codes.json'), 'utf8').then(JSON.parse),
+    readFile(path.join(dataDirectory, 'redemption-code-candidates.json'), 'utf8').then(JSON.parse).catch(() => []),
     readFile(path.join(dataDirectory, 'collection-status.json'), 'utf8').then(JSON.parse),
   ]);
   const eventResponse = await fetch(`${apiUrl}/api/internal/events/import`, {
@@ -49,5 +51,13 @@ if (mode === 'push') {
     signal: AbortSignal.timeout(60_000),
   });
   if (!eventResponse.ok) throw new Error(`Cannot publish schedules: HTTP ${eventResponse.status} ${await eventResponse.text()}`);
+  const candidateResponse = await fetch(`${apiUrl}/api/internal/redemption-code-candidates/import`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify(redemptionCodeCandidates),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!candidateResponse.ok) throw new Error(`Cannot publish redemption code candidates: HTTP ${candidateResponse.status} ${await candidateResponse.text()}`);
   console.log(`Published schedules: ${await eventResponse.text()}`);
+  console.log(`Published redemption code candidates: ${await candidateResponse.text()}`);
 }

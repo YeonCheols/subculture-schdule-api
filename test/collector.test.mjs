@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { classify, collectText, decodeHtml, deduplicate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
+import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
+import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
 
 const source = { gameId: 'genshin', locale: 'ko-KR', url: 'https://example.com/news', allowedHosts: ['example.com'], detailPattern: '/detail/', keywords: ['이벤트'], redemptionCodes: { enabled: true } };
 
@@ -89,8 +91,45 @@ test('extracts only strongly labeled OCR pickup targets and preserves image evid
 });
 
 test('extracts official HTTPS image URLs without accepting unrelated links', () => {
-  const value = '<img src="https://official.example/banner.jpg"><img data-src="http://unsafe.example/a.png"> https://official.example/card.webp';
-  assert.deepEqual(extractImageUrls(value), ['https://official.example/banner.jpg', 'https://official.example/card.webp']);
+  const value = '<img src="https://official.example/banner.jpg"><img data-src="http://unsafe.example/a.png"> https://official.example/card.webp?type=w1678';
+  assert.deepEqual(extractImageUrls(value), ['https://official.example/banner.jpg', 'https://official.example/card.webp?type=w1678']);
+});
+
+test('keeps the complete Naver image proxy path and exposes it even before OCR succeeds', () => {
+  const imageUrl = 'https://nng-phinf.pstatic.net/hash.PNG/01-%EA%B3%B5%EC%A7%80.png?type=w1678';
+  assert.deepEqual(extractImageUrls(`<img src="${imageUrl}">`), [imageUrl]);
+  assert.deepEqual(extractBannerInfo({
+    title: '[단비에서 전하는 연꽃 바람의 축복] 캐릭터 이벤트 튜닝',
+    text: '상세 픽업 정보는 공식 이미지에서 확인해 주세요.', imageUrls: [imageUrl],
+  }), [{
+    name: '단비에서 전하는 연꽃 바람의 축복', kind: 'character', phase: 'unknown',
+    featuredCharacters: [], featuredWeapons: [], sourceImageUrls: [imageUrl],
+  }]);
+});
+
+test('stores strongly labeled OCR redemption codes as review candidates only', () => {
+  const candidates = extractRedemptionCandidatesFromOcr(
+    { gameId: 'wuthering', locale: 'ko-KR' },
+    { title: '3.6 버전 프리뷰 특별 방송', canonical: 'https://game.naver.com/lounge/WutheringWaves/board/detail/1', imageUrl: 'https://nng-phinf.pstatic.net/code.png' },
+    '리딤 코드: WAVE2026\n초대 코드: FRIENDONLY',
+    '2026-08-16T14:00:00Z',
+  );
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].candidateCode, 'WAVE2026');
+  assert.equal(candidates[0].status, 'pending');
+  assert.equal(candidates[0].mediaType, 'official-image');
+});
+
+test('discovers unrestricted HTTPS search results as unverified candidates', () => {
+  const candidates = candidatesFromSearchResults(
+    { gameId: 'genshin', locale: 'ko-KR' },
+    [{ title: '새 코드', url: 'https://community.example/post/1', content: '리딤 코드: WEB2026' }, { title: 'unsafe', url: 'http://unsafe.example', content: '쿠폰 코드: BAD2026' }],
+    '2026-08-16T15:00:00Z',
+  );
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].candidateCode, 'WEB2026');
+  assert.equal(candidates[0].mediaType, 'web-search-result');
+  assert.equal(candidates[0].imageUrl, null);
 });
 
 test('extracts rendered forum links and Naver document text', () => {
@@ -189,6 +228,23 @@ test('retains redemption code history and refreshes status', () => {
   const merged = mergeRedemptionCodeHistory(existing, [], Date.parse('2026-08-10T00:00:00+09:00'));
   assert.equal(merged.length, 1);
   assert.equal(merged[0].status, 'expired');
+});
+
+test('records official redemption source changes without deleting code history', () => {
+  const existing = [{ id: 'code', gameId: 'genshin', code: 'PUBLIC2026', sourceUrl: 'https://example.com/code', contentHash: 'old', changeHistory: [], retrievedAt: '2026-08-01T00:00:00Z', expiresAt: null }];
+  const collected = [{ ...existing[0], contentHash: 'new', lastVerifiedAt: '2026-08-16T00:00:00Z', retrievedAt: '2026-08-16T00:00:00Z' }];
+  const merged = mergeRedemptionCodeHistory(existing, collected);
+  assert.equal(merged.length, 1);
+  assert.deepEqual(merged[0].changeHistory, [{ detectedAt: '2026-08-16T00:00:00Z', previousHash: 'old', currentHash: 'new' }]);
+});
+
+test('merges richer official region, rewards, and expiry for the same code', () => {
+  const base = { id: 'code', gameId: 'genshin', code: 'PUBLIC2026', sourceUrl: 'https://example.com/one', region: null, rewards: ['원석 100'], expiresAt: null, retrievedAt: '2026-08-01T00:00:00Z' };
+  const richer = { ...base, sourceUrl: 'https://example.com/two', region: '아시아', rewards: ['모라 5만'], expiresAt: '2026-09-01T00:00:00+09:00', retrievedAt: '2026-08-02T00:00:00Z' };
+  const [merged] = mergeRedemptionCodeHistory([base], [richer]);
+  assert.equal(merged.region, '아시아');
+  assert.deepEqual(merged.rewards, ['원석 100', '모라 5만']);
+  assert.equal(merged.expiresAt, '2026-09-01T00:00:00+09:00');
 });
 
 test('extracts redemption codes only from the official Genshin main-page code section', () => {

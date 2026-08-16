@@ -19,6 +19,11 @@
       "maxPosts": 3,
       "maxImagesPerPost": 2
     },
+    "redemptionOcr": {
+      "enabled": true,
+      "maxPosts": 2,
+      "maxImagesPerPost": 2
+    },
     "keywords": [
       "공지",
       "이벤트",
@@ -45,6 +50,11 @@
     "bannerOcr": {
       "enabled": true,
       "maxPosts": 3,
+      "maxImagesPerPost": 2
+    },
+    "redemptionOcr": {
+      "enabled": true,
+      "maxPosts": 2,
       "maxImagesPerPost": 2
     },
     "dailyBoardIds": [1, 28, 3],

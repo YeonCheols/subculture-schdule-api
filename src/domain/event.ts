@@ -59,6 +59,9 @@ export interface SourceCollectionStatus {
   storedEventCount: number;
   collectedRedemptionCodeCount?: number;
   storedRedemptionCodeCount?: number;
+  collectedRedemptionCodeCandidateCount?: number;
+  searchDiscovery?: { skipped: boolean; candidateCount: number; errors: string[] };
+  ocrErrors?: string[];
   error?: string;
 }
 
@@ -68,5 +71,7 @@ export interface CollectionStatus {
   collectedEventCount: number;
   redemptionCodeCount?: number;
   collectedRedemptionCodeCount?: number;
+  redemptionCodeCandidateCount?: number;
+  collectedRedemptionCodeCandidateCount?: number;
   sources: SourceCollectionStatus[];
 }

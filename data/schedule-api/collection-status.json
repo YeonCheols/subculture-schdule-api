@@ -1,9 +1,9 @@
 {
-  "retrievedAt": "2026-08-16T12:42:29.008Z",
-  "eventCount": 39,
-  "collectedEventCount": 5,
-  "redemptionCodeCount": 5,
-  "collectedRedemptionCodeCount": 5,
+  "retrievedAt": "2026-08-16T13:00:35.703Z",
+  "eventCount": 44,
+  "collectedEventCount": 28,
+  "redemptionCodeCount": 6,
+  "collectedRedemptionCodeCount": 6,
   "sources": [
     {
       "id": "monster-forum",
@@ -17,18 +17,18 @@
     {
       "id": "wuthering-naver-official",
       "ok": true,
-      "candidateCount": 3,
-      "collectedEventCount": 1,
-      "storedEventCount": 20,
-      "collectedRedemptionCodeCount": 0,
-      "storedRedemptionCodeCount": 0
+      "candidateCount": 90,
+      "collectedEventCount": 23,
+      "storedEventCount": 24,
+      "collectedRedemptionCodeCount": 1,
+      "storedRedemptionCodeCount": 1
     },
     {
       "id": "genshin-official",
       "ok": true,
       "candidateCount": 30,
-      "collectedEventCount": 3,
-      "storedEventCount": 13,
+      "collectedEventCount": 4,
+      "storedEventCount": 14,
       "collectedRedemptionCodeCount": 0,
       "storedRedemptionCodeCount": 3
     },
@@ -37,7 +37,7 @@
       "ok": true,
       "candidateCount": 3,
       "collectedEventCount": 0,
-      "storedEventCount": 13,
+      "storedEventCount": 14,
       "collectedRedemptionCodeCount": 3,
       "storedRedemptionCodeCount": 3
     }

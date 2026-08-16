@@ -7,10 +7,12 @@ import { HealthController } from './health.controller';
 import { RedemptionCodesController } from './redemption-codes/redemption-codes.controller';
 import { RedemptionCodesImportController } from './redemption-codes/redemption-codes-import.controller';
 import { RedemptionCodesService } from './redemption-codes/redemption-codes.service';
+import { RedemptionCodeCandidatesController } from './redemption-codes/redemption-code-candidates.controller';
+import { RedemptionCodeCandidatesService } from './redemption-codes/redemption-code-candidates.service';
 import { StorageService } from './storage/storage.service';
 
 @Module({
-  controllers: [HealthController, EventsController, ImportController, RedemptionCodesController, RedemptionCodesImportController],
-  providers: [StorageService, EventsService, RedemptionCodesService, IngestAuthGuard],
+  controllers: [HealthController, EventsController, ImportController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeCandidatesController],
+  providers: [StorageService, EventsService, RedemptionCodesService, RedemptionCodeCandidatesService, IngestAuthGuard],
 })
 export class AppModule {}

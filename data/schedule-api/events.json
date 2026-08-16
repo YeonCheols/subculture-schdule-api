@@ -49,7 +49,7 @@
     "sourceTimeText": "2026.04.30(목) 12:00 ~ 2026.05.28(목) 11:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -180,6 +180,87 @@
     "summary": "이벤트 기간 동안 웹이벤트 임무를 완료하면 원석, 구현의 수정, 「별바다 세계」 아이템 등 보상을 수령할 수 있습니다. 자세한 임무 내용은 웹이벤트 페이지를 참고해 주세요."
   },
   {
+    "id": "wuthering-09e12885518af3",
+    "gameId": "wuthering",
+    "type": "banner",
+    "title": "3.5 버전 [캐릭터/무기 이벤트 튜닝 · 1차]",
+    "sourceTitle": "3.5 버전 [캐릭터/무기 이벤트 튜닝 · 1차]",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/7904800",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-09T03:10:29.000Z",
+    "startsAt": null,
+    "endsAt": "2026-07-30T10:59:00+09:00",
+    "sourceTimeText": "버전 업데이트 후 ~ 2026년 7월 30일 10:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": "",
+    "banners": [
+      {
+        "name": "캐릭터/무기 이벤트 튜닝 · 1차",
+        "kind": "mixed",
+        "phase": "first",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
+  },
+  {
+    "id": "wuthering-d9956d78d7bd60",
+    "gameId": "wuthering",
+    "type": "banner",
+    "title": "[여정이 남긴 울림] 여정이 남긴 캐릭터 튜닝",
+    "sourceTitle": "[여정이 남긴 울림] 여정이 남긴 캐릭터 튜닝",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/7904847",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-09T03:20:29.000Z",
+    "startsAt": null,
+    "endsAt": "2026-08-19T12:59:00+09:00",
+    "sourceTimeText": "버전 업데이트 후 ~ 2026년 8월 19일 12:59",
+    "status": "unknown",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": "",
+    "banners": [
+      {
+        "name": "여정이 남긴 울림",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
+  },
+  {
+    "id": "wuthering-267ea29cc7d617",
+    "gameId": "wuthering",
+    "type": "banner",
+    "title": "[울림에 새겨진 추억] 여정이 남긴 무기 튜닝",
+    "sourceTitle": "[울림에 새겨진 추억] 여정이 남긴 무기 튜닝",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/7904848",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-09T03:20:29.000Z",
+    "startsAt": null,
+    "endsAt": "2026-08-19T12:59:00+09:00",
+    "sourceTimeText": "버전 업데이트 후 ~ 2026년 8월 19일 12:59",
+    "status": "unknown",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": "",
+    "banners": [
+      {
+        "name": "울림에 새겨진 추억",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
+  },
+  {
     "id": "wuthering-1f0f91109093e6",
     "gameId": "wuthering",
     "type": "update",
@@ -193,7 +274,7 @@
     "sourceTimeText": "2026년 7월 10일 05:00 ~ 2026년 7월 10일 12:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -211,7 +292,7 @@
     "sourceTimeText": "7월 11일(토) 10:00 ~ 7월 19일(일) 23:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -229,7 +310,7 @@
     "sourceTimeText": "2026년 7월 11일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -265,7 +346,7 @@
     "sourceTimeText": "2026년 7월 16일 11:00 ~ 2026년 8월 6일 04:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -319,7 +400,7 @@
     "sourceTimeText": "7월 22일(수) 09:00 ~ 8월 12일(수) 08:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T12:42:29.008Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -337,7 +418,7 @@
     "sourceTimeText": "2026년 7월 23일 05:00 ~ 2026년 7월 30일 04:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -360,24 +441,6 @@
     "summary": ""
   },
   {
-    "id": "wuthering-09e12885518af3",
-    "gameId": "wuthering",
-    "type": "banner",
-    "title": "3.5 버전 [캐릭터/무기 이벤트 튜닝 · 1차]",
-    "sourceTitle": "3.5 버전 [캐릭터/무기 이벤트 튜닝 · 1차]",
-    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/7904800",
-    "sourceLocale": "ko-KR",
-    "publishedAt": "2026-07-09T03:10:29.000Z",
-    "startsAt": "2026-07-30T10:59:00+09:00",
-    "endsAt": null,
-    "sourceTimeText": "2026년 7월 30일 10:59",
-    "status": "ended",
-    "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
-    "version": null,
-    "summary": ""
-  },
-  {
     "id": "wuthering-1f9e5e03a8db54",
     "gameId": "wuthering",
     "type": "banner",
@@ -391,9 +454,18 @@
     "sourceTimeText": "2026년 7월 30일 10:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
-    "summary": ""
+    "summary": "",
+    "banners": [
+      {
+        "name": "아득히 푸른 하늘",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
   },
   {
     "id": "wuthering-507189887f83a9",
@@ -409,9 +481,18 @@
     "sourceTimeText": "2026년 7월 30일 10:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
-    "summary": ""
+    "summary": "",
+    "banners": [
+      {
+        "name": "깃털에 실은 만물의 소리",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
   },
   {
     "id": "wuthering-ae6e18fdefe24c",
@@ -445,7 +526,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 13일 11:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -463,7 +544,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 04:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -481,9 +562,18 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
-    "summary": ""
+    "summary": "",
+    "banners": [
+      {
+        "name": "캐릭터/무기 이벤트 튜닝 · 2차",
+        "kind": "mixed",
+        "phase": "second",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
   },
   {
     "id": "wuthering-385adc3fdb89b5",
@@ -499,9 +589,18 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
-    "summary": ""
+    "summary": "",
+    "banners": [
+      {
+        "name": "노을에 깃든 이슬",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
   },
   {
     "id": "wuthering-00f298450a6142",
@@ -517,9 +616,18 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
-    "summary": ""
+    "summary": "",
+    "banners": [
+      {
+        "name": "단비에서 전하는 연꽃 바람의 축복",
+        "kind": "mixed",
+        "phase": "unknown",
+        "featuredCharacters": [],
+        "featuredWeapons": []
+      }
+    ]
   },
   {
     "id": "wuthering-f9094e13e2a24e",
@@ -535,7 +643,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -553,7 +661,7 @@
     "sourceTimeText": "2026년 7월 31일 21:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T12:42:29.008Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": "여행자들 안녕!"
   },
@@ -571,7 +679,7 @@
     "sourceTimeText": "2026년 8월 4일(화) 11시 ~ 2026년 8월 31일(월) 23시 59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -589,7 +697,7 @@
     "sourceTimeText": "2026년 8월 6일 05:00 ~ 2026년 8월 19일 04:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T14:42:38.577Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -612,6 +720,110 @@
     "summary": ""
   },
   {
+    "id": "genshin-c168c156210d7b",
+    "gameId": "genshin",
+    "type": "banner",
+    "title": "7.0 버전 이벤트 기원 알림 제1회",
+    "sourceTitle": "7.0 버전 이벤트 기원 알림 제1회",
+    "sourceUrl": "https://genshin.hoyoverse.com/ko/news/detail/165610",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-07T11:16:43.000Z",
+    "startsAt": null,
+    "endsAt": "2026-09-01T18:59:00+09:00",
+    "sourceTimeText": "버전 업데이트 후~2026/9/1 18:59",
+    "status": "unknown",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": "이벤트 기간에 이벤트 기원을 통해 더 많은 무기와 캐릭터를 획득하여 파티를 강화하세요!",
+    "banners": [
+      {
+        "name": "백조의 그림자",
+        "kind": "character",
+        "phase": "first",
+        "featuredCharacters": [
+          {
+            "name": "오데트",
+            "rarity": 5
+          },
+          {
+            "name": "알료샤",
+            "rarity": 4
+          },
+          {
+            "name": "설탕",
+            "rarity": 4
+          },
+          {
+            "name": "리넷",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": []
+      },
+      {
+        "name": "난롯가의 잿빛 그림자",
+        "kind": "character",
+        "phase": "first",
+        "featuredCharacters": [
+          {
+            "name": "아를레키노",
+            "rarity": 5
+          },
+          {
+            "name": "알료샤",
+            "rarity": 4
+          },
+          {
+            "name": "설탕",
+            "rarity": 4
+          },
+          {
+            "name": "리넷",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": []
+      },
+      {
+        "name": "신의 주조",
+        "kind": "weapon",
+        "phase": "first",
+        "featuredCharacters": [],
+        "featuredWeapons": [
+          {
+            "name": "백조의 호수",
+            "rarity": 5
+          },
+          {
+            "name": "붉은 달의 형상",
+            "rarity": 5
+          },
+          {
+            "name": "페보니우스 검",
+            "rarity": 4
+          },
+          {
+            "name": "시간의 검",
+            "rarity": 4
+          },
+          {
+            "name": "용학살창",
+            "rarity": 4
+          },
+          {
+            "name": "제례의 악장",
+            "rarity": 4
+          },
+          {
+            "name": "녹슨 활",
+            "rarity": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "wuthering-4fedcf1c90dc6c",
     "gameId": "wuthering",
     "type": "broadcast",
@@ -625,7 +837,7 @@
     "sourceTimeText": "2026년 8월 7일(금) 20:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-09T16:05:07.756Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   },
@@ -661,9 +873,45 @@
     "sourceTimeText": "2026년 8월 12일 00:00 ~ 8월 19일 23:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T12:42:29.008Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": "〈원신〉 7.0 버전 「신이 사랑하지 않은 설국」이 오픈되었습니다. 이에 발맞춰 Discord Quest 이벤트도 시작되었으니, 이벤트에 참여해서 임무를 수행해 보세요! 참여한 분들께는 원석 등 기간 한정 보상을 획득할 수 있는 기회가 주어진답니다~"
+  },
+  {
+    "id": "wuthering-35103bb5092b69",
+    "gameId": "wuthering",
+    "type": "event",
+    "title": "[흩날리는 선율] 에코 재료 한정 2배 이벤트",
+    "sourceTitle": "[흩날리는 선율] 에코 재료 한정 2배 이벤트",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/8046063",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-11T03:00:34.000Z",
+    "startsAt": "2026-08-12T05:00:00+09:00",
+    "endsAt": "2026-08-19T04:59:00+09:00",
+    "sourceTimeText": "2026년 8월 12일 05:00 ~ 2026년 8월 19일 04:59",
+    "status": "active",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "wuthering-6b8438f1d8d4dd",
+    "gameId": "wuthering",
+    "type": "maintenance",
+    "title": "『명조:워더링 웨이브』 3.6 버전 업데이트 점검 사전 공지",
+    "sourceTitle": "『명조:워더링 웨이브』 3.6 버전 업데이트 점검 사전 공지",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/8054290",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-13T03:00:41.000Z",
+    "startsAt": "2026-08-20T05:00:00+09:00",
+    "endsAt": "2026-08-20T12:00:00+09:00",
+    "sourceTimeText": "2026년 8월 20일 05:00 ~ 2026년 8월 20일 12:00",
+    "status": "upcoming",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "version": null,
+    "summary": ""
   },
   {
     "id": "genshin-80fe1688623d35",
@@ -679,7 +927,7 @@
     "sourceTimeText": "2026년 8월 25일 23:59",
     "status": "upcoming",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T12:42:29.008Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": "이벤트 기간에 웹이벤트 임무 「설원의 길잡이」, 「설원으로의 귀환」(복귀 여행자 한정), 「동행 가이드」를 완료하면 원석과 「얼음 열쇠」를 획득할 수 있습니다. 「얼음 열쇠」는 추첨에 사용되는 재화로, 추첨을 진행하면 다양한 보상을 획득할 수 있습니다."
   },
@@ -697,7 +945,7 @@
     "sourceTimeText": "2026년 9월 30일(수) 23:59",
     "status": "upcoming",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T12:42:29.008Z",
+    "retrievedAt": "2026-08-16T13:00:35.703Z",
     "version": null,
     "summary": ""
   }

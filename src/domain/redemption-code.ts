@@ -23,4 +23,25 @@ export interface RedemptionCode {
   rewards: string[];
   status: RedemptionCodeStatus;
   retrievedAt: string;
+  contentHash?: string;
+  lastVerifiedAt?: string;
+  changeHistory?: Array<{
+    detectedAt: string;
+    previousHash: string;
+    currentHash: string;
+  }>;
+}
+
+export interface RedemptionCodeCandidate {
+  id: string;
+  gameId: GameId;
+  candidateCode: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  sourceTitle: string;
+  sourceUrl: string;
+  sourceLocale: string;
+  imageUrl: string | null;
+  mediaType: 'official-image' | 'web-search-result';
+  ocrText: string;
+  discoveredAt: string;
 }

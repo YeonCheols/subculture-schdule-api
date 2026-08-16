@@ -296,7 +296,11 @@ export function extractRedemptionCodes(source, page, retrievedAt, now = Date.now
   }
 
   const publishedDate = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published) : null;
+  const contentHash = createHash('sha256').update(text.replace(/\s+/g, ' ').trim()).digest('hex');
   const timing = extractRedemptionExpiry(text, publishedDate);
+  const region = text.match(/(?:대상\s*)?(?:지역|서버)\s*[:：]\s*(글로벌|한국|아시아|유럽|북미|일본)/i)?.[1] || null;
+  const rewards = (text.match(/(?:코드\s*)?보상\s*[:：]\s*([^\n]{1,160})/i)?.[1] || '')
+    .split(/[,，·]/).map((value) => value.trim()).filter(Boolean).slice(0, 10);
   const publishedAt = publishedDate?.toISOString() || null;
   const unique = new Map();
   for (const candidate of candidates) {
@@ -305,10 +309,11 @@ export function extractRedemptionCodes(source, page, retrievedAt, now = Date.now
     const digest = createHash('sha256').update(`${source.gameId}:${normalizedCode}`).digest('hex').slice(0, 14);
     const redemptionUrl = candidate.redemptionUrl || source.redemptionCodes?.redemptionUrlTemplate?.replace('{code}', encodeURIComponent(candidate.code)) || null;
     const record = {
-      id: `${source.gameId}-code-${digest}`, gameId: source.gameId, code: candidate.code, region: null,
+      id: `${source.gameId}-code-${digest}`, gameId: source.gameId, code: candidate.code, region,
       distributionType: 'public', sourceTitle: page.title, sourceUrl: page.canonical, sourceLocale: source.locale,
       publishedAt, startsAt: null, expiresAt: timing.expiresAt, sourceTimeText: timing.sourceTimeText,
-      redemptionUrl, rewards: [], status: getRedemptionCodeStatus(timing, now), retrievedAt,
+      redemptionUrl, rewards, status: getRedemptionCodeStatus(timing, now), retrievedAt,
+      contentHash, lastVerifiedAt: retrievedAt, changeHistory: [],
     };
     unique.set(normalizedCode, record);
   }
@@ -345,7 +350,22 @@ export function mergeEventHistory(existingEvents, collectedEvents, now = Date.no
 
 export function mergeRedemptionCodeHistory(existingCodes, collectedCodes, now = Date.now()) {
   const byCode = new Map();
-  for (const code of [...existingCodes, ...collectedCodes]) byCode.set(`${code.gameId}:${code.code.toUpperCase()}`, code);
+  for (const code of existingCodes) byCode.set(`${code.gameId}:${code.code.toUpperCase()}`, code);
+  for (const code of collectedCodes) {
+    const key = `${code.gameId}:${code.code.toUpperCase()}`;
+    const previous = byCode.get(key);
+    const changed = previous?.contentHash && code.contentHash && previous.contentHash !== code.contentHash;
+    const changeHistory = changed
+      ? [...(previous.changeHistory || []), { detectedAt: code.lastVerifiedAt || code.retrievedAt, previousHash: previous.contentHash, currentHash: code.contentHash }]
+      : (previous?.changeHistory || code.changeHistory || []);
+    byCode.set(key, {
+      ...previous, ...code,
+      region: code.region || previous?.region || null,
+      expiresAt: code.expiresAt || previous?.expiresAt || null,
+      rewards: [...new Set([...(previous?.rewards || []), ...(code.rewards || [])])],
+      changeHistory,
+    });
+  }
   return [...byCode.values()].map((code) => ({ ...code, status: getRedemptionCodeStatus(code, now) }))
     .sort((a, b) => (b.publishedAt || b.retrievedAt).localeCompare(a.publishedAt || a.retrievedAt));
 }

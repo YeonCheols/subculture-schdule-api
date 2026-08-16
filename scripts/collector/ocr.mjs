@@ -1,4 +1,5 @@
 import kor from '@tesseract.js-data/kor';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import tesseract from 'tesseract.js';
 import { classify, extractBannerInfo } from './lib.mjs';
@@ -63,6 +64,46 @@ export async function enrichBannerPagesWithOcr(source, pages) {
     enriched.push(texts.length ? { ...page, ocrText: texts.join('\n\n') } : page);
   }
   return enriched;
+}
+
+export function extractRedemptionCandidatesFromOcr(source, page, ocrText, discoveredAt) {
+  const candidates = new Map();
+  const pattern = /(?:리딤|교환|프로모션|쿠폰|redeem(?:ption)?)[ \t]*(?:코드)?[ \t]*[:：]?[ \t]*[\[【(]?([A-Za-z0-9]{6,32})[\]】)]?/gi;
+  for (const match of String(ocrText).matchAll(pattern)) {
+    const code = match[1];
+    if (!/[A-Z]/i.test(code) || !/\d/.test(code)) continue;
+    const normalized = code.toUpperCase();
+    const digest = createHash('sha256').update(`${source.gameId}:${page.canonical}:${page.imageUrl}:${normalized}`).digest('hex').slice(0, 14);
+    candidates.set(normalized, {
+      id: `${source.gameId}-ocr-code-${digest}`, gameId: source.gameId, candidateCode: code, status: 'pending',
+      sourceTitle: page.title, sourceUrl: page.canonical, sourceLocale: source.locale,
+      imageUrl: page.imageUrl, mediaType: 'official-image', ocrText: String(ocrText).slice(0, 4000), discoveredAt,
+    });
+  }
+  return [...candidates.values()];
+}
+
+export async function collectRedemptionOcrCandidates(source, pages, discoveredAt) {
+  if (source.redemptionOcr?.enabled !== true || process.env.REDEMPTION_OCR_ENABLED === 'false') return [];
+  const maxPosts = Number(process.env.REDEMPTION_OCR_MAX_POSTS || source.redemptionOcr.maxPosts || 2);
+  const maxImages = Number(process.env.REDEMPTION_OCR_MAX_IMAGES_PER_POST || source.redemptionOcr.maxImagesPerPost || 2);
+  const output = [];
+  output.errors = [];
+  let processedPosts = 0;
+  for (const page of pages) {
+    if (!/(?:방송|리딤|교환|쿠폰|redeem|livestream)/i.test(page.title) || !page.imageUrls?.length || processedPosts >= maxPosts) continue;
+    processedPosts += 1;
+    for (const imageUrl of page.imageUrls.slice(0, maxImages)) {
+      try {
+        const ocrText = await recognize(imageUrl);
+        output.push(...extractRedemptionCandidatesFromOcr(source, { ...page, imageUrl }, ocrText, discoveredAt));
+      } catch (error) {
+        output.errors.push(`${imageUrl}: ${error.message}`);
+        process.stderr.write(`Redemption OCR skipped ${imageUrl}: ${error.message}\n`);
+      }
+    }
+  }
+  return output;
 }
 
 export async function terminateOcrWorker() {

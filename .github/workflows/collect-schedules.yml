@@ -2,7 +2,7 @@ name: Collect and publish official schedules
 
 on:
   schedule:
-    - cron: "10 15 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
       backfill_from:
@@ -37,9 +37,33 @@ jobs:
       - name: Validate backfill inputs
         if: ${{ (inputs.backfill_from == '') != (inputs.backfill_to == '') }}
         run: exit 1
-      - name: Collect at 00:10 KST
+      - name: Start temporary SearXNG
         if: ${{ inputs.backfill_from == '' && inputs.backfill_to == '' }}
+        run: |
+          docker run --detach --name schedule-searxng \
+            --publish 127.0.0.1:8080:8080 \
+            --volume "$GITHUB_WORKSPACE/config/searxng/settings.yml:/etc/searxng/settings.yml:ro" \
+            ghcr.io/searxng/searxng:latest
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error \
+              "http://127.0.0.1:8080/search?q=healthcheck&format=json" >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs schedule-searxng
+          exit 1
+      - name: Collect hourly
+        if: ${{ inputs.backfill_from == '' && inputs.backfill_to == '' }}
+        env:
+          SEARCH_ENGINE_URL: http://127.0.0.1:8080
         run: xvfb-run -a npm run collect
+      - name: Stop temporary SearXNG
+        if: ${{ always() && inputs.backfill_from == '' && inputs.backfill_to == '' }}
+        continue-on-error: true
+        run: docker rm --force schedule-searxng
       - name: Preview requested backfill
         if: ${{ inputs.backfill_from != '' && inputs.backfill_to != '' }}
         env:

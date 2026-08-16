@@ -24,6 +24,11 @@ describe('schedule API', () => {
     sourceTimeText: '2026년 8월 9일 23:59까지', redemptionUrl: 'https://example.com/redeem?code=PUBLIC2026',
     rewards: ['보상'], status: 'active', retrievedAt: '2026-08-07T00:00:00Z',
   };
+  const redemptionCandidate = {
+    id: 'wuthering-ocr-code-test', gameId: 'wuthering', candidateCode: 'WAVE2026', status: 'pending',
+    sourceTitle: '공식 방송', sourceUrl: 'https://game.naver.com/lounge/WutheringWaves/board/detail/1', sourceLocale: 'ko-KR',
+    imageUrl: 'https://nng-phinf.pstatic.net/code.png', mediaType: 'official-image', ocrText: '리딤 코드: WAVE2026', discoveredAt: '2026-08-16T14:00:00Z',
+  };
 
   beforeAll(async () => {
     dataDirectory = await mkdtemp(join(tmpdir(), 'schedule-api-'));
@@ -86,5 +91,16 @@ describe('schedule API', () => {
     const response = await request(app.getHttpServer()).post('/api/internal/events/import').set('Authorization', 'Bearer test-token')
       .send({ events: [event], redemptionCodes: [redemptionCode] }).expect(201);
     expect(response.body).toMatchObject({ eventCount: 1, redemptionCodeCount: 1 });
+  });
+
+  it('imports, filters, and reviews OCR redemption candidates', async () => {
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-candidates/import').send([redemptionCandidate]).expect(401);
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-candidates/import').set('Authorization', 'Bearer test-token').send([redemptionCandidate]).expect(201);
+    await request(app.getHttpServer()).get('/api/v1/redemption-code-candidates?gameId=wuthering&status=pending').expect(200)
+      .expect(({ body }) => expect(body).toEqual([redemptionCandidate]));
+    await request(app.getHttpServer()).patch(`/api/internal/redemption-code-candidates/${redemptionCandidate.id}`).set('Authorization', 'Bearer test-token')
+      .send({ status: 'accepted' }).expect(200).expect(({ body }) => expect(body.status).toBe('accepted'));
+    await request(app.getHttpServer()).get('/api/v1/redemption-codes?gameId=wuthering').expect(200)
+      .expect(({ body }) => expect(body[0].code).toBe('WAVE2026'));
   });
 });

@@ -38,6 +38,9 @@ export function validateRedemptionCodes(input: unknown): RedemptionCode[] {
     }
     if (code.region !== null && (typeof code.region !== 'string' || !code.region.trim())) errors.push(`${at}.region must be null or a non-empty string`);
     if (!Array.isArray(code.rewards) || code.rewards.some((reward) => typeof reward !== 'string' || !reward.trim())) errors.push(`${at}.rewards must be a string array`);
+    if (code.contentHash !== undefined && (typeof code.contentHash !== 'string' || !/^[a-f0-9]{64}$/.test(code.contentHash))) errors.push(`${at}.contentHash must be a SHA-256 hex string`);
+    if (code.lastVerifiedAt !== undefined && (typeof code.lastVerifiedAt !== 'string' || !isoWithZone.test(code.lastVerifiedAt) || Number.isNaN(Date.parse(code.lastVerifiedAt)))) errors.push(`${at}.lastVerifiedAt must be an ISO 8601 instant with timezone`);
+    if (code.changeHistory !== undefined && !Array.isArray(code.changeHistory)) errors.push(`${at}.changeHistory must be an array`);
     for (const field of instantFields) {
       const instant = code[field];
       if (instant != null && (typeof instant !== 'string' || !isoWithZone.test(instant) || Number.isNaN(Date.parse(instant)))) {
