@@ -1,0 +1,4 @@
+interface:
+  display_name: "Collect Official Game Data"
+  short_description: "공식 게임 일정 수집기를 정책에 맞춰 안전하게 변경합니다"
+  default_prompt: "Use $collect-official-game-data to add or repair an official game data collector."

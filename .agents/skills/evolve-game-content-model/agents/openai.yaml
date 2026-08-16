@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evolve Game Content Model"
+  short_description: "리딤코드와 콜라보 등 게임정보 데이터 모델을 확장합니다"
+  default_prompt: "Use $evolve-game-content-model to add a new game-information type safely."

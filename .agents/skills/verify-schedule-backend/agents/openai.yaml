@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Schedule Backend"
+  short_description: "수집기와 API 및 저장소 변경을 위험 기반으로 검증합니다"
+  default_prompt: "Use $verify-schedule-backend to validate this backend change and report evidence."

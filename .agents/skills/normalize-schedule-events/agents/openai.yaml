@@ -1,0 +1,4 @@
+interface:
+  display_name: "Normalize Schedule Events"
+  short_description: "공식 원문을 ScheduleEvent 형식으로 정확히 정규화합니다"
+  default_prompt: "Use $normalize-schedule-events to implement or review event normalization."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Game Integration"
+  short_description: "새 게임과 공식 소스를 전체 수집 파이프라인에 추가합니다"
+  default_prompt: "Use $add-game-integration to add a new supported game and its official sources."
