@@ -79,6 +79,40 @@ export function extractNetmarbleForumLinks(html, source) {
   return results;
 }
 
+export function selectNetmarbleForumCandidates(linkGroups, limit = 30) {
+  const selected = [];
+  const seen = new Set();
+  const positions = linkGroups.map(() => 0);
+  while (selected.length < limit) {
+    let advanced = false;
+    for (let groupIndex = 0; groupIndex < linkGroups.length && selected.length < limit; groupIndex += 1) {
+      const group = linkGroups[groupIndex];
+      while (positions[groupIndex] < group.length) {
+        const candidate = group[positions[groupIndex]++];
+        advanced = true;
+        if (seen.has(candidate.url)) continue;
+        seen.add(candidate.url);
+        selected.push(candidate);
+        break;
+      }
+    }
+    if (!advanced) break;
+  }
+  return selected;
+}
+
+export function diagnoseNetmarbleCandidate(candidate, event = null, page = null) {
+  if (candidate.error) return { title: candidate.title, sourceUrl: candidate.url, outcome: 'excluded', reason: 'detail-render-failed' };
+  const warnings = /모집|픽업|확률\s*(?:UP|업)|확정\s*획득/i.test(`${candidate.title}\n${page?.text || ''}`) && !event?.banners?.length
+    ? ['possible-banner-without-structured-pickups'] : [];
+  return {
+    title: candidate.title, sourceUrl: candidate.finalUrl || candidate.url,
+    outcome: event?.startsAt || event?.endsAt ? 'collected' : 'excluded',
+    ...(event?.startsAt || event?.endsAt ? {} : { reason: 'missing-explicit-schedule-time' }),
+    ...(warnings.length ? { warnings } : {}),
+  };
+}
+
 function meta(html, property) {
   const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const patterns = [
@@ -197,7 +231,7 @@ export function extractTime(text, referenceYear = null) {
     endsAt: iso(updateRelative[1], updateRelative[2], updateRelative[3], updateRelative[4], updateRelative[5] || '00'),
     sourceTimeText: updateRelative[0],
   };
-  const shortRange = referenceYear && text.match(/(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})\s*(?:부터|~|～|—|–|-)\s*(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})/);
+  const shortRange = referenceYear && text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일[^\d]{0,20}(\d{1,2}):(\d{2})\s*(?:부터|~|～|—|–|-)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일[^\d]{0,20}(\d{1,2}):(\d{2})/);
   if (shortRange) return { startsAt: iso(String(referenceYear), shortRange[1], shortRange[2], shortRange[3], shortRange[4]), endsAt: iso(String(referenceYear), shortRange[5], shortRange[6], shortRange[7], shortRange[8]), sourceTimeText: shortRange[0] };
   const single = text.match(/(20\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})/);
   if (single) return { startsAt: iso(single[1], single[2], single[3], single[4], single[5]), endsAt: null, sourceTimeText: single[0] };

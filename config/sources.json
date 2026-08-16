@@ -7,8 +7,13 @@
     "url": "https://forum.netmarble.com/stardive_ko/list/2/1",
     "urls": [
       "https://forum.netmarble.com/stardive_ko/list/2/1",
-      "https://forum.netmarble.com/stardive_ko/list/6/1"
+      "https://forum.netmarble.com/stardive_ko/list/3/1",
+      "https://forum.netmarble.com/stardive_ko/list/4/1",
+      "https://forum.netmarble.com/stardive_ko/list/6/1",
+      "https://forum.netmarble.com/stardive_ko/list/18/1",
+      "https://forum.netmarble.com/stardive_ko/list/20/1"
     ],
+    "dailyMaxPosts": 30,
     "allowedHosts": ["forum.netmarble.com"],
     "detailPattern": "/stardive_ko/view/",
     "redemptionCodes": {

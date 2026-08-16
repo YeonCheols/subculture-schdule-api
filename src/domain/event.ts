@@ -62,6 +62,13 @@ export interface SourceCollectionStatus {
   collectedRedemptionCodeCandidateCount?: number;
   searchDiscovery?: { skipped: boolean; candidateCount: number; errors: string[] };
   ocrErrors?: string[];
+  candidateDiagnostics?: Array<{
+    title: string;
+    sourceUrl: string;
+    outcome: 'collected' | 'excluded';
+    reason?: 'detail-render-failed' | 'missing-explicit-schedule-time';
+    warnings?: string[];
+  }>;
   error?: string;
 }
 

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, deduplicate, extractGenshinMainRedemptionCodes, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from './lib.mjs';
+import { USER_AGENT, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
 import { collectRedemptionOcrCandidates, enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 import { discoverUnofficialRedemptionCandidates } from './search-discovery.mjs';
 
@@ -45,8 +45,10 @@ async function renderUrls(urls, renderWaitMs = null) {
 async function collectSource(source) {
   if (source.kind === 'netmarble-forum') {
     const indexes = await renderUrls(source.urls || [source.url]);
-    const candidates = indexes.filter((item) => item.body).flatMap((item) => extractNetmarbleForumLinks(item.body, source))
-      .filter((item, index, all) => all.findIndex((other) => other.url === item.url) === index).slice(0, maxDetails);
+    const candidates = selectNetmarbleForumCandidates(
+      indexes.filter((item) => item.body).map((item) => extractNetmarbleForumLinks(item.body, source)),
+      Number(source.dailyMaxPosts || maxDetails),
+    );
     if (!candidates.length) throw new Error('No forum posts found after browser rendering');
     const details = await renderUrls(candidates.map((candidate) => candidate.url));
     const events = []; const redemptionCodes = []; const rawCandidates = [];
@@ -57,12 +59,18 @@ async function collectSource(source) {
       rawCandidates.push({ ...candidates[index], finalUrl: detail.finalUrl, body: detail.body });
       pages.push(page);
     }
-    for (const page of await enrichBannerPagesWithOcr(source, pages)) {
+    const enrichedPages = await enrichBannerPagesWithOcr(source, pages);
+    for (const page of enrichedPages) {
       events.push(normalize(source, page, retrievedAt));
       redemptionCodes.push(...extractRedemptionCodes(source, page, retrievedAt));
     }
+    const eventByUrl = new Map(events.map((event) => [event.sourceUrl, event]));
+    const pageByUrl = new Map(enrichedPages.map((page) => [page.canonical, page]));
+    const candidateDiagnostics = rawCandidates.map((candidate) => diagnoseNetmarbleCandidate(
+      candidate, eventByUrl.get(candidate.finalUrl || candidate.url), pageByUrl.get(candidate.finalUrl || candidate.url),
+    ));
     const redemptionCodeCandidates = await collectRedemptionOcrCandidates(source, pages, retrievedAt);
-    return { source, events, redemptionCodes, redemptionCodeCandidates, raw: { sourceId: source.id, retrievedAt, indexes, candidates: rawCandidates }, candidateCount: candidates.length };
+    return { source, events, redemptionCodes, redemptionCodeCandidates, candidateDiagnostics, raw: { sourceId: source.id, retrievedAt, indexes, candidates: rawCandidates }, candidateCount: candidates.length };
   }
 
   if (source.kind === 'hoyoverse-main-redemption') {
@@ -140,7 +148,7 @@ const status = {
   redemptionCodeCandidateCount: redemptionCodeCandidates.length, collectedRedemptionCodeCandidateCount: collectedRedemptionCodeCandidates.length,
   searchDiscovery: { skipped: searchDiscovery.skipped, candidateCount: searchDiscovery.candidates.length, errors: searchDiscovery.errors },
   sources: results.map((result, index) => result.status === 'fulfilled'
-    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt || event.endsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length, collectedRedemptionCodeCandidateCount: result.value.redemptionCodeCandidates.length, ocrErrors: result.value.redemptionCodeCandidates.errors || [] }
+    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt || event.endsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length, collectedRedemptionCodeCandidateCount: result.value.redemptionCodeCandidates.length, ocrErrors: result.value.redemptionCodeCandidates.errors || [], ...(result.value.candidateDiagnostics ? { candidateDiagnostics: result.value.candidateDiagnostics } : {}) }
     : { id: sources[index].id, ok: false, error: result.reason?.message || String(result.reason) }),
 };
 

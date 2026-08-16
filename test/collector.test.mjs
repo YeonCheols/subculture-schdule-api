@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classify, collectText, decodeHtml, deduplicate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
+import { classify, collectText, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
 import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
 import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
 
@@ -15,6 +15,13 @@ test('extracts metadata and Korean KST ranges', () => {
   const page = extractPage('<meta property="og:title" content="신규 이벤트"><p>2026. 8. 7 11:00부터 2026. 8. 9 23:59</p>', { url: 'https://example.com/detail/123', title: 'fallback' });
   assert.equal(page.title, '신규 이벤트');
   assert.deepEqual(extractTime(page.text), { startsAt: '2026-08-07T11:00:00+09:00', endsAt: '2026-08-09T23:59:00+09:00', sourceTimeText: '2026. 8. 7 11:00부터 2026. 8. 9 23:59' });
+});
+
+test('extracts spaced Korean month and day ranges used by Netmarble posts', () => {
+  assert.deepEqual(extractTime('이벤트 진행 기간 - 8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59(KST)', 2026), {
+    startsAt: '2026-08-12T09:00:00+09:00', endsAt: '2026-08-19T08:59:00+09:00',
+    sourceTimeText: '8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59',
+  });
 });
 
 test('preserves an official banner end when its start is only version-update-relative', () => {
@@ -137,6 +144,30 @@ test('extracts rendered forum links and Naver document text', () => {
   assert.match(collectText({ components: [{ value: '2026년 8월 7일 20:00' }] }), /2026년/);
   assert.equal(decodeHtml('&#x1f4e3; 공식 방송'), '📣 공식 방송');
   assert.equal(decodeHtml('&lt;개발자 라이브&gt; 안내'), '<개발자 라이브> 안내');
+});
+
+test('selects Netmarble candidates fairly across official boards', () => {
+  const shared = { url: 'https://forum.netmarble.com/stardive_ko/view/2/1', title: '고정 공지' };
+  const groups = [
+    [shared, ...Array.from({ length: 8 }, (_, index) => ({ url: `https://forum.netmarble.com/stardive_ko/view/2/${index + 10}`, title: `공지 ${index}` }))],
+    [shared, { url: 'https://forum.netmarble.com/stardive_ko/view/4/5445', title: '개발자 노트 #9' }],
+    [shared, { url: 'https://forum.netmarble.com/stardive_ko/view/6/5442', title: '8월 12일 이벤트 안내' }],
+  ];
+  const selected = selectNetmarbleForumCandidates(groups, 6);
+  assert.ok(selected.some((candidate) => candidate.url.endsWith('/4/5445')));
+  assert.ok(selected.some((candidate) => candidate.url.endsWith('/6/5442')));
+  assert.equal(new Set(selected.map((candidate) => candidate.url)).size, selected.length);
+});
+
+test('reports why an official Netmarble banner candidate was excluded', () => {
+  assert.deepEqual(diagnoseNetmarbleCandidate(
+    { title: '업데이트 안내', url: 'https://forum.netmarble.com/stardive_ko/view/3/1', finalUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1' },
+    { startsAt: null, endsAt: null },
+    { text: '신규 이벤트 [모집] 「별빛의 약속」이 추가됩니다.' },
+  ), {
+    title: '업데이트 안내', sourceUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1',
+    outcome: 'excluded', reason: 'missing-explicit-schedule-time', warnings: ['possible-banner-without-structured-pickups'],
+  });
 });
 
 test('discovers configured Naver board posts beyond current pins and keeps official authors only', () => {
