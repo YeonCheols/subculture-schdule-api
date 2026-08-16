@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, collectText, decodeHtml, deduplicate, extractNetmarbleForumLinks, extractPage, mergeEventHistory, normalize } from './lib.mjs';
+import { USER_AGENT, collectText, decodeHtml, deduplicate, extractImageUrls, extractNetmarbleForumLinks, extractPage, mergeEventHistory, normalize } from './lib.mjs';
+import { enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '../..');
@@ -131,11 +132,13 @@ async function collectWuthering(source) {
         let document = {};
         try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
         candidates += 1;
-        events.push(normalize(source, {
+        const text = collectText(document);
+        const [enriched] = await enrichBannerPagesWithOcr(source, [{
           title: decodeHtml(item.feed.title),
           canonical: `${source.canonicalBase}${item.feed.feedId}`,
-          description: '', published, text: collectText(document),
-        }, retrievedAt));
+          description: '', published, text, imageUrls: extractImageUrls(text),
+        }]);
+        events.push(normalize(source, enriched, retrievedAt));
       }
       const dates = content.feeds.map((item) => Date.parse(naverDate(item.feed?.createdDate) || '')).filter(Number.isFinite);
       if (Math.min(...dates) < fromMs || (page + 1) * pageSize >= content.totalCount) break;
@@ -155,11 +158,15 @@ async function collectMonster(source) {
   const details = await renderUrlsInBatches(links.map((item) => item.url));
   const events = [];
   let candidates = 0;
+  const pages = [];
   for (const [index, detail] of details.entries()) {
     if (!detail.body) continue;
     const page = extractPage(detail.body, { ...links[index], url: detail.finalUrl || links[index].url });
     if (!inPublicationRange(page.published)) continue;
     candidates += 1;
+    pages.push(page);
+  }
+  for (const page of await enrichBannerPagesWithOcr(source, pages)) {
     events.push(normalize(source, page, retrievedAt));
   }
   return { events, candidates };
@@ -185,14 +192,15 @@ for (const source of sources) {
     results.push({ source, ok: false, events: [], candidates: 0, error: error.message });
   }
 }
+await terminateOcrWorker();
 
-const collected = deduplicate(results.flatMap((result) => result.events).filter((event) => event.startsAt && overlapsRange(event)));
+const collected = deduplicate(results.flatMap((result) => result.events).filter((event) => (event.startsAt || event.endsAt) && overlapsRange(event)));
 let existing = [];
 try { existing = JSON.parse(await readFile(path.join(dataDirectory, 'events.json'), 'utf8')); } catch {}
 const events = mergeEventHistory(existing, collected);
 const summary = {
   from, to, write, collectedEventCount: collected.length, retainedEventCount: events.length,
-  sources: results.map((result) => ({ id: result.source.id, ok: result.ok, candidateCount: result.candidates, collectedEventCount: result.events.filter((event) => event.startsAt && overlapsRange(event)).length, ...(result.error ? { error: result.error } : {}) })),
+  sources: results.map((result) => ({ id: result.source.id, ok: result.ok, candidateCount: result.candidates, collectedEventCount: result.events.filter((event) => (event.startsAt || event.endsAt) && overlapsRange(event)).length, ...(result.error ? { error: result.error } : {}) })),
 };
 
 if (write) {
@@ -205,7 +213,7 @@ if (write) {
       id: result.source.id,
       ok: result.ok,
       candidateCount: result.candidates,
-      collectedEventCount: result.events.filter((event) => event.startsAt && overlapsRange(event)).length,
+      collectedEventCount: result.events.filter((event) => (event.startsAt || event.endsAt) && overlapsRange(event)).length,
       storedEventCount: events.filter((event) => event.gameId === result.source.gameId).length,
       ...(result.error ? { error: result.error } : {}),
     })),

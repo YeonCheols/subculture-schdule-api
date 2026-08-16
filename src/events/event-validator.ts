@@ -1,5 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import {
+  BANNER_KINDS,
+  BANNER_PHASES,
+  BANNER_EXTRACTION_METHODS,
   CONFIDENCES,
   EVENT_STATUSES,
   EVENT_TYPES,
@@ -46,8 +49,53 @@ export function validateEvents(input: unknown): ScheduleEvent[] {
       if (ids.has(event.id)) errors.push(`${at}.id duplicates ${event.id}`);
       ids.add(event.id);
     }
+    validateBanners(event.banners, at, errors);
   });
 
   if (errors.length) throw new BadRequestException({ message: 'Invalid event data', errors });
   return input as ScheduleEvent[];
+}
+
+function validateBanners(value: unknown, at: string, errors: string[]): void {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) {
+    errors.push(`${at}.banners must be an array`);
+    return;
+  }
+  value.forEach((rawBanner, bannerIndex) => {
+    const bannerAt = `${at}.banners[${bannerIndex}]`;
+    if (!rawBanner || typeof rawBanner !== 'object' || Array.isArray(rawBanner)) {
+      errors.push(`${bannerAt} must be an object`);
+      return;
+    }
+    const banner = rawBanner as Record<string, unknown>;
+    if (typeof banner.name !== 'string' || !banner.name.trim()) errors.push(`${bannerAt}.name must be a non-empty string`);
+    if (!BANNER_KINDS.includes(banner.kind as never)) errors.push(`${bannerAt}.kind is unsupported`);
+    if (!BANNER_PHASES.includes(banner.phase as never)) errors.push(`${bannerAt}.phase is unsupported`);
+    validateFeaturedTargets(banner.featuredCharacters, `${bannerAt}.featuredCharacters`, errors);
+    validateFeaturedTargets(banner.featuredWeapons, `${bannerAt}.featuredWeapons`, errors);
+    if (banner.sourceImageUrls !== undefined && (!Array.isArray(banner.sourceImageUrls) || banner.sourceImageUrls.some((url) => typeof url !== 'string' || !url.startsWith('https://')))) {
+      errors.push(`${bannerAt}.sourceImageUrls must contain only HTTPS URLs`);
+    }
+    if (banner.ocrText !== undefined && banner.ocrText !== null && typeof banner.ocrText !== 'string') errors.push(`${bannerAt}.ocrText must be a string or null`);
+  });
+}
+
+function validateFeaturedTargets(value: unknown, at: string, errors: string[]): void {
+  if (!Array.isArray(value)) {
+    errors.push(`${at} must be an array`);
+    return;
+  }
+  value.forEach((rawTarget, index) => {
+    if (!rawTarget || typeof rawTarget !== 'object' || Array.isArray(rawTarget)) {
+      errors.push(`${at}[${index}] must be an object`);
+      return;
+    }
+    const target = rawTarget as Record<string, unknown>;
+    if (typeof target.name !== 'string' || !target.name.trim()) errors.push(`${at}[${index}].name must be a non-empty string`);
+    if (target.rarity !== null && target.rarity !== 4 && target.rarity !== 5) errors.push(`${at}[${index}].rarity must be 4, 5, or null`);
+    if (target.extractionMethod !== undefined && !BANNER_EXTRACTION_METHODS.includes(target.extractionMethod as never)) errors.push(`${at}[${index}].extractionMethod is unsupported`);
+    if (target.confidence !== undefined && !CONFIDENCES.includes(target.confidence as never)) errors.push(`${at}[${index}].confidence is unsupported`);
+    if (target.extractionMethod === 'official-image-ocr' && target.confidence !== 'unverified') errors.push(`${at}[${index}].confidence must be unverified for OCR`);
+  });
 }

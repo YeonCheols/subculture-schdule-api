@@ -17,6 +17,17 @@ export function collectText(value, output = []) {
   return output.join('\n');
 }
 
+export function extractImageUrls(value = '') {
+  const urls = new Set();
+  for (const match of String(value).matchAll(/https:\/\/[^\s"'<>\\]+?\.(?:png|jpe?g|webp)(?:\?[^\s"'<>\\]*)?/gi)) {
+    try {
+      const url = new URL(decodeHtmlEntities(match[0]));
+      if (url.protocol === 'https:') urls.add(url.toString());
+    } catch {}
+  }
+  return [...urls];
+}
+
 export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
   const byId = new Map();
   for (const item of feedGroups.flat()) {
@@ -31,7 +42,8 @@ export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
       try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
       const created = item.feed.createdDate;
       const publishedAt = /^\d{14}$/.test(created) ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
-      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text: collectText(document) };
+      const text = collectText(document);
+      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text, imageUrls: extractImageUrls(text) };
     });
 }
 
@@ -80,7 +92,7 @@ export function extractPage(html, candidate) {
   const visiblePublished = decodeHtml(html).match(/\|\s*(20\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}):(\d{2})\s*\|/);
   const published = meta(html, 'article:published_time') || (visiblePublished ? `${visiblePublished[1]}-${visiblePublished[2].padStart(2, '0')}-${visiblePublished[3].padStart(2, '0')}T${visiblePublished[4].padStart(2, '0')}:${visiblePublished[5]}:00+09:00` : null);
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i)?.[1] || candidate.url;
-  return { title, description, published, canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(html) };
+  return { title, description, published, canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(html), imageUrls: extractImageUrls(html) };
 }
 
 export function classify(title) {
@@ -92,6 +104,80 @@ export function classify(title) {
   return 'notice';
 }
 
+function bannerPhase(title) {
+  if (/(?:제\s*1\s*회|1\s*차|전반)/i.test(title)) return 'first';
+  if (/(?:제\s*2\s*회|2\s*차|후반)/i.test(title)) return 'second';
+  return 'unknown';
+}
+
+function bannerKind(title, text) {
+  if (/캐릭터\s*[/·&]\s*무기|무기\s*[/·&]\s*캐릭터/i.test(title)) return 'mixed';
+  if (/무기/i.test(title)) return 'weapon';
+  if (/캐릭터|공명자/i.test(title)) return 'character';
+  const hasCharacter = /캐릭터|공명자/i.test(text);
+  const hasWeapon = /무기/i.test(text);
+  if (hasCharacter && hasWeapon) return 'mixed';
+  if (hasWeapon) return 'weapon';
+  return 'character';
+}
+
+function targetName(label) {
+  const withoutElement = label.replace(/\s*\([^)]+\)\s*$/, '').trim();
+  return withoutElement.split('·').at(-1).trim();
+}
+
+function extractFeaturedTargets(text) {
+  const characters = new Map();
+  const weapons = new Map();
+  const pattern = /★\s*([45])\s*(캐릭터|공명자|무기)\s*((?:「[^」]+」(?:\s*[,，]\s*)?)+)/g;
+  for (const match of text.matchAll(pattern)) {
+    const output = match[2] === '무기' ? weapons : characters;
+    for (const quoted of match[3].matchAll(/「([^」]+)」/g)) {
+      const name = targetName(quoted[1]);
+      output.set(name, { name, rarity: Number(match[1]) });
+    }
+  }
+  return { featuredCharacters: [...characters.values()], featuredWeapons: [...weapons.values()] };
+}
+
+function extractOcrFeaturedTargets(text = '') {
+  const characters = new Map();
+  const weapons = new Map();
+  const pattern = /(?:★\s*)?([45])\s*성\s*(?:픽업\s*)?(캐릭터|공명자|무기)\s*[:：-]?\s*[「『\[]?([가-힣A-Za-z][가-힣A-Za-z0-9 '’·-]{1,30})/gi;
+  for (const match of text.matchAll(pattern)) {
+    const output = match[2] === '무기' ? weapons : characters;
+    const name = match[3].trim().replace(/[」』\]]+$/, '').trim();
+    if (!name || /이벤트|기간|확률|안내/.test(name)) continue;
+    output.set(name, { name, rarity: Number(match[1]), extractionMethod: 'official-image-ocr', confidence: 'unverified' });
+  }
+  return { featuredCharacters: [...characters.values()], featuredWeapons: [...weapons.values()] };
+}
+
+export function extractBannerInfo(page) {
+  if (classify(page.title) !== 'banner') return [];
+  const phase = bannerPhase(page.title);
+  const banners = [];
+  const sectionPattern = /「([^」]+)」\s*(?:이벤트\s*)?(?:기원|튜닝)\s*[:：]([\s\S]*?)(?=「[^」]+」\s*(?:이벤트\s*)?(?:기원|튜닝)\s*[:：]|$)/g;
+  for (const section of page.text.matchAll(sectionPattern)) {
+    const targets = extractFeaturedTargets(section[2]);
+    const kind = targets.featuredCharacters.length && targets.featuredWeapons.length ? 'mixed'
+      : targets.featuredWeapons.length ? 'weapon' : 'character';
+    banners.push({ name: section[1].trim(), kind, phase, ...targets });
+  }
+  if (banners.length) return banners;
+
+  const bracketName = page.title.match(/[「[]([^」\]]+)[」\]]/)?.[1]?.trim();
+  const name = bracketName || page.title.trim();
+  const textTargets = extractFeaturedTargets(page.text);
+  const hasTextTargets = textTargets.featuredCharacters.length || textTargets.featuredWeapons.length;
+  const targets = hasTextTargets ? textTargets : extractOcrFeaturedTargets(page.ocrText);
+  const usedOcr = !hasTextTargets && (targets.featuredCharacters.length || targets.featuredWeapons.length);
+  return [{
+    name, kind: bannerKind(page.title, page.text), phase, ...targets,
+    ...(usedOcr ? { sourceImageUrls: page.imageUrls || [], ocrText: page.ocrText } : {}),
+  }];
+}
+
 export function extractTime(text, referenceYear = null) {
   const range = text.match(/(20\d{2})[.년\-/]\s*(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?\s*(?:부터|~|～|—|–|-)[\s\S]{0,80}?(?:(20\d{2})[.년\-/]\s*)?(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?/);
   const iso = (y, m, d, h, min) => `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${h.padStart(2, '0')}:${min.padStart(2, '0')}:00+09:00`;
@@ -99,6 +185,12 @@ export function extractTime(text, referenceYear = null) {
     const [, sy, sm, sd, sh, smin = '00', ey = sy, em, ed, eh, emin = '00'] = range;
     return { startsAt: iso(sy, sm, sd, sh, smin), endsAt: iso(ey, em, ed, eh, emin), sourceTimeText: range[0] };
   }
+  const updateRelative = text.match(/버전\s*업데이트\s*후\s*(?:부터|~|～|—|–|-)\s*(20\d{2})[.년\-/]\s*(\d{1,2})[.월\-/]\s*(\d{1,2})일?\s*(?:\([^)]+\))?\s*(\d{1,2})[:시]\s*(\d{2})?/);
+  if (updateRelative) return {
+    startsAt: null,
+    endsAt: iso(updateRelative[1], updateRelative[2], updateRelative[3], updateRelative[4], updateRelative[5] || '00'),
+    sourceTimeText: updateRelative[0],
+  };
   const shortRange = referenceYear && text.match(/(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})\s*(?:부터|~|～|—|–|-)\s*(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})/);
   if (shortRange) return { startsAt: iso(String(referenceYear), shortRange[1], shortRange[2], shortRange[3], shortRange[4]), endsAt: iso(String(referenceYear), shortRange[5], shortRange[6], shortRange[7], shortRange[8]), sourceTimeText: shortRange[0] };
   const single = text.match(/(20\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일[^\d]{0,20}(\d{1,2}):(\d{2})/);
@@ -110,13 +202,15 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
   const referenceYear = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).getFullYear() : null;
   const timing = extractTime(page.text, referenceYear);
   const digest = createHash('sha256').update(page.canonical).digest('hex').slice(0, 14);
+  const banners = extractBannerInfo(page);
   return {
     id: `${source.gameId}-${digest}`, gameId: source.gameId, type: classify(page.title),
     title: page.title.replace(/\s*-\s*몬길:\s*STAR DIVE$/i, ''), sourceTitle: page.title, sourceUrl: page.canonical,
     sourceLocale: source.locale, publishedAt: page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null,
     startsAt: timing.startsAt, endsAt: timing.endsAt, sourceTimeText: timing.sourceTimeText,
-    status: getEventStatus(timing, now), confidence: timing.startsAt ? 'confirmed' : 'probable', retrievedAt,
+    status: getEventStatus(timing, now), confidence: timing.startsAt || timing.endsAt ? 'confirmed' : 'probable', retrievedAt,
     version: page.title.match(/(?:버전|Version|v)\s*([0-9]+(?:\.[0-9]+)+)/i)?.[1] || null, summary: page.description.slice(0, 240),
+    ...(banners.length ? { banners } : {}),
   };
 }
 
@@ -223,7 +317,10 @@ export function deduplicate(events) {
 
 export function getEventStatus(event, now = Date.now()) {
   const start = Date.parse(event.startsAt);
-  if (Number.isNaN(start)) return 'unknown';
+  if (Number.isNaN(start)) {
+    const end = Date.parse(event.endsAt);
+    return !Number.isNaN(end) && end < now ? 'ended' : 'unknown';
+  }
   if (start > now) return 'upcoming';
   if (!event.endsAt) return 'ended';
   const end = Date.parse(event.endsAt);
@@ -231,7 +328,7 @@ export function getEventStatus(event, now = Date.now()) {
 }
 
 export function mergeEventHistory(existingEvents, collectedEvents, now = Date.now()) {
-  return deduplicate([...existingEvents, ...collectedEvents]).filter((event) => event.startsAt).map((event) => ({
+  return deduplicate([...existingEvents, ...collectedEvents]).filter((event) => event.startsAt || event.endsAt).map((event) => ({
     ...event,
     title: decodeHtmlEntities(event.title),
     sourceTitle: decodeHtmlEntities(event.sourceTitle),

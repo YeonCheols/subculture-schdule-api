@@ -14,6 +14,11 @@
     "redemptionCodes": {
       "enabled": true
     },
+    "bannerOcr": {
+      "enabled": true,
+      "maxPosts": 3,
+      "maxImagesPerPost": 2
+    },
     "keywords": [
       "공지",
       "이벤트",
@@ -36,6 +41,11 @@
     "officialNickname": "GM 연구소",
     "redemptionCodes": {
       "enabled": true
+    },
+    "bannerOcr": {
+      "enabled": true,
+      "maxPosts": 3,
+      "maxImagesPerPost": 2
     },
     "dailyBoardIds": [1, 28, 3],
     "dailyPageSize": 30,

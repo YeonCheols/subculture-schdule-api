@@ -15,6 +15,7 @@ describe('schedule API', () => {
     sourceUrl: 'https://example.com/event/1', sourceLocale: 'ko-KR', publishedAt: null,
     startsAt: '2026-08-07T00:00:00+09:00', endsAt: '2026-08-08T23:59:00+09:00', sourceTimeText: '8월 7일',
     status: 'active', confidence: 'confirmed', retrievedAt: '2026-08-07T00:00:00Z', version: null, summary: '',
+    banners: [{ name: '테스트 기원', kind: 'character', phase: 'first', featuredCharacters: [{ name: '테스트 캐릭터', rarity: 5 }], featuredWeapons: [] }],
   };
   const redemptionCode = {
     id: 'genshin-code-test', gameId: 'genshin', code: 'PUBLIC2026', region: null, distributionType: 'public',
@@ -47,8 +48,14 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).post('/api/internal/events/import').set('Authorization', 'Bearer test-token').send([event]).expect(201);
     const response = await request(app.getHttpServer()).get('/api/v1/events?gameId=genshin&date=2026-08-08').expect(200);
     expect(response.body).toHaveLength(1);
+    expect(response.body[0].banners[0].featuredCharacters[0]).toEqual({ name: '테스트 캐릭터', rarity: 5 });
     await request(app.getHttpServer()).get('/api/v1/collection-status').expect(200).expect(({ body }) => expect(body.eventCount).toBe(1));
   });
+
+  it('rejects malformed banner metadata', () => request(app.getHttpServer()).post('/api/internal/events/import')
+    .set('Authorization', 'Bearer test-token')
+    .send([{ ...event, banners: [{ ...event.banners[0], kind: 'artifact', featuredCharacters: [{ name: '', rarity: 6 }] }] }])
+    .expect(400));
 
   it('does not cache a missing dataset response', async () => {
     const originalDirectory = process.env.LOCAL_DATA_DIR;

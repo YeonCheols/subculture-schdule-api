@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classify, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
+import { classify, collectText, decodeHtml, deduplicate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
 
 const source = { gameId: 'genshin', locale: 'ko-KR', url: 'https://example.com/news', allowedHosts: ['example.com'], detailPattern: '/detail/', keywords: ['이벤트'], redemptionCodes: { enabled: true } };
 
@@ -15,11 +15,82 @@ test('extracts metadata and Korean KST ranges', () => {
   assert.deepEqual(extractTime(page.text), { startsAt: '2026-08-07T11:00:00+09:00', endsAt: '2026-08-09T23:59:00+09:00', sourceTimeText: '2026. 8. 7 11:00부터 2026. 8. 9 23:59' });
 });
 
+test('preserves an official banner end when its start is only version-update-relative', () => {
+  assert.deepEqual(extractTime('〓기원 기간〓 7.0 버전 업데이트 후~2026/9/1 18:59'), {
+    startsAt: null,
+    endsAt: '2026-09-01T18:59:00+09:00',
+    sourceTimeText: '버전 업데이트 후~2026/9/1 18:59',
+  });
+});
+
 test('normalizes, deduplicates, classifies, and calculates status', () => {
   const event = normalize(source, { title: '1.2 버전 업데이트', canonical: 'https://example.com/detail/123', description: '설명', published: null, text: '2026. 8. 7 11:00 ~ 2026. 8. 9 23:59' }, '2026-08-07T00:00:00Z', Date.parse('2026-08-08T00:00:00Z'));
   assert.equal(event.status, 'active');
   assert.equal(deduplicate([event, { ...event, title: '중복' }]).length, 1);
   assert.equal(classify('특별 방송 안내'), 'broadcast');
+});
+
+test('extracts multiple official character and weapon banners with rarity and phase', () => {
+  const page = {
+    title: '7.0 버전 이벤트 기원 알림 제1회',
+    canonical: 'https://genshin.hoyoverse.com/ko/news/detail/170000',
+    description: '', published: '2026-08-12T12:00:00+09:00',
+    text: [
+      '「백조의 그림자」 기원: 「백조의 춤·오데트(얼음)」 확률 UP!',
+      '● 이벤트 기간에 한정 ★5 캐릭터 「백조의 춤·오데트(얼음)」의 기원 획득 확률 대폭 증가!',
+      '● 이벤트 기간에 ★4 캐릭터 「섬광의 추적자·알료샤(번개)」, 「무해한 달콤함·설탕(바람)」의 기원 획득 확률 대폭 증가!',
+      '「신의 주조」 기원: 「한손검·백조의 호수」, 「장병기·붉은 달의 형상」 확률 UP!',
+      '● 이벤트 기간에 한정 ★5 무기 「한손검·백조의 호수」, 「장병기·붉은 달의 형상」의 기원 획득 확률 대폭 증가!',
+      '● 이벤트 기간에 ★4 무기 「한손검·페보니우스 검」, 「활·녹슨 활」의 기원 획득 확률 대폭 증가!',
+    ].join('\n'),
+  };
+
+  assert.deepEqual(extractBannerInfo(page), [
+    {
+      name: '백조의 그림자', kind: 'character', phase: 'first',
+      featuredCharacters: [{ name: '오데트', rarity: 5 }, { name: '알료샤', rarity: 4 }, { name: '설탕', rarity: 4 }],
+      featuredWeapons: [],
+    },
+    {
+      name: '신의 주조', kind: 'weapon', phase: 'first', featuredCharacters: [],
+      featuredWeapons: [{ name: '백조의 호수', rarity: 5 }, { name: '붉은 달의 형상', rarity: 5 }, { name: '페보니우스 검', rarity: 4 }, { name: '녹슨 활', rarity: 4 }],
+    },
+  ]);
+  assert.deepEqual(normalize(source, page, '2026-08-12T04:00:00Z').banners, extractBannerInfo(page));
+});
+
+test('keeps text-only banner identity without inventing image-only featured targets', () => {
+  const page = {
+    title: '[노을에 깃든 이슬] 무기 이벤트 튜닝 · 2차', canonical: 'https://game.naver.com/lounge/WutheringWaves/board/detail/1',
+    description: '', published: '2026-07-29T12:00:00+09:00', text: '이벤트 튜닝을 통해 더 많은 캐릭터와 무기를 획득하세요. 상세 픽업 대상은 공식 이미지에서 확인해 주세요.',
+  };
+  assert.deepEqual(extractBannerInfo(page), [{
+    name: '노을에 깃든 이슬', kind: 'weapon', phase: 'second', featuredCharacters: [], featuredWeapons: [],
+  }]);
+});
+
+test('extracts only strongly labeled OCR pickup targets and preserves image evidence', () => {
+  const page = {
+    title: '[별빛의 부름] 캐릭터 픽업', canonical: 'https://forum.netmarble.com/stardive_ko/view/6/1',
+    description: '', published: '2026-08-16T12:00:00+09:00', text: '상세 내용은 이미지를 확인해 주세요.',
+    imageUrls: ['https://hedwig-cf.netmarble.com/official/banner.jpg'],
+    ocrText: '5성 픽업 캐릭터: 프리렌\n4성 픽업 캐릭터: 클라우디아\n무관한 이벤트 문구\n5성 픽업 무기: 별빛의 검',
+  };
+  assert.deepEqual(extractBannerInfo(page), [{
+    name: '별빛의 부름', kind: 'character', phase: 'unknown',
+    featuredCharacters: [
+      { name: '프리렌', rarity: 5, extractionMethod: 'official-image-ocr', confidence: 'unverified' },
+      { name: '클라우디아', rarity: 4, extractionMethod: 'official-image-ocr', confidence: 'unverified' },
+    ],
+    featuredWeapons: [{ name: '별빛의 검', rarity: 5, extractionMethod: 'official-image-ocr', confidence: 'unverified' }],
+    sourceImageUrls: ['https://hedwig-cf.netmarble.com/official/banner.jpg'],
+    ocrText: page.ocrText,
+  }]);
+});
+
+test('extracts official HTTPS image URLs without accepting unrelated links', () => {
+  const value = '<img src="https://official.example/banner.jpg"><img data-src="http://unsafe.example/a.png"> https://official.example/card.webp';
+  assert.deepEqual(extractImageUrls(value), ['https://official.example/banner.jpg', 'https://official.example/card.webp']);
 });
 
 test('extracts rendered forum links and Naver document text', () => {

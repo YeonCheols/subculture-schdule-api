@@ -7,6 +7,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
 import { USER_AGENT, deduplicate, extractGenshinMainRedemptionCodes, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from './lib.mjs';
+import { enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '../..');
@@ -47,10 +48,14 @@ async function collectSource(source) {
     if (!candidates.length) throw new Error('No forum posts found after browser rendering');
     const details = await renderUrls(candidates.map((candidate) => candidate.url));
     const events = []; const redemptionCodes = []; const rawCandidates = [];
+    const pages = [];
     for (const [index, detail] of details.entries()) {
       if (!detail.body) { rawCandidates.push({ ...candidates[index], error: detail.error }); continue; }
       const page = extractPage(detail.body, { ...candidates[index], url: detail.finalUrl });
       rawCandidates.push({ ...candidates[index], finalUrl: detail.finalUrl, body: detail.body });
+      pages.push(page);
+    }
+    for (const page of await enrichBannerPagesWithOcr(source, pages)) {
       events.push(normalize(source, page, retrievedAt));
       redemptionCodes.push(...extractRedemptionCodes(source, page, retrievedAt));
     }
@@ -77,8 +82,8 @@ async function collectSource(source) {
       if (boardPayload.code !== 200 || !Array.isArray(boardPayload.content?.feeds)) throw new Error(`Invalid Naver Lounge response for board ${boardId}`);
       return boardPayload.content.feeds;
     }));
-    const pages = extractNaverOfficialPages([payload.content, ...boardPayloads], source, Number(source.dailyMaxPosts || maxDetails));
-    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter((event) => event.startsAt);
+    const pages = await enrichBannerPagesWithOcr(source, extractNaverOfficialPages([payload.content, ...boardPayloads], source, Number(source.dailyMaxPosts || maxDetails)));
+    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter((event) => event.startsAt || event.endsAt);
     const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
     return { source, events, redemptionCodes, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: pages.length };
   }
@@ -108,7 +113,8 @@ async function readExistingRedemptionCodes() {
 }
 
 const results = await Promise.allSettled(sources.map(collectSource));
-const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter((event) => event.startsAt));
+await terminateOcrWorker();
+const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter((event) => event.startsAt || event.endsAt));
 const events = mergeEventHistory(await readExistingEvents(), collectedEvents);
 const collectedRedemptionCodes = mergeRedemptionCodeHistory([], results.flatMap((result) => result.status === 'fulfilled' ? result.value.redemptionCodes : []));
 const redemptionCodes = mergeRedemptionCodeHistory(await readExistingRedemptionCodes(), collectedRedemptionCodes);
@@ -116,7 +122,7 @@ const status = {
   retrievedAt, eventCount: events.length, collectedEventCount: collectedEvents.length,
   redemptionCodeCount: redemptionCodes.length, collectedRedemptionCodeCount: collectedRedemptionCodes.length,
   sources: results.map((result, index) => result.status === 'fulfilled'
-    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length }
+    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt || event.endsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length }
     : { id: sources[index].id, ok: false, error: result.reason?.message || String(result.reason) }),
 };
 
