@@ -154,6 +154,26 @@ test('extracts rendered forum links and Naver document text', () => {
   assert.equal(decodeHtml('&lt;개발자 라이브&gt; 안내'), '<개발자 라이브> 안내');
 });
 
+test('limits Netmarble images to the official article body', () => {
+  const page = extractPage([
+    '<img src="https://sgimage.netmarble.com/ui.png">',
+    '<div class="contents_detail" id="contentsDetail"><p>신규 이벤트 [모집] “별빛의 약속”</p><img src="https://hedwig-cf.netmarble.com/official-banner.jpg"></div>',
+    '<div class="contents_detail" id="contentsBlock"><img src="https://sgimage.netmarble.com/sticker.png"></div>',
+  ].join(''), { url: 'https://forum.netmarble.com/stardive_ko/view/3/1', title: '업데이트 안내' });
+  assert.deepEqual(page.imageUrls, ['https://hedwig-cf.netmarble.com/official-banner.jpg']);
+});
+
+test('exposes official Monster recruitment names as banner candidates', () => {
+  assert.deepEqual(extractBannerInfo({
+    title: '「현실과 현상을 기록하는 이단심판관 」 업데이트 안내',
+    text: '✨ 신규 ★5 캐릭터 [메이벨] 추가 ✨ 신규 모집 추가 - 이벤트 [모집] “현실과 현상을 기록하는 이단 심판관”이 추가됩니다.',
+    imageUrls: ['https://hedwig-cf.netmarble.com/official-banner.jpg'],
+  }), [{
+    name: '현실과 현상을 기록하는 이단 심판관', kind: 'character', phase: 'unknown',
+    featuredCharacters: [{ name: '메이벨', rarity: 5 }], featuredWeapons: [], sourceImageUrls: ['https://hedwig-cf.netmarble.com/official-banner.jpg'],
+  }]);
+});
+
 test('selects Netmarble candidates fairly across official boards', () => {
   const shared = { url: 'https://forum.netmarble.com/stardive_ko/view/2/1', title: '고정 공지' };
   const groups = [
@@ -168,13 +188,14 @@ test('selects Netmarble candidates fairly across official boards', () => {
 });
 
 test('reports why an official Netmarble banner candidate was excluded', () => {
+  const banners = [{ name: '별빛의 약속', kind: 'mixed', phase: 'unknown', featuredCharacters: [], featuredWeapons: [] }];
   assert.deepEqual(diagnoseNetmarbleCandidate(
     { title: '업데이트 안내', url: 'https://forum.netmarble.com/stardive_ko/view/3/1', finalUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1' },
-    { startsAt: null, endsAt: null },
+    { startsAt: null, endsAt: null, banners },
     { text: '신규 이벤트 [모집] 「별빛의 약속」이 추가됩니다.' },
   ), {
     title: '업데이트 안내', sourceUrl: 'https://forum.netmarble.com/stardive_ko/view/3/1',
-    outcome: 'excluded', reason: 'missing-explicit-schedule-time', warnings: ['possible-banner-without-structured-pickups'],
+    outcome: 'excluded', reason: 'missing-explicit-schedule-time', banners,
   });
 });
 

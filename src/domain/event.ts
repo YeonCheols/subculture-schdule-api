@@ -67,6 +67,7 @@ export interface SourceCollectionStatus {
     sourceUrl: string;
     outcome: 'collected' | 'excluded';
     reason?: 'detail-render-failed' | 'missing-explicit-schedule-time';
+    banners?: EventBanner[];
     warnings?: string[];
   }>;
   error?: string;

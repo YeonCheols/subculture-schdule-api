@@ -109,6 +109,7 @@ export function diagnoseNetmarbleCandidate(candidate, event = null, page = null)
     title: candidate.title, sourceUrl: candidate.finalUrl || candidate.url,
     outcome: event?.startsAt || event?.endsAt ? 'collected' : 'excluded',
     ...(event?.startsAt || event?.endsAt ? {} : { reason: 'missing-explicit-schedule-time' }),
+    ...(event?.banners?.length ? { banners: event.banners } : {}),
     ...(warnings.length ? { warnings } : {}),
   };
 }
@@ -129,7 +130,8 @@ export function extractPage(html, candidate) {
   const visiblePublished = decodeHtml(html).match(/\|\s*(20\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}):(\d{2})\s*\|/);
   const published = meta(html, 'article:published_time') || (visiblePublished ? `${visiblePublished[1]}-${visiblePublished[2].padStart(2, '0')}-${visiblePublished[3].padStart(2, '0')}T${visiblePublished[4].padStart(2, '0')}:${visiblePublished[5]}:00+09:00` : null);
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i)?.[1] || candidate.url;
-  return { title, description, published, canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(html), imageUrls: extractImageUrls(html) };
+  const articleHtml = html.match(/<div\b[^>]*class=["'][^"']*contents_detail[^"']*["'][^>]*id=["']contentsDetail["'][^>]*>([\s\S]*?)(?=<div\b[^>]*class=["'][^"']*contents_detail[^"']*["'][^>]*id=["']contentsBlock["'])/i)?.[1] || html;
+  return { title, description, published, canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(articleHtml), imageUrls: extractImageUrls(articleHtml) };
 }
 
 export function classify(title) {
@@ -194,10 +196,26 @@ function extractOcrFeaturedTargets(text = '') {
 }
 
 export function extractBannerInfo(page) {
-  if (classify(page.title) !== 'banner') return [];
+  const recruitmentNames = [...String(page.text).matchAll(/이벤트\s*\[모집\]\s*[“"「]([^”"」]+)[”"」]/g)].map((match) => match[1].trim());
+  if (classify(page.title) !== 'banner' && !recruitmentNames.length) return [];
   const phase = bannerPhase(page.title);
+  const imageEvidence = page.imageUrls?.length ? { sourceImageUrls: page.imageUrls } : {};
+  if (recruitmentNames.length) {
+    const newCharacters = [...String(page.text).matchAll(/신규\s*(?:★\s*)?([45])\s*성?\s*캐릭터\s*\[\s*([^\]]+?)\s*\]/g)]
+      .map((match) => ({ name: match[2].trim(), rarity: Number(match[1]) }));
+    const newWeapons = [...String(page.text).matchAll(/신규\s*(?:★\s*)?([45])\s*성?\s*(?:무기|장비)\s*\[\s*([^\]]+?)\s*\]/g)]
+      .map((match) => ({ name: match[2].trim(), rarity: Number(match[1]) }));
+    return [...new Set(recruitmentNames)].map((name) => {
+      const matchesHeading = page.title.replace(/\s+/g, '').includes(name.replace(/\s+/g, ''));
+      const featuredCharacters = matchesHeading ? newCharacters : [];
+      const featuredWeapons = matchesHeading ? newWeapons : [];
+      const kind = featuredCharacters.length && !featuredWeapons.length ? 'character'
+        : featuredWeapons.length && !featuredCharacters.length ? 'weapon' : 'mixed';
+      return { name, kind, phase, featuredCharacters, featuredWeapons, ...imageEvidence };
+    });
+  }
   const evidence = {
-    ...(page.imageUrls?.length ? { sourceImageUrls: page.imageUrls } : {}),
+    ...imageEvidence,
     ...(page.ocrText ? { ocrText: page.ocrText } : {}),
   };
   const banners = [];

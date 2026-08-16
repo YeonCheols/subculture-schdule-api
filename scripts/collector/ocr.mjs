@@ -47,7 +47,7 @@ export async function enrichBannerPagesWithOcr(source, pages) {
   for (const page of pages) {
     const existing = extractBannerInfo(page);
     const hasTargets = existing.some((banner) => banner.featuredCharacters.length || banner.featuredWeapons.length);
-    if (classify(page.title) !== 'banner' || hasTargets || !page.imageUrls?.length || processedPosts >= maxPosts) {
+    if (!existing.length || hasTargets || !page.imageUrls?.length || processedPosts >= maxPosts) {
       enriched.push(page);
       continue;
     }
