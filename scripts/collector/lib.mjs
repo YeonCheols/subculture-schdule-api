@@ -19,7 +19,7 @@ export function collectText(value, output = []) {
 
 export function extractImageUrls(value = '') {
   const urls = new Set();
-  for (const match of String(value).matchAll(/https:\/\/[^\s"'<>\\]+?\.(?:png|jpe?g|webp)(?:\?[^\s"'<>\\]*)?/gi)) {
+  for (const match of String(value).matchAll(/https:\/\/[^\s"'<>\\]+\.(?:png|jpe?g|webp)(?:\?[^\s"'<>\\]*)?/gi)) {
     try {
       const url = new URL(decodeHtmlEntities(match[0]));
       if (url.protocol === 'https:') urls.add(url.toString());
@@ -39,11 +39,14 @@ export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
     .slice(0, limit)
     .map((item) => {
       let document = {};
-      try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
+      const contents = item.feed.contents || '';
+      try { document = JSON.parse(contents || '{}'); } catch {}
       const created = item.feed.createdDate;
       const publishedAt = /^\d{14}$/.test(created) ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
-      const text = collectText(document);
-      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text, imageUrls: extractImageUrls(text) };
+      const structuredText = collectText(document);
+      const text = structuredText || decodeHtml(contents);
+      const imageSource = `${contents}\n${item.feed.repImageUrl || ''}`;
+      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text, imageUrls: extractImageUrls(imageSource) };
     });
 }
 
@@ -129,7 +132,7 @@ function targetName(label) {
 function extractFeaturedTargets(text) {
   const characters = new Map();
   const weapons = new Map();
-  const pattern = /★\s*([45])\s*(캐릭터|공명자|무기)\s*((?:「[^」]+」(?:\s*[,，]\s*)?)+)/g;
+  const pattern = /(?:★\s*)?([45])\s*성?\s*(캐릭터|공명자|무기)\s*((?:「[^」]+」(?:\s*[,，]\s*)?)+)/g;
   for (const match of text.matchAll(pattern)) {
     const output = match[2] === '무기' ? weapons : characters;
     for (const quoted of match[3].matchAll(/「([^」]+)」/g)) {
@@ -156,13 +159,17 @@ function extractOcrFeaturedTargets(text = '') {
 export function extractBannerInfo(page) {
   if (classify(page.title) !== 'banner') return [];
   const phase = bannerPhase(page.title);
+  const evidence = {
+    ...(page.imageUrls?.length ? { sourceImageUrls: page.imageUrls } : {}),
+    ...(page.ocrText ? { ocrText: page.ocrText } : {}),
+  };
   const banners = [];
   const sectionPattern = /「([^」]+)」\s*(?:이벤트\s*)?(?:기원|튜닝)\s*[:：]([\s\S]*?)(?=「[^」]+」\s*(?:이벤트\s*)?(?:기원|튜닝)\s*[:：]|$)/g;
   for (const section of page.text.matchAll(sectionPattern)) {
     const targets = extractFeaturedTargets(section[2]);
     const kind = targets.featuredCharacters.length && targets.featuredWeapons.length ? 'mixed'
       : targets.featuredWeapons.length ? 'weapon' : 'character';
-    banners.push({ name: section[1].trim(), kind, phase, ...targets });
+    banners.push({ name: section[1].trim(), kind, phase, ...targets, ...evidence });
   }
   if (banners.length) return banners;
 
@@ -171,10 +178,9 @@ export function extractBannerInfo(page) {
   const textTargets = extractFeaturedTargets(page.text);
   const hasTextTargets = textTargets.featuredCharacters.length || textTargets.featuredWeapons.length;
   const targets = hasTextTargets ? textTargets : extractOcrFeaturedTargets(page.ocrText);
-  const usedOcr = !hasTextTargets && (targets.featuredCharacters.length || targets.featuredWeapons.length);
   return [{
     name, kind: bannerKind(page.title, page.text), phase, ...targets,
-    ...(usedOcr ? { sourceImageUrls: page.imageUrls || [], ocrText: page.ocrText } : {}),
+    ...evidence,
   }];
 }
 

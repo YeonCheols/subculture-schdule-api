@@ -111,6 +111,21 @@ test('discovers configured Naver board posts beyond current pins and keeps offic
   assert.match(pages[0].text, /F5F4D3B2A2/);
 });
 
+test('extracts banner text and complete images from official Naver HTML contents', () => {
+  const imageUrl = 'https://nng-phinf.pstatic.net/hash.PNG/01-banner.png?type=w1678';
+  const source = { canonicalBase: 'https://game.naver.com/lounge/WutheringWaves/board/detail/', officialNickname: 'GM 연구소' };
+  const official = { user: { nickname: 'GM 연구소' }, feed: {
+    feedId: 7992626, createdDate: '20260812120000', title: '[단비에서 전하는 연꽃 바람의 축복] 캐릭터 이벤트 튜닝',
+    contents: `<p>5성 캐릭터 「카르티시아」</p><img src="${imageUrl}">`,
+  } };
+
+  const [page] = extractNaverOfficialPages([[official]], source);
+  assert.match(page.text, /카르티시아/);
+  assert.deepEqual(page.imageUrls, [imageUrl]);
+  assert.deepEqual(extractBannerInfo(page)[0].featuredCharacters, [{ name: '카르티시아', rarity: 5 }]);
+  assert.deepEqual(extractBannerInfo(page)[0].sourceImageUrls, [imageUrl]);
+});
+
 test('retains history while replacing recollected URLs', () => {
   const now = Date.parse('2026-08-07T03:00:00Z');
   const existing = [{ id: 'ended', sourceUrl: 'https://example.com/ended', title: '&lt;기존&gt;', sourceTitle: '&lt;기존&gt; - 공식', startsAt: '2026-08-06T20:00:00+09:00', endsAt: null }];
