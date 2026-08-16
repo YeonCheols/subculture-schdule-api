@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classify, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractLinks, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
+import { classify, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractLinks, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
 
 const source = { gameId: 'genshin', locale: 'ko-KR', url: 'https://example.com/news', allowedHosts: ['example.com'], detailPattern: '/detail/', keywords: ['이벤트'], redemptionCodes: { enabled: true } };
 
@@ -29,6 +29,17 @@ test('extracts rendered forum links and Naver document text', () => {
   assert.equal(decodeHtml('&lt;개발자 라이브&gt; 안내'), '<개발자 라이브> 안내');
 });
 
+test('discovers configured Naver board posts beyond current pins and keeps official authors only', () => {
+  const naverSource = { gameId: 'wuthering', locale: 'ko-KR', canonicalBase: 'https://game.naver.com/lounge/WutheringWaves/board/detail/', officialNickname: 'GM 연구소' };
+  const official = { user: { nickname: 'GM 연구소' }, feed: { feedId: 7917001, createdDate: '20260711200035', title: '양양의 드림 이스케이프 · 정답 공개', contents: JSON.stringify({ components: [{ value: '최종 리딤 코드는 [F5F4D3B2A2]' }] }) } };
+  const community = { user: { nickname: '일반 사용자' }, feed: { feedId: 999, createdDate: '20260711200035', title: '비공식 코드', contents: '{}' } };
+
+  const pages = extractNaverOfficialPages([[official], [official, community]], naverSource, 30);
+  assert.equal(pages.length, 1);
+  assert.equal(pages[0].canonical, 'https://game.naver.com/lounge/WutheringWaves/board/detail/7917001');
+  assert.match(pages[0].text, /F5F4D3B2A2/);
+});
+
 test('retains history while replacing recollected URLs', () => {
   const now = Date.parse('2026-08-07T03:00:00Z');
   const existing = [{ id: 'ended', sourceUrl: 'https://example.com/ended', title: '&lt;기존&gt;', sourceTitle: '&lt;기존&gt; - 공식', startsAt: '2026-08-06T20:00:00+09:00', endsAt: null }];
@@ -51,6 +62,20 @@ test('extracts only explicit public redemption codes from official text', () => 
   assert.equal(codes[0].distributionType, 'public');
   assert.equal(codes[0].expiresAt, '2026-08-09T23:59:00+09:00');
   assert.equal(codes[0].status, 'active');
+});
+
+test('extracts a bracketed Wuthering Waves redemption code from official prose', () => {
+  const codes = extractRedemptionCodes({ ...source, gameId: 'wuthering' }, {
+    title: '양양의 드림 이스케이프 · 정답 공개',
+    canonical: 'https://game.naver.com/lounge/WutheringWaves/board/detail/7917001',
+    published: '2026-07-11T20:00:35+09:00',
+    text: '그림을 순서대로 조합한 최종 리딤 코드는\nnodeStyle\ntextNode\nSE-4d0800cf-9ee4-4ad6-8607-d9cab6d34eca\n[F5F4D3B2A2]\n입니다. 해당 리딤 코드는 3.5 버전 종료 시까지 유효합니다.',
+  }, '2026-08-16T12:50:53.008Z');
+
+  assert.equal(codes.length, 1);
+  assert.equal(codes[0].code, 'F5F4D3B2A2');
+  assert.equal(codes[0].status, 'unknown');
+  assert.equal(codes[0].sourceTimeText, '해당 리딤 코드는 3.5 버전 종료 시까지 유효');
 });
 
 test('uses the official publication year for a redemption code expiry without a year', () => {

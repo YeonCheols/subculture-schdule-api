@@ -17,6 +17,24 @@ export function collectText(value, output = []) {
   return output.join('\n');
 }
 
+export function extractNaverOfficialPages(feedGroups, source, limit = 30) {
+  const byId = new Map();
+  for (const item of feedGroups.flat()) {
+    if (item.user?.nickname !== source.officialNickname || !item.feed?.feedId) continue;
+    byId.set(String(item.feed.feedId), item);
+  }
+  return [...byId.values()]
+    .sort((a, b) => String(b.feed.createdDate || '').localeCompare(String(a.feed.createdDate || '')))
+    .slice(0, limit)
+    .map((item) => {
+      let document = {};
+      try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
+      const created = item.feed.createdDate;
+      const publishedAt = /^\d{14}$/.test(created) ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
+      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text: collectText(document) };
+    });
+}
+
 export function absoluteUrl(value, base) {
   try { return new URL(value, base).toString(); } catch { return null; }
 }
@@ -117,7 +135,8 @@ function extractRedemptionExpiry(text, referenceDate = null) {
   const shortPattern = /(?:코드\s*)?(?:사용|입력|교환|유효|만료)[^\n]{0,80}?(?<month>\d{1,2})월\s*(?<day>\d{1,2})일?[^\d\n]{0,20}(?<meridiem>오전|오후)?\s*(?<hour>\d{1,2})(?:[:시]\s*(?<minute>\d{2}))?/;
   const shortMatch = text.match(shortPattern);
   if (!shortMatch?.groups || !referenceDate || Number(shortMatch.groups.month) < referenceDate.getUTCMonth() + 1) {
-    return { expiresAt: null, sourceTimeText: '' };
+    const versionExpiry = text.match(/(?:해당\s*)?(?:리딤|교환|프로모션)\s*코드는?\s*\d+(?:\.\d+)*\s*버전\s*종료\s*시까지\s*유효/i);
+    return { expiresAt: null, sourceTimeText: versionExpiry?.[0]?.trim() || '' };
   }
   shortMatch.groups.year = String(referenceDate.getUTCFullYear());
   return { expiresAt: koreanInstant(shortMatch), sourceTimeText: shortMatch[0].trim() };
@@ -152,8 +171,15 @@ export function extractRedemptionCodes(source, page, retrievedAt, now = Date.now
   if (source.redemptionCodes?.enabled !== true) return [];
   const candidates = [];
   const text = decodeHtmlEntities(page.text || '');
-  const labeled = /(?:공용\s+쿠폰\s+코드|(?:공용\s+)?(?:리딤|교환|프로모션)\s*코드|redeem(?:ption)?\s+code)\s*[:：]?\s*([A-Za-z0-9]{6,32})/gi;
+  const labeled = /(?:공용[ \t]+쿠폰[ \t]+코드|(?:공용[ \t]+)?(?:리딤|교환|프로모션)[ \t]*코드|redeem(?:ption)?[ \t]+code)(?:는|은)?[ \t]*[:：]?[ \t]*[\[【(]?([A-Za-z0-9]{6,32})[\]】)]?/gi;
   for (const match of text.matchAll(labeled)) {
+    const context = text.slice(Math.max(0, match.index - 80), match.index + match[0].length + 80);
+    if (/초대|추천|개별|1회용|구매\s*시|계정당\s*발급/i.test(context)) continue;
+    candidates.push({ code: match[1], redemptionUrl: null });
+  }
+
+  const bracketedProse = /(?:공용\s+쿠폰\s+코드|(?:공용\s+)?(?:리딤|교환|프로모션)\s*코드)(?:는|은)?[\s\S]{0,180}?\[([A-Za-z0-9]{6,32})\]/gi;
+  for (const match of text.matchAll(bracketedProse)) {
     const context = text.slice(Math.max(0, match.index - 80), match.index + match[0].length + 80);
     if (/초대|추천|개별|1회용|구매\s*시|계정당\s*발급/i.test(context)) continue;
     candidates.push({ code: match[1], redemptionUrl: null });

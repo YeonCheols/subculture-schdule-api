@@ -37,6 +37,9 @@
     "redemptionCodes": {
       "enabled": true
     },
+    "dailyBoardIds": [1, 28, 3],
+    "dailyPageSize": 30,
+    "dailyMaxPosts": 90,
     "backfillBoardIds": [1, 28, 3],
     "keywords": [
       "공지",

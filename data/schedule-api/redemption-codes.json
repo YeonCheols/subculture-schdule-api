@@ -15,7 +15,7 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=Everwinter",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T12:42:29.008Z"
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
   },
   {
     "id": "genshin-code-bcaf5e47855def",
@@ -33,7 +33,7 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=OntoSnezhnaya",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T12:42:29.008Z"
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
   },
   {
     "id": "genshin-code-b7be36af4fcb41",
@@ -51,7 +51,7 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=Odette0812",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T12:42:29.008Z"
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
   },
   {
     "id": "monster-code-cc80d537afdc2c",
@@ -69,7 +69,7 @@
     "redemptionUrl": null,
     "rewards": [],
     "status": "active",
-    "retrievedAt": "2026-08-16T12:42:29.008Z"
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
   },
   {
     "id": "monster-code-1b54030a6e9497",
@@ -87,6 +87,24 @@
     "redemptionUrl": null,
     "rewards": [],
     "status": "active",
-    "retrievedAt": "2026-08-16T12:42:29.008Z"
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
+  },
+  {
+    "id": "wuthering-code-636010e51f114a",
+    "gameId": "wuthering",
+    "code": "F5F4D3B2A2",
+    "region": null,
+    "distributionType": "public",
+    "sourceTitle": "양양의 드림 이스케이프 · 정답 공개",
+    "sourceUrl": "https://game.naver.com/lounge/WutheringWaves/board/detail/7917001",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-11T11:00:35.000Z",
+    "startsAt": null,
+    "expiresAt": null,
+    "sourceTimeText": "해당 리딤 코드는 3.5 버전 종료 시까지 유효",
+    "redemptionUrl": null,
+    "rewards": [],
+    "status": "unknown",
+    "retrievedAt": "2026-08-16T13:00:35.703Z"
   }
 ]

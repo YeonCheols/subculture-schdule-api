@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from './lib.mjs';
+import { USER_AGENT, deduplicate, extractGenshinMainRedemptionCodes, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from './lib.mjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '../..');
@@ -69,17 +69,18 @@ async function collectSource(source) {
   if (source.kind === 'naver-lounge-pins') {
     const payload = JSON.parse(index.body);
     if (payload.code !== 200 || !Array.isArray(payload.content)) throw new Error('Invalid Naver Lounge official feed response');
-    const officialFeeds = payload.content.filter((item) => item.user?.nickname === source.officialNickname).slice(0, maxDetails);
-    const pages = officialFeeds.map((item) => {
-      let document = {};
-      try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
-      const created = item.feed.createdDate;
-      const publishedAt = /^\d{14}$/.test(created) ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
-      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text: collectText(document) };
-    });
+    const pageSize = Math.min(Number(source.dailyPageSize || 30), 50);
+    const boardPayloads = await Promise.all((source.dailyBoardIds || []).map(async (boardId) => {
+      const url = new URL('https://comm-api.game.naver.com/nng_main/v1/community/lounge/WutheringWaves/feed');
+      url.search = new URLSearchParams({ offset: '0', limit: String(pageSize), order: 'NEW', boardId: String(boardId), buffFilteringYN: 'N' });
+      const boardPayload = JSON.parse((await request(url)).body);
+      if (boardPayload.code !== 200 || !Array.isArray(boardPayload.content?.feeds)) throw new Error(`Invalid Naver Lounge response for board ${boardId}`);
+      return boardPayload.content.feeds;
+    }));
+    const pages = extractNaverOfficialPages([payload.content, ...boardPayloads], source, Number(source.dailyMaxPosts || maxDetails));
     const events = pages.map((page) => normalize(source, page, retrievedAt)).filter((event) => event.startsAt);
     const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
-    return { source, events, redemptionCodes, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: officialFeeds.length };
+    return { source, events, redemptionCodes, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: pages.length };
   }
 
   if (source.kind === 'hoyoverse-content') {
