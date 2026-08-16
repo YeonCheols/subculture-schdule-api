@@ -82,6 +82,11 @@ export function extractNetmarbleForumLinks(html, source) {
 export function selectNetmarbleForumCandidates(linkGroups, limit = 30) {
   const selected = [];
   const seen = new Set();
+  for (const candidate of linkGroups.flat().filter((item) => /,\s*[^,]+\s*등장!/.test(item.title))) {
+    if (selected.length >= limit || seen.has(candidate.url)) continue;
+    seen.add(candidate.url);
+    selected.push(candidate);
+  }
   const positions = linkGroups.map(() => 0);
   while (selected.length < limit) {
     let advanced = false;
@@ -197,17 +202,34 @@ function extractOcrFeaturedTargets(text = '') {
 
 export function extractBannerInfo(page) {
   const recruitmentNames = [...String(page.text).matchAll(/이벤트\s*\[모집\]\s*[“"「]([^”"」]+)[”"」]/g)].map((match) => match[1].trim());
-  if (classify(page.title) !== 'banner' && !recruitmentNames.length) return [];
+  const showcase = page.title.match(/^(.+),\s*([^,]+?)\s*등장!\s*(?:-\s*몬길:\s*STAR DIVE)?$/i);
+  if (classify(page.title) !== 'banner' && !recruitmentNames.length && !showcase) return [];
   const phase = bannerPhase(page.title);
   const imageEvidence = page.imageUrls?.length ? { sourceImageUrls: page.imageUrls } : {};
+  if (showcase && !recruitmentNames.length) {
+    return [{
+      name: showcase[1].trim(), kind: 'character', phase,
+      featuredCharacters: [{ name: showcase[2].trim(), rarity: null }], featuredWeapons: [], ...imageEvidence,
+    }];
+  }
   if (recruitmentNames.length) {
     const newCharacters = [...String(page.text).matchAll(/신규\s*(?:★\s*)?([45])\s*성?\s*캐릭터\s*\[\s*([^\]]+?)\s*\]/g)]
-      .map((match) => ({ name: match[2].trim(), rarity: Number(match[1]) }));
+      .map((match) => {
+        const name = match[2].trim();
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const descriptor = String(page.text).match(new RegExp(`-\\s*([^,]{2,100}),\\s*\\[\\s*${escapedName}\\s*\\]가\\s*신규\\s*캐릭터`))?.[1]?.trim() || '';
+        return { name, rarity: Number(match[1]), descriptor };
+      });
     const newWeapons = [...String(page.text).matchAll(/신규\s*(?:★\s*)?([45])\s*성?\s*(?:무기|장비)\s*\[\s*([^\]]+?)\s*\]/g)]
       .map((match) => ({ name: match[2].trim(), rarity: Number(match[1]) }));
     return [...new Set(recruitmentNames)].map((name) => {
-      const matchesHeading = page.title.replace(/\s+/g, '').includes(name.replace(/\s+/g, ''));
-      const featuredCharacters = matchesHeading ? newCharacters : [];
+      const compactName = name.replace(/\s+/g, '');
+      const matchesHeading = page.title.replace(/\s+/g, '').includes(compactName);
+      const featuredCharacters = newCharacters.filter((target) => {
+        const compactDescriptor = target.descriptor.replace(/\s+/g, '');
+        return matchesHeading || (compactDescriptor && (compactDescriptor.includes(compactName) || compactName.includes(compactDescriptor)));
+      })
+        .map(({ descriptor, ...target }) => target);
       const featuredWeapons = matchesHeading ? newWeapons : [];
       const kind = featuredCharacters.length && !featuredWeapons.length ? 'character'
         : featuredWeapons.length && !featuredCharacters.length ? 'weapon' : 'mixed';

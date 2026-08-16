@@ -174,6 +174,28 @@ test('exposes official Monster recruitment names as banner candidates', () => {
   }]);
 });
 
+test('associates a Monster recruitment with its explicitly described new character', () => {
+  const banners = extractBannerInfo({
+    title: '「추앙하지 않는 자, 모두 유죄」 업데이트 안내',
+    text: '신규 ★5 캐릭터 [나기] 추가 - 백린의 무녀, [나기]가 신규 캐릭터로 추가됩니다. 신규 모집 추가 - 이벤트 [모집] “백린의 무녀”가 추가됩니다. - 이벤트 [모집] “교룡의 백린”이 추가됩니다.',
+    imageUrls: ['https://hedwig-cf.netmarble.com/update.jpg'],
+  });
+  assert.deepEqual(banners[0].featuredCharacters, [{ name: '나기', rarity: 5 }]);
+  assert.deepEqual(banners[1].featuredCharacters, []);
+});
+
+test('exposes an official Monster character showcase as a pickup candidate', () => {
+  assert.deepEqual(extractBannerInfo({
+    title: '메이드와 토끼풀 여관의 간판 메이드, 에스데 등장! - 몬길: STAR DIVE',
+    text: '',
+    imageUrls: ['https://hedwig-cf.netmarble.com/esde.jpg'],
+  }), [{
+    name: '메이드와 토끼풀 여관의 간판 메이드', kind: 'character', phase: 'unknown',
+    featuredCharacters: [{ name: '에스데', rarity: null }], featuredWeapons: [],
+    sourceImageUrls: ['https://hedwig-cf.netmarble.com/esde.jpg'],
+  }]);
+});
+
 test('selects Netmarble candidates fairly across official boards', () => {
   const shared = { url: 'https://forum.netmarble.com/stardive_ko/view/2/1', title: '고정 공지' };
   const groups = [
@@ -185,6 +207,20 @@ test('selects Netmarble candidates fairly across official boards', () => {
   assert.ok(selected.some((candidate) => candidate.url.endsWith('/4/5445')));
   assert.ok(selected.some((candidate) => candidate.url.endsWith('/6/5442')));
   assert.equal(new Set(selected.map((candidate) => candidate.url)).size, selected.length);
+});
+
+test('prioritizes official Monster character showcases within the daily detail limit', () => {
+  const selected = selectNetmarbleForumCandidates([
+    [
+      { url: 'https://forum.netmarble.com/stardive_ko/view/2/1', title: '일반 공지' },
+      { url: 'https://forum.netmarble.com/stardive_ko/view/2/2', title: '추가 공지' },
+    ],
+    [
+      { url: 'https://forum.netmarble.com/stardive_ko/view/20/3', title: '공식 영상' },
+      { url: 'https://forum.netmarble.com/stardive_ko/view/20/4', title: '간판 메이드, 에스데 등장!' },
+    ],
+  ], 2);
+  assert.ok(selected.some((candidate) => candidate.title.includes('에스데 등장!')));
 });
 
 test('reports why an official Netmarble banner candidate was excluded', () => {

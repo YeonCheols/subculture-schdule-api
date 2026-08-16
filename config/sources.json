@@ -13,7 +13,7 @@
       "https://forum.netmarble.com/stardive_ko/list/18/1",
       "https://forum.netmarble.com/stardive_ko/list/20/1"
     ],
-    "dailyMaxPosts": 30,
+    "dailyMaxPosts": 31,
     "allowedHosts": ["forum.netmarble.com"],
     "detailPattern": "/stardive_ko/view/",
     "redemptionCodes": {
