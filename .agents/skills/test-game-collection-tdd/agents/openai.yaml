@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Game Collection TDD"
+  short_description: "공식 게임 수집기를 TDD로 재현하고 검증합니다"
+  default_prompt: "Use $test-game-collection-tdd to verify the official game collectors with a red-green-refactor workflow."
