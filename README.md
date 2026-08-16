@@ -23,6 +23,7 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `POST` | `/api/internal/redemption-code-candidates/import` | 인증된 후보 데이터 import |
 | `PATCH` | `/api/internal/redemption-code-candidates/:id` | 후보 승인 또는 거절 |
 | `GET` | `/api/v1/redemption-codes?gameId=genshin&status=active` | 공식 본문에서 확인한 공용 리딤코드 조회 |
+| `GET` | `/api/v1/redemption-codes/expiring-today?gameId=genshin` | 한국 시간 기준 오늘 만료되는 리딤코드 조회 |
 | `POST` | `/api/internal/events/import` | 수동/외부 데이터 저장(Bearer 인증) |
 | `POST` | `/api/internal/redemption-codes/import` | 리딤코드 저장(Bearer 인증) |
 
