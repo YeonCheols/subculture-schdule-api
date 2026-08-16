@@ -18,6 +18,24 @@
     "summary": ""
   },
   {
+    "id": "monster-92c58ed61141b4",
+    "gameId": "monster",
+    "type": "maintenance",
+    "title": "4월 23일(목) 업데이트 및 점검 안내 (4/23 07:45 수정) [점검 완료]",
+    "sourceTitle": "4월 23일(목) 업데이트 및 점검 안내 (4/23 07:45 수정) [점검 완료] - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/1650",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-04-22T15:28:00.000Z",
+    "startsAt": "2026-04-24T09:00:00+09:00",
+    "endsAt": "2026-04-27T08:59:00+09:00",
+    "sourceTimeText": "4월 24일(금) 09:00 ~ 4월 27일(월) 08:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
     "id": "genshin-61d53096a6f5b2",
     "gameId": "genshin",
     "type": "banner",
@@ -49,7 +67,25 @@
     "sourceTimeText": "2026.04.30(목) 12:00 ~ 2026.05.28(목) 11:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-0c4b7e7a4034c5",
+    "gameId": "monster",
+    "type": "update",
+    "title": "4월 29일(수)「잔영을 거두는 불꽃」업데이트 안내 (4월 30일 (목) 13:47 내용 수정)",
+    "sourceTitle": "4월 29일(수)「잔영을 거두는 불꽃」업데이트 안내 (4월 30일 (목) 13:47 내용 수정) - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/2208",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-04-29T01:02:00.000Z",
+    "startsAt": "2026-05-06T09:00:00+09:00",
+    "endsAt": "2026-05-27T08:59:00+09:00",
+    "sourceTimeText": "5월 6일(수) 09:00 ~ 5월 27일(수) 08:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -106,6 +142,24 @@
     "retrievedAt": "2026-08-09T14:42:38.577Z",
     "version": null,
     "summary": "이벤트 기간에 웹이벤트 임무를 완료하면 원석과 「각설탕」을 획득할 수 있습니다. 「각설탕」은 추첨에 사용되는 재화로, 추첨을 진행하면 다양한 보상을 획득할 수 있습니다."
+  },
+  {
+    "id": "monster-0bb845c3e20cde",
+    "gameId": "monster",
+    "type": "notice",
+    "title": "개발자 노트 #6 [6/1 21:50 수정]",
+    "sourceTitle": "개발자 노트 #6 [6/1 21:50 수정] - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/4348",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-06-01T12:44:00.000Z",
+    "startsAt": "2026-06-08T09:00:00+09:00",
+    "endsAt": null,
+    "sourceTimeText": "2026년 6월 8일(월) 오전 9:00",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
   },
   {
     "id": "genshin-d47b6d13862c6a",
@@ -193,7 +247,7 @@
     "sourceTimeText": "버전 업데이트 후 ~ 2026년 7월 30일 10:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
@@ -201,8 +255,59 @@
         "name": "캐릭터/무기 이벤트 튜닝 · 1차",
         "kind": "mixed",
         "phase": "first",
-        "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredCharacters": [
+          {
+            "name": "헤르센",
+            "rarity": 5
+          },
+          {
+            "name": "단근",
+            "rarity": 4
+          },
+          {
+            "name": "치샤",
+            "rarity": 4
+          },
+          {
+            "name": "알토",
+            "rarity": 4
+          },
+          {
+            "name": "린네",
+            "rarity": 5
+          }
+        ],
+        "featuredWeapons": [
+          {
+            "name": "한낮의 의지",
+            "rarity": 5
+          },
+          {
+            "name": "야귀의 신념",
+            "rarity": 4
+          },
+          {
+            "name": "천공의 역행",
+            "rarity": 4
+          },
+          {
+            "name": "기묘한 울림",
+            "rarity": 4
+          },
+          {
+            "name": "스펙트럼 블래스터",
+            "rarity": 5
+          }
+        ],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfODgg/MDAxNzgzNTY1NDQ4OTYx.D4yvtcoPIj0XktCueBH8tCujblLLQ-cEdMokvyVuGgQg.5VTr_hHcWdIPkmjNfz7t8QfCVPxrfUiGPkAZQywLMUMg.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfNjkg/MDAxNzgzNTY1NjI0OTUx.pO0NU8Smbfo4NgcMkxY5ln_laH_9hIOFnTT2k5Nc7XMg.q7pBeUYL5HVwmglqbkIuk6rLewzbkDjv5mxdxe8BFS4g.JPEG/2.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfNzUg/MDAxNzgzNTY1NjI0Nzk5.lAYJb30S0WPiUwMtYvibwf_fsuNNjmM4S_N4UXBuUasg.Fn7olWeHopb7-7i6kZ0wpEvDp1975sFqTHcNcLfGR4Ug.JPEG/3.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfMTUg/MDAxNzgzNTY1NjI0Mjkw.PrxpkJqSnzwbrAFdZPooQ2lvStnRw8S7Bv7nGtFUAoQg.6aLilkZiQDCX83wrS6gUjvCX-RSX5TXwQAftLD04aa4g.JPEG/0.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfMTA1/MDAxNzgzNTY1NjI0MjIy.Xttl5BrQDnf864r-ZmkGjsXABRhgnHYEO1Dsr2UjtVsg.Ee3ByDKc0MOhoxkDRcdqS4XTEXLYhkFyrG2-v7ZnKzEg.JPEG/1.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfOTIg/MDAxNzgzNTY1NDQ4NzU0.SdUlLIDeOlgdLZIDxcs0TSle4i7pfH90j81mwNstrNwg.5IijERRZTQoKOGimRmEMzMtAn_lDZFVnN-iycb2gey8g.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDlfOTIg/MDAxNzgzNTY1NDQ4NzU0.SdUlLIDeOlgdLZIDxcs0TSle4i7pfH90j81mwNstrNwg.5IijERRZTQoKOGimRmEMzMtAn_lDZFVnN-iycb2gey8g.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -220,16 +325,35 @@
     "sourceTimeText": "버전 업데이트 후 ~ 2026년 8월 19일 12:59",
     "status": "unknown",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "여정이 남긴 울림",
-        "kind": "mixed",
+        "kind": "character",
         "phase": "unknown",
-        "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredCharacters": [
+          {
+            "name": "복링",
+            "rarity": 4
+          },
+          {
+            "name": "산화",
+            "rarity": 4
+          },
+          {
+            "name": "양양",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": [],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMjg1/MDAxNzgzNTA4NzkzMzQy.wouPBzkJ2tJggAAdW11QiPMvpBeygrek9vA_vKrAS-Mg.7XFkHWTi7-yrNl0719a2BFzAx5MxLWDDt04mc59jsT0g.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfODgg/MDAxNzgzNTA4OTMzNTMx.gpURwFzqjFF2redCmEPvKtTLDpYAF6kzatekM0i0rlog.X3WGXH70Lm46s7rPVUM9qrXDEEae2y5Ggz4lJr7n95kg.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTQ5/MDAxNzgzNTA4NzkyNzk4.u7AsrN4gqI2dlQYEWrY8pSv-y8FzbdD0qh2Cf3JH_kEg.O0Ag4JzE46PV34LYIem1Hp-38BZ8XDQcsnrvPLh3r1Mg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTQ5/MDAxNzgzNTA4NzkyNzk4.u7AsrN4gqI2dlQYEWrY8pSv-y8FzbdD0qh2Cf3JH_kEg.O0Ag4JzE46PV34LYIem1Hp-38BZ8XDQcsnrvPLh3r1Mg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -247,16 +371,59 @@
     "sourceTimeText": "버전 업데이트 후 ~ 2026년 8월 19일 12:59",
     "status": "unknown",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "울림에 새겨진 추억",
-        "kind": "mixed",
+        "kind": "weapon",
         "phase": "unknown",
         "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredWeapons": [
+          {
+            "name": "청룡의 천장",
+            "rarity": 5
+          },
+          {
+            "name": "꼭두각시의 손",
+            "rarity": 5
+          },
+          {
+            "name": "태평성대",
+            "rarity": 5
+          },
+          {
+            "name": "솟아오르는 화염",
+            "rarity": 5
+          },
+          {
+            "name": "옥수 비단",
+            "rarity": 5
+          },
+          {
+            "name": "팔방의 천추",
+            "rarity": 5
+          },
+          {
+            "name": "장야의 불빛",
+            "rarity": 4
+          },
+          {
+            "name": "판타지 변주",
+            "rarity": 4
+          },
+          {
+            "name": "영원의 붕괴",
+            "rarity": 4
+          }
+        ],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTg5/MDAxNzgzNTEwMjEzNzg3.roLSBCjkQPq7baqKoAGoMNl6p2I7XCdINsBDhaGBwgQg.TBYWQGQfobv7f9xcnsIgIExbuMSJchZWyt3LmPPalYYg.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMjg2/MDAxNzgzNTEwMjUwMDYx.-4bgfEyICfin-WLMGkE5upZtHu2ErjIaR8RsxanqxyAg.Okiajlm7efA8PSZ86bkjOE7jvfxhVVMsSKwaFB_RiaUg.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfNyAg/MDAxNzgzNTEwMjEzMzc2.QwQe-sGGTKd2gBhiYVz6NNUnggzHdViVnirMyNqR4W8g.vZNDaZOlyxLrbNVuRUjjOZgoBD3fZ3EGFiemM4JVHwgg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfNyAg/MDAxNzgzNTEwMjEzMzc2.QwQe-sGGTKd2gBhiYVz6NNUnggzHdViVnirMyNqR4W8g.vZNDaZOlyxLrbNVuRUjjOZgoBD3fZ3EGFiemM4JVHwgg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -274,7 +441,7 @@
     "sourceTimeText": "2026년 7월 10일 05:00 ~ 2026년 7월 10일 12:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -292,7 +459,7 @@
     "sourceTimeText": "7월 11일(토) 10:00 ~ 7월 19일(일) 23:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -310,7 +477,43 @@
     "sourceTimeText": "2026년 7월 11일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-98a96c4abadb09",
+    "gameId": "monster",
+    "type": "notice",
+    "title": "몬길: STAR DIVE X 네이버페이 즉시 할인 프로모션 안내 [종료]",
+    "sourceTitle": "몬길: STAR DIVE X 네이버페이 즉시 할인 프로모션 안내 [종료] - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5077",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-15T01:00:00.000Z",
+    "startsAt": "2026-07-15T10:00:00+09:00",
+    "endsAt": "2026-07-31T23:59:00+09:00",
+    "sourceTimeText": "2026년 07월 15일(수) 10:00 - 2026년 7월 31일(화) 23:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-038276fea712a2",
+    "gameId": "monster",
+    "type": "event",
+    "title": "7월 15일(수) 시원한 여름 바캉스! 접속 보상 이벤트 안내",
+    "sourceTitle": "7월 15일(수) 시원한 여름 바캉스! 접속 보상 이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5152",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-14T09:00:00.000Z",
+    "startsAt": "2026-07-15T19:00:00+09:00",
+    "endsAt": "2026-07-22T18:59:00+09:00",
+    "sourceTimeText": "7월 15일(수) 19:00 - 7월 22일(수) 18:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -346,7 +549,7 @@
     "sourceTimeText": "2026년 7월 16일 11:00 ~ 2026년 8월 6일 04:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -365,6 +568,24 @@
     "status": "active",
     "confidence": "confirmed",
     "retrievedAt": "2026-08-16T12:06:33.434Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-4befe6ed657900",
+    "gameId": "monster",
+    "type": "notice",
+    "title": "여름맞이! App Store 프로모션 안내",
+    "sourceTitle": "여름맞이! App Store 프로모션 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5184",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-20T02:00:00.000Z",
+    "startsAt": "2026-07-20T00:00:00+09:00",
+    "endsAt": "2026-08-02T23:59:00+09:00",
+    "sourceTimeText": "7 월 20일(월) 00:00 ~ 8월 2일(일) 23:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -418,7 +639,25 @@
     "sourceTimeText": "2026년 7월 23일 05:00 ~ 2026년 7월 30일 04:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-f97f26eb1c30a5",
+    "gameId": "monster",
+    "type": "event",
+    "title": "몬길: STAR DIVE X Galaxy Z Fold8 Ultra I Fold8 I Flip8 출시 기념 – 미나, 나래 스페셜 테마 증정 이벤트 안내",
+    "sourceTitle": "몬길: STAR DIVE X Galaxy Z Fold8 Ultra I Fold8 I Flip8 출시 기념 – 미나, 나래 스페셜 테마 증정 이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5274",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-23T02:00:00.000Z",
+    "startsAt": "2026-07-24T09:00:00+09:00",
+    "endsAt": "2026-08-03T20:00:00+09:00",
+    "sourceTimeText": "7월 24일(금) 09:00 ~ 8월 3일(월) 20:00",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -454,16 +693,39 @@
     "sourceTimeText": "2026년 7월 30일 10:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "아득히 푸른 하늘",
-        "kind": "mixed",
+        "kind": "weapon",
         "phase": "unknown",
         "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredWeapons": [
+          {
+            "name": "아득히 푸른 하늘",
+            "rarity": 5
+          },
+          {
+            "name": "야귀의 신념",
+            "rarity": 4
+          },
+          {
+            "name": "천공의 역행",
+            "rarity": 4
+          },
+          {
+            "name": "기묘한 울림",
+            "rarity": 4
+          }
+        ],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMjE3/MDAxNzgzNDk1MjMxOTU5.Qk5b7FDd1H_SxbkC13Yy4mTmnlWiTSdeXqjMy-tlSA4g.wqGQBsCOsFeMl2sOQZY6PRzJRtHqn_qPpdn60demooIg.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTIw/MDAxNzgzNDk1MjYzNDc3.pYk21kR-TZ7-3T34aiY6IWZJ67nmf8S7M79HI3fkP48g.EWTiZrturicYqGQ2F3CrD3_OatQKCkf37zeBnlXJm7Eg.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTE5/MDAxNzgzNDk1MzM5MDM4.qSxld-Qf4BSNWggQtLj_urgvpfiKFcZhSPp9PALt7SYg.mM6UiA3lTq_Q5ms5FfW0KcFlg4bmoPU16x0iTnt7C1Ag.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTE5/MDAxNzgzNDk1MzM5MDM4.qSxld-Qf4BSNWggQtLj_urgvpfiKFcZhSPp9PALt7SYg.mM6UiA3lTq_Q5ms5FfW0KcFlg4bmoPU16x0iTnt7C1Ag.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -481,16 +743,39 @@
     "sourceTimeText": "2026년 7월 30일 10:59",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "깃털에 실은 만물의 소리",
-        "kind": "mixed",
+        "kind": "character",
         "phase": "unknown",
-        "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredCharacters": [
+          {
+            "name": "현령",
+            "rarity": 5
+          },
+          {
+            "name": "단근",
+            "rarity": 4
+          },
+          {
+            "name": "치샤",
+            "rarity": 4
+          },
+          {
+            "name": "알토",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": [],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfNzIg/MDAxNzgzNDk0ODc0MTQx.bR7UoEyMN6jlCzgLamTBhcinDf84K1B8qy7kAMo6GUsg.cRvWgWpZ4wQ_f2cYJmGnqdlKxKzMYXdR9z6RGJAtV6Ig.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMjQ1/MDAxNzgzNDk0OTAxODY2.y7FIkrSCMyKQoPa2ZvlaOOfaJIlLMWhp-WEse0oyNtsg.yRT-Lj6ggqqDR7_zh7aVNHV_lU5sri3tMHir9VJYQnIg.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTE5/MDAxNzgzNDk0OTc3OTE4.BXusCm1KMZMjh2y2d1M62ONKI1B1RomUYK7XRRcqOlkg.CbmshP3BQSAw9IeR0aAow9ORS0oJUgNzKQWWRLKhoaYg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MDhfMTE5/MDAxNzgzNDk0OTc3OTE4.BXusCm1KMZMjh2y2d1M62ONKI1B1RomUYK7XRRcqOlkg.CbmshP3BQSAw9IeR0aAow9ORS0oJUgNzKQWWRLKhoaYg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -526,7 +811,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 13일 11:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -544,7 +829,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 04:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -562,7 +847,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
@@ -570,8 +855,49 @@
         "name": "캐릭터/무기 이벤트 튜닝 · 2차",
         "kind": "mixed",
         "phase": "second",
-        "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredCharacters": [
+          {
+            "name": "에이메스",
+            "rarity": 5
+          },
+          {
+            "name": "설지",
+            "rarity": 4
+          },
+          {
+            "name": "모르테피",
+            "rarity": 4
+          },
+          {
+            "name": "루미",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": [
+          {
+            "name": "영원한 샛별",
+            "rarity": 5
+          },
+          {
+            "name": "판타지 변주",
+            "rarity": 4
+          },
+          {
+            "name": "영원의 붕괴",
+            "rarity": 4
+          },
+          {
+            "name": "역설의 격류",
+            "rarity": 4
+          }
+        ],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTM5/MDAxNzg1MjI2NTQwNzIy.rwh5l0L-peBaSW3wKmGS9NbZ-2cmZTilwx5AObAzkq0g.WNaW-PKhYGhFm-W5jLxvKEYJ2EQj5Nt1jchv0IvBIm4g.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMjgx/MDAxNzg1MjI2NjY4MjI2.wtrsogIRN60h0bJl7LYNaSjYDVnzgWC9Q_fb9Utriqcg.dS8olh3lkEKh3mtzey8eS90meYR0U03Vmnycgl3hpNYg.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTQ5/MDAxNzg1MjI2ODQzNTIz.ZLqaCYEQ4oyQ-ifF9Bck84ayH20ovETaMKbV-UiM6UEg.UG2gKsUpkUugJTX1UAkhrv-mlPSaUAtH2l6MBLWWdKog.JPEG/KR.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTU0/MDAxNzg1MjI2NTQwNjIz.61aPH_A7Ug-N-_jHLYPZw9mCvyiNn4a1ZMobEb_Eeasg.h7ZDAI-ShF8qZcoBewntTOMLu3hB4UDB3eomjQKZ5zUg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTU0/MDAxNzg1MjI2NTQwNjIz.61aPH_A7Ug-N-_jHLYPZw9mCvyiNn4a1ZMobEb_Eeasg.h7ZDAI-ShF8qZcoBewntTOMLu3hB4UDB3eomjQKZ5zUg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -589,16 +915,39 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "노을에 깃든 이슬",
-        "kind": "mixed",
+        "kind": "weapon",
         "phase": "unknown",
         "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredWeapons": [
+          {
+            "name": "노을에 깃든 이슬",
+            "rarity": 5
+          },
+          {
+            "name": "판타지 변주",
+            "rarity": 4
+          },
+          {
+            "name": "영원의 붕괴",
+            "rarity": 4
+          },
+          {
+            "name": "역설의 격류",
+            "rarity": 4
+          }
+        ],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTEz/MDAxNzg1MjMxNzM2NjQz.enH9kqIKGWcSMYxzjRApEJ42Vs2l1K_RBZBhWwLqSQIg.IGZVVedirVzu161uGUtYQnfI07ljrqZGcRBF1y9n1s4g.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMTM0/MDAxNzg1MjMxODE2NTU3.52x1ETkYUBsu9oLplpL-JsY_IEM8wDY-c7zvsMqBbskg.ZxxonRSOHPO7PrxedLM1lBUT656tpDZD9QL9L8LCWQ4g.JPEG/kr.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfNzEg/MDAxNzg1MjMxNzM2NDAw.25_eSBii7h7UZKh2Ji6vDlQU46EWrPpOdU3eXn9W2Qgg.UIJlfJZTlHeSaL0M-yUTOLlkGn-6EoPtEbHQsY_eQaog.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfNzEg/MDAxNzg1MjMxNzM2NDAw.25_eSBii7h7UZKh2Ji6vDlQU46EWrPpOdU3eXn9W2Qgg.UIJlfJZTlHeSaL0M-yUTOLlkGn-6EoPtEbHQsY_eQaog.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -616,16 +965,39 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "",
     "banners": [
       {
         "name": "단비에서 전하는 연꽃 바람의 축복",
-        "kind": "mixed",
+        "kind": "character",
         "phase": "unknown",
-        "featuredCharacters": [],
-        "featuredWeapons": []
+        "featuredCharacters": [
+          {
+            "name": "수수",
+            "rarity": 5
+          },
+          {
+            "name": "설지",
+            "rarity": 4
+          },
+          {
+            "name": "모르테피",
+            "rarity": 4
+          },
+          {
+            "name": "루미",
+            "rarity": 4
+          }
+        ],
+        "featuredWeapons": [],
+        "sourceImageUrls": [
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMjM5/MDAxNzg1MjMxMjc3NzYy.QeP1aT_mJ-8p8CUKgnSbOKJNNEBRGRG228lKSdFNF8Qg.df-XHM6iWzGEUmUTJwnAQvhYWTOQbZM6X6cn2Q11iRcg.PNG/01-%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMjkx/MDAxNzg1MjMxMzM5OTY0.YDdzx6NtwbSz5OI-wWN_rhzmjfyd7adwZ_SQkHdmYCYg.COWPG3Y1nyGbU5YxfbvA5utgd70Gn5pBkT3mXQwFD88g.JPEG/kr.jpg?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMjU4/MDAxNzg1MjMxMjc3NTQw.5FSeSabjP4b-xvVyhTNO_6VweL28xwZdMygUjI45iOIg._oT9axK3D18AtFXaFxs_Q6a0SKZSiOZ_gvv8EtVnLmUg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png?type=w1678",
+          "https://nng-phinf.pstatic.net/MjAyNjA3MjhfMjU4/MDAxNzg1MjMxMjc3NTQw.5FSeSabjP4b-xvVyhTNO_6VweL28xwZdMygUjI45iOIg._oT9axK3D18AtFXaFxs_Q6a0SKZSiOZ_gvv8EtVnLmUg.PNG/02_%EA%B3%B5%EC%A7%80%EC%82%AC%ED%95%AD.png"
+        ]
       }
     ]
   },
@@ -643,7 +1015,7 @@
     "sourceTimeText": "2026년 7월 30일 11:00 ~ 2026년 8월 19일 12:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -661,7 +1033,7 @@
     "sourceTimeText": "2026년 7월 31일 21:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "여행자들 안녕!"
   },
@@ -679,7 +1051,25 @@
     "sourceTimeText": "2026년 8월 4일(화) 11시 ~ 2026년 8월 31일(월) 23시 59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-fd0dfd00ae10e5",
+    "gameId": "monster",
+    "type": "event",
+    "title": "8월 5일(수) 이벤트 안내",
+    "sourceTitle": "8월 5일(수) 이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5402",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-04T08:00:00.000Z",
+    "startsAt": "2026-08-05T09:00:00+09:00",
+    "endsAt": "2026-08-19T08:59:00+09:00",
+    "sourceTimeText": "8 월 5일(수) 09:00 ~ 8월 19일(수) 08:59",
+    "status": "active",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -697,7 +1087,7 @@
     "sourceTimeText": "2026년 8월 6일 05:00 ~ 2026년 8월 19일 04:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -720,6 +1110,24 @@
     "summary": ""
   },
   {
+    "id": "monster-7f6b6f3175b3b3",
+    "gameId": "monster",
+    "type": "notice",
+    "title": "몬길: STAR DIVE X GPG Deals Week on PC 프로모션 [7/23 18:30 수정]",
+    "sourceTitle": "몬길: STAR DIVE X GPG Deals Week on PC 프로모션 [7/23 18:30 수정] - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5284",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-23T03:00:00.000Z",
+    "startsAt": "2026-08-06T23:59:00+09:00",
+    "endsAt": null,
+    "sourceTimeText": "2026년 8월 6일(목) 23:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
     "id": "genshin-c168c156210d7b",
     "gameId": "genshin",
     "type": "banner",
@@ -733,7 +1141,7 @@
     "sourceTimeText": "버전 업데이트 후~2026/9/1 18:59",
     "status": "unknown",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "이벤트 기간에 이벤트 기원을 통해 더 많은 무기와 캐릭터를 획득하여 파티를 강화하세요!",
     "banners": [
@@ -837,7 +1245,25 @@
     "sourceTimeText": "2026년 8월 7일(금) 20:00",
     "status": "ended",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-7bee883ca87ae4",
+    "gameId": "monster",
+    "type": "event",
+    "title": "세계 고양이의 날 기념! 몬스터링 성장 지원 이벤트 안내",
+    "sourceTitle": "세계 고양이의 날 기념! 몬스터링 성장 지원 이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5356",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-07T10:00:00.000Z",
+    "startsAt": "2026-08-08T19:00:00+09:00",
+    "endsAt": "2026-08-12T18:59:00+09:00",
+    "sourceTimeText": "8 월 8일(토) 19:00 - 8월 12일(수) 18:59",
+    "status": "ended",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -873,7 +1299,7 @@
     "sourceTimeText": "2026년 8월 12일 00:00 ~ 8월 19일 23:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "〈원신〉 7.0 버전 「신이 사랑하지 않은 설국」이 오픈되었습니다. 이에 발맞춰 Discord Quest 이벤트도 시작되었으니, 이벤트에 참여해서 임무를 수행해 보세요! 참여한 분들께는 원석 등 기간 한정 보상을 획득할 수 있는 기회가 주어진답니다~"
   },
@@ -891,7 +1317,43 @@
     "sourceTimeText": "2026년 8월 12일 05:00 ~ 2026년 8월 19일 04:59",
     "status": "active",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-801b2fdc91a50c",
+    "gameId": "monster",
+    "type": "event",
+    "title": "7월 29일(수)「현실과 현상을 기록하는 이단 심판관」이벤트 안내",
+    "sourceTitle": "7월 29일(수)「현실과 현상을 기록하는 이단 심판관」이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5338",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-07-29T01:32:00.000Z",
+    "startsAt": "2026-08-12T09:00:00+09:00",
+    "endsAt": "2026-08-19T08:59:00+09:00",
+    "sourceTimeText": "8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59",
+    "status": "active",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "version": null,
+    "summary": ""
+  },
+  {
+    "id": "monster-a53cd2f5f40ff1",
+    "gameId": "monster",
+    "type": "event",
+    "title": "8월 12일(수) 이벤트 안내",
+    "sourceTitle": "8월 12일(수) 이벤트 안내 - 몬길: STAR DIVE",
+    "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5442",
+    "sourceLocale": "ko-KR",
+    "publishedAt": "2026-08-11T08:00:00.000Z",
+    "startsAt": "2026-08-12T09:00:00+09:00",
+    "endsAt": "2026-08-19T08:59:00+09:00",
+    "sourceTimeText": "8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59",
+    "status": "active",
+    "confidence": "confirmed",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -909,7 +1371,7 @@
     "sourceTimeText": "2026년 8월 20일 05:00 ~ 2026년 8월 20일 12:00",
     "status": "upcoming",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   },
@@ -927,7 +1389,7 @@
     "sourceTimeText": "2026년 8월 25일 23:59",
     "status": "upcoming",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": "이벤트 기간에 웹이벤트 임무 「설원의 길잡이」, 「설원으로의 귀환」(복귀 여행자 한정), 「동행 가이드」를 완료하면 원석과 「얼음 열쇠」를 획득할 수 있습니다. 「얼음 열쇠」는 추첨에 사용되는 재화로, 추첨을 진행하면 다양한 보상을 획득할 수 있습니다."
   },
@@ -945,7 +1407,7 @@
     "sourceTimeText": "2026년 9월 30일(수) 23:59",
     "status": "upcoming",
     "confidence": "confirmed",
-    "retrievedAt": "2026-08-16T13:00:35.703Z",
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
     "version": null,
     "summary": ""
   }

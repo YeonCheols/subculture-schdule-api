@@ -15,7 +15,10 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=Everwinter",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "9ff0ab3f16542aa11d0350cad6de7f3d25f2614a5b90d01a83b8a7508a66976b",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": []
   },
   {
     "id": "genshin-code-bcaf5e47855def",
@@ -33,7 +36,10 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=OntoSnezhnaya",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "64201df7b64d228179b8370fc08fc54a123d81592dd12c9ece153c30d4e2dc7c",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": []
   },
   {
     "id": "genshin-code-b7be36af4fcb41",
@@ -51,7 +57,10 @@
     "redemptionUrl": "https://genshin.hoyoverse.com/ko/gift?code=Odette0812",
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "73bbd1ad3ba514ac1487d1ac6fd9da7a9d5fb30492b2534dd91ac8cfebf37d47",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": []
   },
   {
     "id": "monster-code-cc80d537afdc2c",
@@ -69,7 +78,16 @@
     "redemptionUrl": null,
     "rewards": [],
     "status": "active",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "5b76baa13f71676897b4cc8ff3236861c09faee4f531182479dac150384de460",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": [
+      {
+        "detectedAt": "2026-08-16T14:00:45.991Z",
+        "previousHash": "7e0871c0144eddae9e48b3a0c6542a335acb1739ab539d050b1b9be8d7ac2544",
+        "currentHash": "5b76baa13f71676897b4cc8ff3236861c09faee4f531182479dac150384de460"
+      }
+    ]
   },
   {
     "id": "monster-code-1b54030a6e9497",
@@ -87,7 +105,16 @@
     "redemptionUrl": null,
     "rewards": [],
     "status": "active",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "5b76baa13f71676897b4cc8ff3236861c09faee4f531182479dac150384de460",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": [
+      {
+        "detectedAt": "2026-08-16T14:00:45.991Z",
+        "previousHash": "7e0871c0144eddae9e48b3a0c6542a335acb1739ab539d050b1b9be8d7ac2544",
+        "currentHash": "5b76baa13f71676897b4cc8ff3236861c09faee4f531182479dac150384de460"
+      }
+    ]
   },
   {
     "id": "wuthering-code-636010e51f114a",
@@ -105,6 +132,9 @@
     "redemptionUrl": null,
     "rewards": [],
     "status": "unknown",
-    "retrievedAt": "2026-08-16T13:00:35.703Z"
+    "retrievedAt": "2026-08-16T14:00:45.991Z",
+    "contentHash": "9f6c1a3899693d27b3679ed697652afcb4ea91400c9b5fc69ed0133d23411baf",
+    "lastVerifiedAt": "2026-08-16T14:00:45.991Z",
+    "changeHistory": []
   }
 ]

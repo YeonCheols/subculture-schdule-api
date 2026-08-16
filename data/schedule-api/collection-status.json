@@ -1,18 +1,218 @@
 {
-  "retrievedAt": "2026-08-16T13:00:35.703Z",
-  "eventCount": 44,
-  "collectedEventCount": 28,
+  "retrievedAt": "2026-08-16T14:00:45.991Z",
+  "eventCount": 56,
+  "collectedEventCount": 39,
   "redemptionCodeCount": 6,
   "collectedRedemptionCodeCount": 6,
+  "redemptionCodeCandidateCount": 0,
+  "collectedRedemptionCodeCandidateCount": 0,
+  "searchDiscovery": {
+    "skipped": true,
+    "candidateCount": 0,
+    "errors": []
+  },
   "sources": [
     {
       "id": "monster-forum",
       "ok": true,
-      "candidateCount": 11,
-      "collectedEventCount": 1,
-      "storedEventCount": 6,
+      "candidateCount": 30,
+      "collectedEventCount": 12,
+      "storedEventCount": 18,
       "collectedRedemptionCodeCount": 2,
-      "storedRedemptionCodeCount": 2
+      "storedRedemptionCodeCount": 2,
+      "collectedRedemptionCodeCandidateCount": 0,
+      "ocrErrors": [],
+      "candidateDiagnostics": [
+        {
+          "title": "필독 7월 29일(수) 「현실과 현상을 기록하는 이단심판관 」업데이트 안내 2026. 7. 29.",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/5339",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "공지 8월 12일(수) 개발자 라운지 토크 요약 한눈에 보기! 2026. 8. 14.",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/2/5484",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "공지 8월 17일(월) 고객센터 이용 안내 2026. 8. 14.",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/2/5474",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "공지 샛별의 서약 혜택 추가 사전 안내 2026. 8. 12.",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/2/5475",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "현실과 현상을 기록하는 이단심판관, 메이벨 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/5270",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "7월 8일(수) 「잊지 못할 첫 여름, 서머 다이브!」1.2 버전 업데이트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/4983",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "개발자 노트 #9",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/5445",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "7월 29일(수)「현실과 현상을 기록하는 이단 심판관」이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5338",
+          "outcome": "collected"
+        },
+        {
+          "title": "몬길: STAR DIVE X GPG Deals Week on PC 프로모션 [7/23 18:30 수정]",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5284",
+          "outcome": "collected"
+        },
+        {
+          "title": "무더위도 이길 수 없는 불의 소녀, 베르나 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/4992",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "6월 17일(수) 「추앙하지 않는 자, 모두 유죄」업데이트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/4763",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "론칭 100일 기념! PD로부터의 감사 편지",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/5259",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "8월 12일(수) 이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5442",
+          "outcome": "collected"
+        },
+        {
+          "title": "몬길: STAR DIVE X Galaxy Z Fold8 Ultra I Fold8 I Flip8 출시 기념 – 미나, 나래 스페셜 테마 증정 이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5274",
+          "outcome": "collected"
+        },
+        {
+          "title": "모두의 축제를 꿈꾸는 사랑의 전도사, 프란시스 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/4971",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "5월 27일(수)「상흔 속에서 피어나는 꽃들」1.1 버전 업데이트 안내 [6/1 14:00 추가]",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/3959",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "개발자 노트 #8",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/4905",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "세계 고양이의 날 기념! 몬스터링 성장 지원 이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5356",
+          "outcome": "collected"
+        },
+        {
+          "title": "여름맞이! App Store 프로모션 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5184",
+          "outcome": "collected"
+        },
+        {
+          "title": "백린의 무녀, 나기 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/4698",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "4월 29일(수)「잔영을 거두는 불꽃」업데이트 안내 (4월 30일 (목) 13:47 내용 수정)",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/2208",
+          "outcome": "collected",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "개발자 노트 #7",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/4699",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "8월 5일(수) 이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5402",
+          "outcome": "collected"
+        },
+        {
+          "title": "몬길: STAR DIVE X 네이버페이 즉시 할인 프로모션 안내 [종료]",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5077",
+          "outcome": "collected"
+        },
+        {
+          "title": "새벽 이슬의 정기를 타고난 여우 소녀, 나래 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/3894",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "4월 23일(목) 업데이트 및 점검 안내 (4/23 07:45 수정) [점검 완료]",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/3/1650",
+          "outcome": "collected"
+        },
+        {
+          "title": "개발자 노트 #6 [6/1 21:50 수정]",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/4/4348",
+          "outcome": "collected",
+          "warnings": [
+            "possible-banner-without-structured-pickups"
+          ]
+        },
+        {
+          "title": "7월 29일(수) 디스코드 이벤트 2종 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/6/5324",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        },
+        {
+          "title": "7월 15일(수) 시원한 여름 바캉스! 접속 보상 이벤트 안내",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/18/5152",
+          "outcome": "collected"
+        },
+        {
+          "title": "운명의 힘을 품은 구미호, 미나 등장!",
+          "sourceUrl": "https://forum.netmarble.com/stardive_ko/view/20/2268",
+          "outcome": "excluded",
+          "reason": "missing-explicit-schedule-time"
+        }
+      ]
     },
     {
       "id": "wuthering-naver-official",
@@ -21,7 +221,9 @@
       "collectedEventCount": 23,
       "storedEventCount": 24,
       "collectedRedemptionCodeCount": 1,
-      "storedRedemptionCodeCount": 1
+      "storedRedemptionCodeCount": 1,
+      "collectedRedemptionCodeCandidateCount": 0,
+      "ocrErrors": []
     },
     {
       "id": "genshin-official",
@@ -30,7 +232,9 @@
       "collectedEventCount": 4,
       "storedEventCount": 14,
       "collectedRedemptionCodeCount": 0,
-      "storedRedemptionCodeCount": 3
+      "storedRedemptionCodeCount": 3,
+      "collectedRedemptionCodeCandidateCount": 0,
+      "ocrErrors": []
     },
     {
       "id": "genshin-main-redemption",
@@ -39,7 +243,9 @@
       "collectedEventCount": 0,
       "storedEventCount": 14,
       "collectedRedemptionCodeCount": 3,
-      "storedRedemptionCodeCount": 3
+      "storedRedemptionCodeCount": 3,
+      "collectedRedemptionCodeCandidateCount": 0,
+      "ocrErrors": []
     }
   ]
 }
