@@ -169,7 +169,12 @@ function deduplicateLinks(links) {
   return [...new Map(links.map((item) => [item.url, item])).values()];
 }
 
-const collectors = { 'netmarble-forum': collectMonster, 'naver-lounge-pins': collectWuthering, 'hoyoverse-content': collectGenshin };
+const collectors = {
+  'netmarble-forum': collectMonster,
+  'naver-lounge-pins': collectWuthering,
+  'hoyoverse-content': collectGenshin,
+  'hoyoverse-main-redemption': async () => ({ events: [], candidates: 0 }),
+};
 const results = [];
 for (const source of sources) {
   process.stderr.write(`Backfilling ${source.gameId}...\n`);

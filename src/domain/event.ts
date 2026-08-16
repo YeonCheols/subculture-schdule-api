@@ -33,6 +33,8 @@ export interface SourceCollectionStatus {
   candidateCount: number;
   collectedEventCount: number;
   storedEventCount: number;
+  collectedRedemptionCodeCount?: number;
+  storedRedemptionCodeCount?: number;
   error?: string;
 }
 
@@ -40,5 +42,7 @@ export interface CollectionStatus {
   retrievedAt: string;
   eventCount: number;
   collectedEventCount: number;
+  redemptionCodeCount?: number;
+  collectedRedemptionCodeCount?: number;
   sources: SourceCollectionStatus[];
 }

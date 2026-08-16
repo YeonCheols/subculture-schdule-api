@@ -16,6 +16,13 @@ describe('schedule API', () => {
     startsAt: '2026-08-07T00:00:00+09:00', endsAt: '2026-08-08T23:59:00+09:00', sourceTimeText: '8월 7일',
     status: 'active', confidence: 'confirmed', retrievedAt: '2026-08-07T00:00:00Z', version: null, summary: '',
   };
+  const redemptionCode = {
+    id: 'genshin-code-test', gameId: 'genshin', code: 'PUBLIC2026', region: null, distributionType: 'public',
+    sourceTitle: '공식 리딤 코드 안내', sourceUrl: 'https://example.com/code/1', sourceLocale: 'ko-KR',
+    publishedAt: '2026-08-07T00:00:00+09:00', startsAt: null, expiresAt: '2026-08-09T23:59:00+09:00',
+    sourceTimeText: '2026년 8월 9일 23:59까지', redemptionUrl: 'https://example.com/redeem?code=PUBLIC2026',
+    rewards: ['보상'], status: 'active', retrievedAt: '2026-08-07T00:00:00Z',
+  };
 
   beforeAll(async () => {
     dataDirectory = await mkdtemp(join(tmpdir(), 'schedule-api-'));
@@ -58,4 +65,19 @@ describe('schedule API', () => {
   });
 
   it('rejects unsupported query values', () => request(app.getHttpServer()).get('/api/v1/events?gameId=unknown').expect(400));
+
+  it('protects, validates, imports, and filters redemption codes', async () => {
+    await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').send([redemptionCode]).expect(401);
+    await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').set('Authorization', 'Bearer test-token').send([redemptionCode]).expect(201);
+    const response = await request(app.getHttpServer()).get('/api/v1/redemption-codes?gameId=genshin&status=active').expect(200);
+    expect(response.body).toEqual([redemptionCode]);
+    await request(app.getHttpServer()).post('/api/internal/redemption-codes/import').set('Authorization', 'Bearer test-token')
+      .send([{ ...redemptionCode, code: 'PERSONAL123', distributionType: 'single-use' }]).expect(400);
+  });
+
+  it('validates and imports schedules and redemption codes in one sync request', async () => {
+    const response = await request(app.getHttpServer()).post('/api/internal/events/import').set('Authorization', 'Bearer test-token')
+      .send({ events: [event], redemptionCodes: [redemptionCode] }).expect(201);
+    expect(response.body).toMatchObject({ eventCount: 1, redemptionCodeCount: 1 });
+  });
 });

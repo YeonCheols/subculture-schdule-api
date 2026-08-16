@@ -19,7 +19,9 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `GET` | `/api/v1/events` | 전체 일정 조회 |
 | `GET` | `/api/v1/events?gameId=genshin&status=active&date=2026-08-08` | 게임·상태·날짜 필터 |
 | `GET` | `/api/v1/collection-status` | 마지막 수집 상태 조회 |
+| `GET` | `/api/v1/redemption-codes?gameId=genshin&status=active` | 공식 본문에서 확인한 공용 리딤코드 조회 |
 | `POST` | `/api/internal/events/import` | 수동/외부 데이터 저장(Bearer 인증) |
+| `POST` | `/api/internal/redemption-codes/import` | 리딤코드 저장(Bearer 인증) |
 
 ## 로컬에서 바로 수집하고 서빙하기
 
@@ -36,6 +38,7 @@ npm run dev
 ```bash
 curl http://localhost:5000/api/v1/events
 curl http://localhost:5000/api/v1/collection-status
+curl http://localhost:5000/api/v1/redemption-codes
 ```
 
 몬길 공식 포럼은 브라우저 렌더링이 필요하므로 로컬에서는 Electron Chromium을 사용하고, GitHub Actions에서는 `xvfb-run`으로 실행합니다. 원신과 명조는 공식 JSON API를 직접 조회합니다.
@@ -72,6 +75,10 @@ curl -X POST https://YOUR_PROJECT.vercel.app/api/internal/events/import \
 ```
 
 이벤트 import는 잘못된 enum, 중복 ID, timezone 없는 시각, HTTP 출처 URL을 거부합니다.
+
+리딤코드는 일정과 분리된 `redemption-codes.json`에 저장합니다. 공식 원문 본문에 코드 문자열이
+명시된 공용 코드만 자동 수집하며 초대·추천 코드, 구매 또는 개별 지급 쿠폰, 이미지나 방송에만
+표시된 코드는 확정 데이터로 저장하지 않습니다. 만료 시각이 원문에 없으면 상태는 `unknown`입니다.
 
 ## Electron 연동
 

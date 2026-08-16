@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { get, put } from '@vercel/blob';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 @Injectable()
@@ -27,7 +27,9 @@ export class StorageService {
     if (this.localDirectory) {
       const filePath = join(this.localDirectory, pathname);
       await mkdir(dirname(filePath), { recursive: true });
-      await writeFile(filePath, serialized, 'utf8');
+      const temporary = `${filePath}.tmp`;
+      await writeFile(temporary, serialized, 'utf8');
+      await rename(temporary, filePath);
       return;
     }
     await put(pathname, serialized, {

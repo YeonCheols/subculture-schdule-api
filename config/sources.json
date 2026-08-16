@@ -11,7 +11,19 @@
     ],
     "allowedHosts": ["forum.netmarble.com"],
     "detailPattern": "/stardive_ko/view/",
-    "keywords": ["공지", "이벤트", "업데이트", "점검", "픽업", "방송"]
+    "redemptionCodes": {
+      "enabled": true
+    },
+    "keywords": [
+      "공지",
+      "이벤트",
+      "업데이트",
+      "점검",
+      "픽업",
+      "방송",
+      "노트",
+      "리딤"
+    ]
   },
   {
     "id": "wuthering-naver-official",
@@ -22,8 +34,21 @@
     "canonicalBase": "https://game.naver.com/lounge/WutheringWaves/board/detail/",
     "allowedHosts": ["game.naver.com", "comm-api.game.naver.com"],
     "officialNickname": "GM 연구소",
+    "redemptionCodes": {
+      "enabled": true
+    },
     "backfillBoardIds": [1, 28, 3],
-    "keywords": ["공지", "이벤트", "업데이트", "점검", "튜닝", "방송"]
+    "keywords": [
+      "공지",
+      "이벤트",
+      "업데이트",
+      "점검",
+      "튜닝",
+      "방송",
+      "노트",
+      "리딤",
+      "주요 정보"
+    ]
   },
   {
     "id": "genshin-official",
@@ -34,6 +59,25 @@
     "canonicalBase": "https://genshin.hoyoverse.com/ko/news/detail/",
     "allowedHosts": ["genshin.hoyoverse.com"],
     "detailPattern": "/news/detail/",
+    "redemptionCodes": {
+      "enabled": true,
+      "redemptionHosts": ["genshin.hoyoverse.com"],
+      "redemptionUrlTemplate": "https://genshin.hoyoverse.com/ko/gift?code={code}"
+    },
     "keywords": ["공지", "이벤트", "업데이트", "점검", "기원", "특별 방송"]
+  },
+  {
+    "id": "genshin-main-redemption",
+    "gameId": "genshin",
+    "locale": "en-US",
+    "kind": "hoyoverse-main-redemption",
+    "url": "https://genshin.hoyoverse.com/main/?lang=ko-kr",
+    "allowedHosts": ["genshin.hoyoverse.com"],
+    "renderWaitMs": 5000,
+    "redemptionCodes": {
+      "enabled": true,
+      "redemptionUrlTemplate": "https://genshin.hoyoverse.com/ko/gift?code={code}"
+    },
+    "keywords": ["Redeem Code"]
   }
 ]

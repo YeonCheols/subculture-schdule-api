@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classify, collectText, decodeHtml, deduplicate, extractLinks, extractNetmarbleForumLinks, extractPage, extractTime, getEventStatus, mergeEventHistory, normalize } from '../scripts/collector/lib.mjs';
+import { classify, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractLinks, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from '../scripts/collector/lib.mjs';
 
-const source = { gameId: 'genshin', locale: 'ko-KR', url: 'https://example.com/news', allowedHosts: ['example.com'], detailPattern: '/detail/', keywords: ['이벤트'] };
+const source = { gameId: 'genshin', locale: 'ko-KR', url: 'https://example.com/news', allowedHosts: ['example.com'], detailPattern: '/detail/', keywords: ['이벤트'], redemptionCodes: { enabled: true } };
 
 test('discovers only allowed official detail links', () => {
   const html = '<a href="/detail/123"><span>신규 이벤트 안내</span></a><a href="https://evil.test/detail/9">이벤트</a>';
@@ -36,4 +36,68 @@ test('retains history while replacing recollected URLs', () => {
   assert.equal(merged[0].title, '갱신됨');
   assert.equal(merged[0].sourceTitle, '<기존> - 공식');
   assert.equal(getEventStatus(merged[0], now), 'ended');
+});
+
+test('extracts only explicit public redemption codes from official text', () => {
+  const codes = extractRedemptionCodes(source, {
+    title: '공식 리딤 코드 안내',
+    canonical: 'https://example.com/detail/codes',
+    published: '2026-08-07T12:00:00+09:00',
+    text: '공용 리딤 코드: PUBLIC2026\n사용 기한은 2026년 8월 9일 23:59까지입니다.',
+  }, '2026-08-07T04:00:00Z', Date.parse('2026-08-08T00:00:00Z'));
+
+  assert.equal(codes.length, 1);
+  assert.equal(codes[0].code, 'PUBLIC2026');
+  assert.equal(codes[0].distributionType, 'public');
+  assert.equal(codes[0].expiresAt, '2026-08-09T23:59:00+09:00');
+  assert.equal(codes[0].status, 'active');
+});
+
+test('uses the official publication year for a redemption code expiry without a year', () => {
+  const codes = extractRedemptionCodes(source, {
+    title: '개발자 라운지 토크 기념 쿠폰', canonical: 'https://example.com/detail/lounge-code',
+    published: '2026-08-14T13:55:00+09:00',
+    text: '리딤 코드: LETSGOALFRED\n코드 입력 기간 (KST): 라이브 방송 후 - 8월 19일(수) 08:30까지',
+  }, '2026-08-16T12:06:33.434Z', Date.parse('2026-08-16T21:06:33+09:00'));
+
+  assert.equal(codes[0].expiresAt, '2026-08-19T08:30:00+09:00');
+  assert.equal(codes[0].sourceTimeText, '코드 입력 기간 (KST): 라이브 방송 후 - 8월 19일(수) 08:30');
+  assert.equal(codes[0].status, 'active');
+});
+
+test('rejects invitation and individually issued coupon codes', () => {
+  const page = {
+    title: '콜라보 상품 안내', canonical: 'https://example.com/detail/purchase', published: null,
+    text: '상품 구매 시 인게임 쿠폰 번호 1EA를 지급합니다. 초대 코드: PERSONAL123',
+  };
+  assert.deepEqual(extractRedemptionCodes(source, page, '2026-08-07T04:00:00Z'), []);
+});
+
+test('retains redemption code history and refreshes status', () => {
+  const existing = [{ id: 'genshin-code', gameId: 'genshin', code: 'PUBLIC2026', sourceUrl: 'https://example.com/old', expiresAt: '2026-08-09T23:59:00+09:00', status: 'active' }];
+  const merged = mergeRedemptionCodeHistory(existing, [], Date.parse('2026-08-10T00:00:00+09:00'));
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].status, 'expired');
+});
+
+test('extracts redemption codes only from the official Genshin main-page code section', () => {
+  const html = [
+    '<div class="pz-text">UnrelatedWord</div>',
+    '<div class="pz-text">Redeem Code</div>',
+    '<div class="pz-text">×300</div>',
+    '<div class="pz-text">Everwinter</div>',
+    '<div class="pz-text">OntoSnezhnaya</div>',
+    '<div class="pz-text">Odette0812</div>',
+    '<div class="pz-text">Redeem Code</div>',
+    '<div class="pz-text">Top-Up Bonus</div>',
+  ].join('');
+  const genshinMain = {
+    gameId: 'genshin', locale: 'en-US', canonicalUrl: 'https://genshin.hoyoverse.com/en',
+    redemptionCodes: { enabled: true, redemptionUrlTemplate: 'https://genshin.hoyoverse.com/ko/gift?code={code}' },
+  };
+  const codes = extractGenshinMainRedemptionCodes(genshinMain, html, '2026-08-16T12:30:00Z');
+
+  assert.deepEqual(codes.map((code) => code.code), ['Everwinter', 'OntoSnezhnaya', 'Odette0812']);
+  assert.ok(codes.every((code) => code.sourceUrl === 'https://genshin.hoyoverse.com/en'));
+  assert.ok(codes.every((code) => code.expiresAt === null && code.status === 'unknown'));
 });

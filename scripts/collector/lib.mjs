@@ -102,6 +102,93 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
   };
 }
 
+function koreanInstant(match) {
+  let hour = Number(match.groups.hour);
+  if (match.groups.meridiem === '오후' && hour < 12) hour += 12;
+  if (match.groups.meridiem === '오전' && hour === 12) hour = 0;
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${match.groups.year}-${pad(match.groups.month)}-${pad(match.groups.day)}T${pad(hour)}:${pad(match.groups.minute || 0)}:00+09:00`;
+}
+
+function extractRedemptionExpiry(text, referenceDate = null) {
+  const pattern = /(?:코드\s*)?(?:사용|입력|교환|유효|만료)[^\n]{0,60}?(?<year>20\d{2})[.년\/-]\s*(?<month>\d{1,2})[.월\/-]\s*(?<day>\d{1,2})일?[^\d\n]{0,20}(?<meridiem>오전|오후)?\s*(?<hour>\d{1,2})(?:[:시]\s*(?<minute>\d{2}))?/;
+  const match = text.match(pattern);
+  if (match?.groups) return { expiresAt: koreanInstant(match), sourceTimeText: match[0].trim() };
+  const shortPattern = /(?:코드\s*)?(?:사용|입력|교환|유효|만료)[^\n]{0,80}?(?<month>\d{1,2})월\s*(?<day>\d{1,2})일?[^\d\n]{0,20}(?<meridiem>오전|오후)?\s*(?<hour>\d{1,2})(?:[:시]\s*(?<minute>\d{2}))?/;
+  const shortMatch = text.match(shortPattern);
+  if (!shortMatch?.groups || !referenceDate || Number(shortMatch.groups.month) < referenceDate.getUTCMonth() + 1) {
+    return { expiresAt: null, sourceTimeText: '' };
+  }
+  shortMatch.groups.year = String(referenceDate.getUTCFullYear());
+  return { expiresAt: koreanInstant(shortMatch), sourceTimeText: shortMatch[0].trim() };
+}
+
+export function getRedemptionCodeStatus(code, now = Date.now()) {
+  if (!code.expiresAt || Number.isNaN(Date.parse(code.expiresAt))) return 'unknown';
+  return Date.parse(code.expiresAt) < now ? 'expired' : 'active';
+}
+
+export function extractGenshinMainRedemptionCodes(source, html, retrievedAt, now = Date.now()) {
+  if (source.redemptionCodes?.enabled !== true) return [];
+  const texts = [...html.matchAll(/class=["'][^"']*\bpz-text\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi)]
+    .map((match) => decodeHtml(match[1])).filter(Boolean);
+  const markerIndex = texts.findIndex((text, index) => /^×\s*\d+$/.test(text) && /redeem code/i.test(texts[index - 1] || ''));
+  if (markerIndex < 0) return [];
+  const candidates = [];
+  for (const text of texts.slice(markerIndex + 1, markerIndex + 8)) {
+    if (/redeem code/i.test(text)) break;
+    if (/^[A-Za-z0-9]{6,32}$/.test(text)) candidates.push(text);
+    if (candidates.length >= 5) break;
+  }
+  const page = {
+    title: 'Genshin Impact official main page redemption codes',
+    canonical: source.canonicalUrl || source.url,
+    published: null,
+  };
+  return candidates.flatMap((code) => extractRedemptionCodes(source, { ...page, text: `Redeem code: ${code}` }, retrievedAt, now));
+}
+
+export function extractRedemptionCodes(source, page, retrievedAt, now = Date.now()) {
+  if (source.redemptionCodes?.enabled !== true) return [];
+  const candidates = [];
+  const text = decodeHtmlEntities(page.text || '');
+  const labeled = /(?:공용\s+쿠폰\s+코드|(?:공용\s+)?(?:리딤|교환|프로모션)\s*코드|redeem(?:ption)?\s+code)\s*[:：]?\s*([A-Za-z0-9]{6,32})/gi;
+  for (const match of text.matchAll(labeled)) {
+    const context = text.slice(Math.max(0, match.index - 80), match.index + match[0].length + 80);
+    if (/초대|추천|개별|1회용|구매\s*시|계정당\s*발급/i.test(context)) continue;
+    candidates.push({ code: match[1], redemptionUrl: null });
+  }
+
+  for (const match of text.matchAll(/https:\/\/[^\s"'<>]+/gi)) {
+    try {
+      const url = new URL(match[0]);
+      const code = url.searchParams.get('code');
+      if (!code || !/^[A-Za-z0-9]{6,32}$/.test(code)) continue;
+      if (!source.redemptionCodes?.redemptionHosts?.includes(url.hostname)) continue;
+      candidates.push({ code, redemptionUrl: url.toString() });
+    } catch {}
+  }
+
+  const publishedDate = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published) : null;
+  const timing = extractRedemptionExpiry(text, publishedDate);
+  const publishedAt = publishedDate?.toISOString() || null;
+  const unique = new Map();
+  for (const candidate of candidates) {
+    const normalizedCode = candidate.code.toUpperCase();
+    if (['REDEMPTIONCODE', 'REDEEMCODE'].includes(normalizedCode)) continue;
+    const digest = createHash('sha256').update(`${source.gameId}:${normalizedCode}`).digest('hex').slice(0, 14);
+    const redemptionUrl = candidate.redemptionUrl || source.redemptionCodes?.redemptionUrlTemplate?.replace('{code}', encodeURIComponent(candidate.code)) || null;
+    const record = {
+      id: `${source.gameId}-code-${digest}`, gameId: source.gameId, code: candidate.code, region: null,
+      distributionType: 'public', sourceTitle: page.title, sourceUrl: page.canonical, sourceLocale: source.locale,
+      publishedAt, startsAt: null, expiresAt: timing.expiresAt, sourceTimeText: timing.sourceTimeText,
+      redemptionUrl, rewards: [], status: getRedemptionCodeStatus(timing, now), retrievedAt,
+    };
+    unique.set(normalizedCode, record);
+  }
+  return [...unique.values()];
+}
+
 export function deduplicate(events) {
   const byUrl = new Map();
   for (const event of events) byUrl.set(event.sourceUrl, event);
@@ -125,4 +212,11 @@ export function mergeEventHistory(existingEvents, collectedEvents, now = Date.no
     summary: decodeHtmlEntities(event.summary),
     status: getEventStatus(event, now),
   }));
+}
+
+export function mergeRedemptionCodeHistory(existingCodes, collectedCodes, now = Date.now()) {
+  const byCode = new Map();
+  for (const code of [...existingCodes, ...collectedCodes]) byCode.set(`${code.gameId}:${code.code.toUpperCase()}`, code);
+  return [...byCode.values()].map((code) => ({ ...code, status: getRedemptionCodeStatus(code, now) }))
+    .sort((a, b) => (b.publishedAt || b.retrievedAt).localeCompare(a.publishedAt || a.retrievedAt));
 }

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, collectText, decodeHtml, deduplicate, extractNetmarbleForumLinks, extractPage, mergeEventHistory, normalize } from './lib.mjs';
+import { USER_AGENT, collectText, decodeHtml, deduplicate, extractGenshinMainRedemptionCodes, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeEventHistory, mergeRedemptionCodeHistory, normalize } from './lib.mjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '../..');
@@ -26,7 +26,7 @@ async function request(url) {
   return { body: await response.text(), finalUrl: response.url };
 }
 
-async function renderUrls(urls) {
+async function renderUrls(urls, renderWaitMs = null) {
   const directory = await mkdtemp(path.join(tmpdir(), 'schedule-api-forum-'));
   const input = path.join(directory, 'input.json'); const output = path.join(directory, 'output.json');
   await writeFile(input, JSON.stringify(urls));
@@ -34,7 +34,7 @@ async function renderUrls(urls) {
   const chromiumArgs = isCi ? ['--no-sandbox', '--disable-setuid-sandbox'] : [];
   await execFileAsync(electronPath, [path.join(import.meta.dirname, 'render-browser.cjs'), input, output, ...chromiumArgs], {
     timeout: timeoutMs * Math.max(2, urls.length),
-    env: { ...process.env, ...(isCi ? { ELECTRON_DISABLE_SANDBOX: '1' } : {}) },
+    env: { ...process.env, ...(renderWaitMs ? { RENDER_WAIT_MS: String(renderWaitMs) } : {}), ...(isCi ? { ELECTRON_DISABLE_SANDBOX: '1' } : {}) },
   });
   return JSON.parse(await readFile(output, 'utf8'));
 }
@@ -46,14 +46,23 @@ async function collectSource(source) {
       .filter((item, index, all) => all.findIndex((other) => other.url === item.url) === index).slice(0, maxDetails);
     if (!candidates.length) throw new Error('No forum posts found after browser rendering');
     const details = await renderUrls(candidates.map((candidate) => candidate.url));
-    const events = []; const rawCandidates = [];
+    const events = []; const redemptionCodes = []; const rawCandidates = [];
     for (const [index, detail] of details.entries()) {
       if (!detail.body) { rawCandidates.push({ ...candidates[index], error: detail.error }); continue; }
       const page = extractPage(detail.body, { ...candidates[index], url: detail.finalUrl });
       rawCandidates.push({ ...candidates[index], finalUrl: detail.finalUrl, body: detail.body });
       events.push(normalize(source, page, retrievedAt));
+      redemptionCodes.push(...extractRedemptionCodes(source, page, retrievedAt));
     }
-    return { source, events, raw: { sourceId: source.id, retrievedAt, indexes, candidates: rawCandidates }, candidateCount: candidates.length };
+    return { source, events, redemptionCodes, raw: { sourceId: source.id, retrievedAt, indexes, candidates: rawCandidates }, candidateCount: candidates.length };
+  }
+
+  if (source.kind === 'hoyoverse-main-redemption') {
+    const [page] = await renderUrls([source.url], source.renderWaitMs || 5000);
+    if (!page?.body) throw new Error(`Official main page rendering failed: ${page?.error || 'empty HTML'}`);
+    const canonicalUrl = page.finalUrl && new URL(page.finalUrl).hostname === 'genshin.hoyoverse.com' ? page.finalUrl : source.url;
+    const redemptionCodes = extractGenshinMainRedemptionCodes({ ...source, canonicalUrl }, page.body, retrievedAt);
+    return { source, events: [], redemptionCodes, raw: { sourceId: source.id, retrievedAt, page }, candidateCount: redemptionCodes.length };
   }
 
   const index = await request(source.url);
@@ -61,26 +70,30 @@ async function collectSource(source) {
     const payload = JSON.parse(index.body);
     if (payload.code !== 200 || !Array.isArray(payload.content)) throw new Error('Invalid Naver Lounge official feed response');
     const officialFeeds = payload.content.filter((item) => item.user?.nickname === source.officialNickname).slice(0, maxDetails);
-    const events = officialFeeds.map((item) => {
+    const pages = officialFeeds.map((item) => {
       let document = {};
       try { document = JSON.parse(item.feed.contents || '{}'); } catch {}
       const created = item.feed.createdDate;
       const publishedAt = /^\d{14}$/.test(created) ? `${created.slice(0, 4)}-${created.slice(4, 6)}-${created.slice(6, 8)}T${created.slice(8, 10)}:${created.slice(10, 12)}:${created.slice(12, 14)}+09:00` : null;
-      return normalize(source, { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text: collectText(document) }, retrievedAt);
-    }).filter((event) => event.startsAt);
-    return { source, events, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: officialFeeds.length };
+      return { title: decodeHtml(item.feed.title), canonical: `${source.canonicalBase}${item.feed.feedId}`, description: '', published: publishedAt, text: collectText(document) };
+    });
+    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter((event) => event.startsAt);
+    const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
+    return { source, events, redemptionCodes, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: officialFeeds.length };
   }
 
   if (source.kind === 'hoyoverse-content') {
     const payload = JSON.parse(index.body);
     if (payload.retcode !== 0 || !Array.isArray(payload.data?.list)) throw new Error(`Invalid official API response: ${payload.message || 'missing list'}`);
     const items = payload.data.list.slice(0, maxDetails);
-    const events = items.map((item) => normalize(source, {
+    const pages = items.map((item) => ({
       title: item.sTitle, canonical: `${source.canonicalBase}${item.iInfoId}`, description: item.sIntro || '',
       published: item.dtCreateTime ? `${item.dtCreateTime.replace(' ', 'T')}+09:00` : null,
       text: `${item.sTitle}\n${item.sIntro || ''}\n${item.sContent || ''}`,
-    }, retrievedAt));
-    return { source, events, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: items.length };
+    }));
+    const events = pages.map((page) => normalize(source, page, retrievedAt));
+    const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
+    return { source, events, redemptionCodes, raw: { sourceId: source.id, sourceUrl: index.finalUrl, retrievedAt, payload }, candidateCount: items.length };
   }
   throw new Error(`Unsupported source kind: ${source.kind}`);
 }
@@ -89,18 +102,25 @@ async function readExistingEvents() {
   try { return JSON.parse(await readFile(path.join(dataDirectory, 'events.json'), 'utf8')); } catch { return []; }
 }
 
+async function readExistingRedemptionCodes() {
+  try { return JSON.parse(await readFile(path.join(dataDirectory, 'redemption-codes.json'), 'utf8')); } catch { return []; }
+}
+
 const results = await Promise.allSettled(sources.map(collectSource));
 const collectedEvents = deduplicate(results.flatMap((result) => result.status === 'fulfilled' ? result.value.events : []).filter((event) => event.startsAt));
 const events = mergeEventHistory(await readExistingEvents(), collectedEvents);
+const collectedRedemptionCodes = mergeRedemptionCodeHistory([], results.flatMap((result) => result.status === 'fulfilled' ? result.value.redemptionCodes : []));
+const redemptionCodes = mergeRedemptionCodeHistory(await readExistingRedemptionCodes(), collectedRedemptionCodes);
 const status = {
   retrievedAt, eventCount: events.length, collectedEventCount: collectedEvents.length,
+  redemptionCodeCount: redemptionCodes.length, collectedRedemptionCodeCount: collectedRedemptionCodes.length,
   sources: results.map((result, index) => result.status === 'fulfilled'
-    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length }
+    ? { id: result.value.source.id, ok: true, candidateCount: result.value.candidateCount, collectedEventCount: result.value.events.filter((event) => event.startsAt).length, storedEventCount: events.filter((event) => event.gameId === result.value.source.gameId).length, collectedRedemptionCodeCount: result.value.redemptionCodes.length, storedRedemptionCodeCount: redemptionCodes.filter((code) => code.gameId === result.value.source.gameId).length }
     : { id: sources[index].id, ok: false, error: result.reason?.message || String(result.reason) }),
 };
 
 if (dryRun) {
-  console.log(JSON.stringify({ status, events }, null, 2));
+  console.log(JSON.stringify({ status, events, redemptionCodes }, null, 2));
   process.exit(status.sources.some((source) => !source.ok) ? 1 : 0);
 }
 
@@ -113,9 +133,9 @@ async function atomicJson(name, value) {
   const target = path.join(dataDirectory, name); const temporary = `${target}.tmp`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`); await rename(temporary, target);
 }
-await Promise.all([atomicJson('events.json', events), atomicJson('collection-status.json', status)]);
+await Promise.all([atomicJson('events.json', events), atomicJson('redemption-codes.json', redemptionCodes), atomicJson('collection-status.json', status)]);
 
-console.log(`Collected ${collectedEvents.length} events, retained ${events.length}, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
+console.log(`Collected ${collectedEvents.length} events and ${collectedRedemptionCodes.length} redemption codes, retained ${events.length} events and ${redemptionCodes.length} redemption codes, successful sources=${status.sources.filter((source) => source.ok).length}/${sources.length}.`);
 const failedSources = status.sources.filter((source) => !source.ok);
 for (const source of failedSources) console.error(`Source ${source.id} failed: ${source.error}`);
 if (failedSources.length) process.exitCode = 1;
