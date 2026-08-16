@@ -26,12 +26,14 @@ test('extracts rendered forum links and Naver document text', () => {
   assert.deepEqual(extractNetmarbleForumLinks('<a data-router="view/6/4009"><span>여름 이벤트 안내</span></a>', { url: 'https://forum.netmarble.com/stardive_ko/list/6/1' }), [{ url: 'https://forum.netmarble.com/stardive_ko/view/6/4009', title: '여름 이벤트 안내' }]);
   assert.match(collectText({ components: [{ value: '2026년 8월 7일 20:00' }] }), /2026년/);
   assert.equal(decodeHtml('&#x1f4e3; 공식 방송'), '📣 공식 방송');
+  assert.equal(decodeHtml('&lt;개발자 라이브&gt; 안내'), '<개발자 라이브> 안내');
 });
 
 test('retains history while replacing recollected URLs', () => {
   const now = Date.parse('2026-08-07T03:00:00Z');
-  const existing = [{ id: 'ended', sourceUrl: 'https://example.com/ended', title: '기존', startsAt: '2026-08-06T20:00:00+09:00', endsAt: null }];
+  const existing = [{ id: 'ended', sourceUrl: 'https://example.com/ended', title: '&lt;기존&gt;', sourceTitle: '&lt;기존&gt; - 공식', startsAt: '2026-08-06T20:00:00+09:00', endsAt: null }];
   const merged = mergeEventHistory(existing, [{ ...existing[0], title: '갱신됨' }], now);
   assert.equal(merged[0].title, '갱신됨');
+  assert.equal(merged[0].sourceTitle, '<기존> - 공식');
   assert.equal(getEventStatus(merged[0], now), 'ended');
 });

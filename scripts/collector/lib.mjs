@@ -2,8 +2,12 @@ import { createHash } from 'node:crypto';
 
 export const USER_AGENT = 'GameTimeCalendar/0.1 (+official schedule collector)';
 
+function decodeHtmlEntities(value = '') {
+  return value.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16))).replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code))).replace(/&nbsp;|&#160;/gi, ' ').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'");
+}
+
 export function decodeHtml(value = '') {
-  return value.replace(/<[^>]+>/g, ' ').replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16))).replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code))).replace(/&nbsp;|&#160;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/\s+/g, ' ').trim();
+  return decodeHtmlEntities(value.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 
 export function collectText(value, output = []) {
@@ -114,5 +118,11 @@ export function getEventStatus(event, now = Date.now()) {
 }
 
 export function mergeEventHistory(existingEvents, collectedEvents, now = Date.now()) {
-  return deduplicate([...existingEvents, ...collectedEvents]).filter((event) => event.startsAt).map((event) => ({ ...event, status: getEventStatus(event, now) }));
+  return deduplicate([...existingEvents, ...collectedEvents]).filter((event) => event.startsAt).map((event) => ({
+    ...event,
+    title: decodeHtmlEntities(event.title),
+    sourceTitle: decodeHtmlEntities(event.sourceTitle),
+    summary: decodeHtmlEntities(event.summary),
+    status: getEventStatus(event, now),
+  }));
 }
