@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { sha256, splitJsonArray } from './api-sync-lib.mjs';
 
 const mode = process.argv[2];
 const apiUrl = process.env.SCHEDULE_API_URL?.replace(/\/$/, '');
 const dataDirectory = path.resolve(import.meta.dirname, '../data/schedule-api');
+const eventBatchTargetBytes = Number(process.env.EVENT_IMPORT_BATCH_BYTES ?? 1_000_000);
 
 if (!['pull', 'push'].includes(mode)) throw new Error('Usage: node scripts/api-sync.mjs <pull|push>');
 if (!apiUrl) throw new Error('SCHEDULE_API_URL is required');
+if (!Number.isInteger(eventBatchTargetBytes) || eventBatchTargetBytes < 10_000 || eventBatchTargetBytes > 1_250_000) {
+  throw new Error('EVENT_IMPORT_BATCH_BYTES must be an integer between 10000 and 1250000');
+}
 
 if (mode === 'pull') {
   await mkdir(dataDirectory, { recursive: true });
@@ -46,13 +52,25 @@ if (mode === 'push') {
     readFile(path.join(dataDirectory, 'redemption-code-candidates.json'), 'utf8').then(JSON.parse).catch(() => []),
     readFile(path.join(dataDirectory, 'collection-status.json'), 'utf8').then(JSON.parse),
   ]);
-  const eventResponse = await fetch(`${apiUrl}/api/internal/events/import`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ events, redemptionCodes, collectionStatus }),
-    signal: AbortSignal.timeout(60_000),
+  const runId = process.env.IMPORT_RUN_ID || randomUUID();
+  const eventBatches = splitJsonArray(events, eventBatchTargetBytes);
+  for (const [index, batch] of eventBatches.entries()) {
+    const serialized = JSON.stringify(batch);
+    const response = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/batches`, token, {
+      part: index + 1,
+      totalParts: eventBatches.length,
+      checksum: sha256(serialized),
+      events: batch,
+    });
+    console.log(`Uploaded event batch ${index + 1}/${eventBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} event(s), response=${await response.text()}`);
+  }
+  const eventResponse = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/finalize`, token, {
+    totalParts: eventBatches.length,
+    expectedEventCount: events.length,
+    checksum: sha256(JSON.stringify(events)),
+    redemptionCodes,
+    collectionStatus,
   });
-  if (!eventResponse.ok) throw new Error(`Cannot publish schedules: HTTP ${eventResponse.status} ${await eventResponse.text()}`);
   const candidateResponse = await fetch(`${apiUrl}/api/internal/redemption-code-candidates/import`, {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
@@ -67,3 +85,30 @@ if (mode === 'push') {
   console.log(`Published schedules: ${await eventResponse.text()}`);
   console.log(`Published redemption code candidates: ${await candidateResponse.text()}`);
 }
+
+async function postJsonWithRetry(url, token, body) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (response.ok) return response;
+      const message = `HTTP ${response.status} ${await response.text()}`;
+      if (response.status < 500) throw new NonRetryableHttpError(message);
+      if (attempt === 3) throw new Error(message);
+      lastError = new Error(message);
+    } catch (error) {
+      if (error instanceof NonRetryableHttpError) throw new Error(`Cannot publish JSON: ${error.message}`);
+      lastError = error;
+      if (attempt === 3) break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, attempt * 1_000));
+  }
+  throw new Error(`Cannot publish JSON after 3 attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
+class NonRetryableHttpError extends Error {}

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { splitJsonArray } from '../scripts/api-sync-lib.mjs';
 import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
 import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
 import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
@@ -418,4 +419,13 @@ test('extracts redemption codes only from the official Genshin main-page code se
   assert.deepEqual(codes.map((code) => code.code), ['Everwinter', 'OntoSnezhnaya', 'Odette0812']);
   assert.ok(codes.every((code) => code.sourceUrl === 'https://genshin.hoyoverse.com/en'));
   assert.ok(codes.every((code) => code.expiresAt === null && code.status === 'unknown'));
+});
+
+test('splits API event imports by UTF-8 JSON byte size without losing order', () => {
+  const values = Array.from({ length: 12 }, (_, index) => ({ id: index, title: '한글'.repeat(20) }));
+  const batches = splitJsonArray(values, 500);
+  assert.ok(batches.length > 1);
+  assert.ok(batches.every((batch) => Buffer.byteLength(JSON.stringify(batch)) <= 500));
+  assert.deepEqual(batches.flat(), values);
+  assert.throws(() => splitJsonArray([{ title: '한'.repeat(200) }], 100), /single event exceeds/);
 });

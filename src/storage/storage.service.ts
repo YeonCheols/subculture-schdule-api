@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { get, put } from '@vercel/blob';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { del, get, put } from '@vercel/blob';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 @Injectable()
@@ -22,6 +22,15 @@ export class StorageService {
     return JSON.parse(await new Response(result.stream).text()) as T;
   }
 
+  async tryReadJson<T>(pathname: string): Promise<T | undefined> {
+    try {
+      return await this.readJson<T>(pathname);
+    } catch (error) {
+      if (error instanceof NotFoundException) return undefined;
+      throw error;
+    }
+  }
+
   async writeJson(pathname: string, value: unknown): Promise<void> {
     const serialized = JSON.stringify(value, null, 2);
     if (this.localDirectory) {
@@ -38,5 +47,14 @@ export class StorageService {
       allowOverwrite: true,
       contentType: 'application/json; charset=utf-8',
     });
+  }
+
+  async deleteFiles(pathnames: string[]): Promise<void> {
+    if (!pathnames.length) return;
+    if (this.localDirectory) {
+      await Promise.all(pathnames.map((pathname) => rm(join(this.localDirectory!, pathname), { force: true })));
+      return;
+    }
+    await del(pathnames);
   }
 }

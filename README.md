@@ -18,6 +18,7 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `GET` | `/health` | 배포 상태 확인 |
 | `GET` | `/api/v1/events` | 전체 일정 조회 |
 | `GET` | `/api/v1/events?gameId=genshin&status=active&date=2026-08-08` | 게임·상태·날짜 필터 |
+| `GET` | `/api/v2/events?gameId=genshin&cursor=...` | 게임별 cursor 페이지 조회(페이지당 100개) |
 | `GET` | `/api/v1/collection-status` | 마지막 수집 상태 조회 |
 | `GET` | `/api/v1/redemption-code-candidates` | OCR 리딤코드 검수 후보 조회 |
 | `POST` | `/api/internal/redemption-code-candidates/import` | 인증된 후보 데이터 import |
@@ -26,6 +27,8 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `GET` | `/api/v1/redemption-codes/expiring-today?gameId=genshin` | 한국 시간 기준 오늘 만료되는 리딤코드 조회 |
 | `GET` | `/api/v1/redemption-codes/expiring?withinHours=24&gameId=genshin` | 지정 시간 이내 만료 예정인 리딤코드 조회 |
 | `POST` | `/api/internal/events/import` | 수동/외부 데이터 저장(Bearer 인증) |
+| `POST` | `/api/internal/event-imports/:runId/batches` | workflow 이벤트 임시 배치 저장(Bearer 인증) |
+| `POST` | `/api/internal/event-imports/:runId/finalize` | 전체 배치 검증 및 운영 데이터 확정(Bearer 인증) |
 | `POST` | `/api/internal/redemption-codes/import` | 리딤코드 저장(Bearer 인증) |
 
 ## 로컬에서 바로 수집하고 서빙하기
@@ -68,7 +71,7 @@ xvfb-run -a npm run collect
 npm run api:publish
 ```
 
-예약 작업은 API에서 기존 이력을 내려받고 새 수집 결과를 병합한 다음, 인증된 import API로 전송합니다. GitHub Actions는 Blob 토큰을 가지지 않으며 Vercel Function만 Blob을 읽고 씁니다. 데이터 갱신 시 Vercel 재배포는 필요하지 않습니다.
+예약 작업은 API에서 기존 이력을 내려받고 새 수집 결과를 병합한 다음, 1MB 이하의 이벤트 배치를 run ID별 임시 Blob에 전송합니다. 모든 배치의 수량과 checksum 검증이 성공한 경우에만 운영 JSON과 게임별 페이지 manifest를 갱신합니다. GitHub Actions는 Blob 토큰을 가지지 않으며 Vercel Function만 Blob을 읽고 씁니다. 데이터 갱신 시 Vercel 재배포는 필요하지 않습니다.
 
 ## 수동 import
 

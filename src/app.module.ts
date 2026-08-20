@@ -12,9 +12,12 @@ import { RedemptionCodeCandidatesService } from './redemption-codes/redemption-c
 import { StorageService } from './storage/storage.service';
 import { CharactersController } from './characters/characters.controller';
 import { CharactersService } from './characters/characters.service';
+import { EventImportsController } from './events/event-imports.controller';
+import { EventImportsService } from './events/event-imports.service';
+import { EventsV2Controller } from './events/events-v2.controller';
 
 @Module({
-  controllers: [HealthController, EventsController, ImportController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeCandidatesController, CharactersController],
-  providers: [StorageService, EventsService, RedemptionCodesService, RedemptionCodeCandidatesService, CharactersService, IngestAuthGuard],
+  controllers: [HealthController, EventsController, EventsV2Controller, ImportController, EventImportsController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeCandidatesController, CharactersController],
+  providers: [StorageService, EventsService, EventImportsService, RedemptionCodesService, RedemptionCodeCandidatesService, CharactersService, IngestAuthGuard],
 })
 export class AppModule {}

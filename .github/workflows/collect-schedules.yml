@@ -80,4 +80,5 @@ jobs:
         env:
           SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+          IMPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: npm run api:publish
