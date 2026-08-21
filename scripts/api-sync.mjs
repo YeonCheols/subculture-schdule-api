@@ -10,7 +10,7 @@ const apiUrl = process.env.SCHEDULE_API_URL?.replace(/\/$/, '');
 const dataDirectory = path.resolve(import.meta.dirname, '../data/schedule-api');
 const eventBatchTargetBytes = Number(process.env.EVENT_IMPORT_BATCH_BYTES ?? 1_000_000);
 
-if (!['pull', 'push'].includes(mode)) throw new Error('Usage: node scripts/api-sync.mjs <pull|push>');
+if (!['pull', 'push', 'push-events', 'push-redemption-codes'].includes(mode)) throw new Error('Usage: node scripts/api-sync.mjs <pull|push|push-events|push-redemption-codes>');
 if (!apiUrl) throw new Error('SCHEDULE_API_URL is required');
 if (!Number.isInteger(eventBatchTargetBytes) || eventBatchTargetBytes < 10_000 || eventBatchTargetBytes > 1_250_000) {
   throw new Error('EVENT_IMPORT_BATCH_BYTES must be an integer between 10000 and 1250000');
@@ -42,7 +42,7 @@ if (mode === 'pull') {
   }
 }
 
-if (mode === 'push') {
+if (mode === 'push' || mode === 'push-events' || mode === 'push-redemption-codes') {
   const token = process.env.INGEST_TOKEN;
   if (!token) throw new Error('INGEST_TOKEN is required');
   const [events, characters, redemptionCodes, redemptionCodeCandidates, collectionStatus] = await Promise.all([
@@ -53,37 +53,59 @@ if (mode === 'push') {
     readFile(path.join(dataDirectory, 'collection-status.json'), 'utf8').then(JSON.parse),
   ]);
   const runId = process.env.IMPORT_RUN_ID || randomUUID();
-  const eventBatches = splitJsonArray(events, eventBatchTargetBytes);
-  for (const [index, batch] of eventBatches.entries()) {
-    const serialized = JSON.stringify(batch);
-    const response = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/batches`, token, {
-      part: index + 1,
+  if (mode === 'push' || mode === 'push-events') {
+    const eventBatches = nonEmptyBatches(events, eventBatchTargetBytes);
+    for (const [index, batch] of eventBatches.entries()) {
+      const serialized = JSON.stringify(batch);
+      const response = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/batches`, token, {
+        part: index + 1,
+        totalParts: eventBatches.length,
+        checksum: sha256(serialized),
+        events: batch,
+      });
+      console.log(`Uploaded event batch ${index + 1}/${eventBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} event(s), response=${await response.text()}`);
+    }
+    const eventResponse = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/finalize`, token, {
       totalParts: eventBatches.length,
-      checksum: sha256(serialized),
-      events: batch,
+      expectedEventCount: events.length,
+      checksum: sha256(JSON.stringify(events)),
+      collectionStatus,
     });
-    console.log(`Uploaded event batch ${index + 1}/${eventBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} event(s), response=${await response.text()}`);
+    const characterResponse = await fetch(`${apiUrl}/api/internal/characters/import`, {
+      method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(characters), signal: AbortSignal.timeout(60_000),
+    });
+    if (!characterResponse.ok) throw new Error(`Cannot publish characters: HTTP ${characterResponse.status} ${await characterResponse.text()}`);
+    console.log(`Published schedules: ${await eventResponse.text()}`);
   }
-  const eventResponse = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/finalize`, token, {
-    totalParts: eventBatches.length,
-    expectedEventCount: events.length,
-    checksum: sha256(JSON.stringify(events)),
-    redemptionCodes,
-    collectionStatus,
-  });
-  const candidateResponse = await fetch(`${apiUrl}/api/internal/redemption-code-candidates/import`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: JSON.stringify(redemptionCodeCandidates),
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!candidateResponse.ok) throw new Error(`Cannot publish redemption code candidates: HTTP ${candidateResponse.status} ${await candidateResponse.text()}`);
-  const characterResponse = await fetch(`${apiUrl}/api/internal/characters/import`, {
-    method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(characters), signal: AbortSignal.timeout(60_000),
-  });
-  if (!characterResponse.ok) throw new Error(`Cannot publish characters: HTTP ${characterResponse.status} ${await characterResponse.text()}`);
-  console.log(`Published schedules: ${await eventResponse.text()}`);
-  console.log(`Published redemption code candidates: ${await candidateResponse.text()}`);
+  if (mode === 'push' || mode === 'push-redemption-codes') {
+    const codeBatches = nonEmptyBatches(redemptionCodes, eventBatchTargetBytes);
+    for (const [index, batch] of codeBatches.entries()) {
+      const serialized = JSON.stringify(batch);
+      const response = await postJsonWithRetry(`${apiUrl}/api/internal/redemption-code-imports/${encodeURIComponent(runId)}/batches`, token, {
+        part: index + 1,
+        totalParts: codeBatches.length,
+        checksum: sha256(serialized),
+        redemptionCodes: batch,
+      });
+      console.log(`Uploaded redemption code batch ${index + 1}/${codeBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} code(s), response=${await response.text()}`);
+    }
+    const codeResponse = await postJsonWithRetry(`${apiUrl}/api/internal/redemption-code-imports/${encodeURIComponent(runId)}/finalize`, token, {
+      totalParts: codeBatches.length,
+      expectedRedemptionCodeCount: redemptionCodes.length,
+      checksum: sha256(JSON.stringify(redemptionCodes)),
+    });
+    const candidateResponse = await fetch(`${apiUrl}/api/internal/redemption-code-candidates/import`, {
+      method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(redemptionCodeCandidates), signal: AbortSignal.timeout(60_000),
+    });
+    if (!candidateResponse.ok) throw new Error(`Cannot publish redemption code candidates: HTTP ${candidateResponse.status} ${await candidateResponse.text()}`);
+    console.log(`Published redemption codes: ${await codeResponse.text()}`);
+    console.log(`Published redemption code candidates: ${await candidateResponse.text()}`);
+  }
+}
+
+function nonEmptyBatches(values, maxBytes) {
+  const batches = splitJsonArray(values, maxBytes);
+  return batches.length ? batches : [[]];
 }
 
 async function postJsonWithRetry(url, token, body) {

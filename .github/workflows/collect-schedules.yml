@@ -76,9 +76,52 @@ jobs:
           BACKFILL_MAX_PAGES: 5
           BACKFILL_PAGE_SIZE: 30
         run: xvfb-run -a npm run collect:backfill -- --from=${{ inputs.backfill_from }} --to=${{ inputs.backfill_to }} --write
-      - name: Publish through the authenticated API
+      - name: Upload collected data
+        uses: actions/upload-artifact@v4
+        with:
+          name: schedule-api-data-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/schedule-api/*.json
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-events:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download collected data
+        uses: actions/download-artifact@v4
+        with:
+          name: schedule-api-data-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/schedule-api
+      - name: Publish events through the authenticated API
         env:
           SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
           IMPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-        run: npm run api:publish
+        run: npm run api:publish:events
+
+  publish-redemption-codes:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download collected data
+        uses: actions/download-artifact@v4
+        with:
+          name: schedule-api-data-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/schedule-api
+      - name: Publish redemption codes through the authenticated API
+        env:
+          SCHEDULE_API_URL: ${{ secrets.SCHEDULE_API_URL }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+          IMPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: npm run api:publish:redemption-codes

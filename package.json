@@ -11,6 +11,8 @@
     "collect:characters": "node scripts/collector/characters.mjs",
     "api:pull": "node scripts/api-sync.mjs pull",
     "api:publish": "node scripts/api-sync.mjs push",
+    "api:publish:events": "node scripts/api-sync.mjs push-events",
+    "api:publish:redemption-codes": "node scripts/api-sync.mjs push-redemption-codes",
     "dev": "nest start --watch",
     "dev:vercel": "npx --yes vercel dev --listen 5000",
     "start": "node dist/main.js",

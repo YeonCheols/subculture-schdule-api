@@ -4,8 +4,6 @@ import type { CollectionStatus, ScheduleEvent } from '../domain/event';
 import { StorageService } from '../storage/storage.service';
 import { validateEvents } from './event-validator';
 import { EventsService, type EventPagesManifest } from './events.service';
-import { validateRedemptionCodes } from '../redemption-codes/redemption-code-validator';
-import { RedemptionCodesService } from '../redemption-codes/redemption-codes.service';
 
 const MAX_BATCH_BYTES = 1_250_000;
 const RUN_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
@@ -22,7 +20,6 @@ interface FinalizeBody {
   expectedEventCount?: unknown;
   checksum?: unknown;
   collectionStatus?: CollectionStatus;
-  redemptionCodes?: unknown;
 }
 
 export interface StoredEventBatch {
@@ -61,7 +58,6 @@ interface CompletedEventImport {
     runId: string;
     totalParts: number;
     eventCount: number;
-    redemptionCodeCount: number;
     retrievedAt: string;
   };
 }
@@ -71,7 +67,6 @@ export class EventImportsService {
   constructor(
     @Inject(StorageService) private readonly storage: StorageService,
     @Inject(EventsService) private readonly eventsService: EventsService,
-    @Inject(RedemptionCodesService) private readonly redemptionCodesService: RedemptionCodesService,
   ) {}
 
   async storeBatch(runId: string, body: EventBatchBody) {
@@ -124,13 +119,8 @@ export class EventImportsService {
     validateUniqueSourceUrls(events);
     if (events.length !== expectedEventCount) throw new BadRequestException(`expected ${expectedEventCount} events but received ${events.length}`);
     if (sha256(JSON.stringify(events)) !== body.checksum) throw new BadRequestException('final event checksum does not match');
-    const redemptionCodes = validateRedemptionCodes(body.redemptionCodes ?? []);
-
-    const [eventResult, codeResult] = await Promise.all([
-      this.eventsService.import(events, body.collectionStatus, runId),
-      this.redemptionCodesService.import(redemptionCodes),
-    ]);
-    const result = { runId, totalParts, ...eventResult, ...codeResult };
+    const eventResult = await this.eventsService.import(events, body.collectionStatus, runId);
+    const result = { runId, totalParts, ...eventResult };
     await this.storage.writeJson(completionPath(runId), { totalParts, expectedEventCount, checksum: body.checksum, result } satisfies CompletedEventImport);
     const temporaryPaths = Array.from({ length: totalParts }, (_, index) => batchPath(runId, index + 1));
     const cleanup = await Promise.allSettled([this.storage.deleteFiles(temporaryPaths)]);

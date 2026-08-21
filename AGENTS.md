@@ -169,6 +169,8 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - 로컬 관리자 화면의 운영 기록 조회는 `ADMIN_READ_PROXY_URL`에 지정한 HTTPS 운영 도메인의 관리자 GET API만 서버 측에서 프록시한다. 로컬에 운영 Blob OIDC 권한을 부여하거나 import POST를 프록시하지 않는다.
 - GitHub Actions에 Vercel Blob 장기 자격 증명을 제공하지 않는다. Blob 읽기·쓰기·임시 파일 삭제는 인증된 Vercel Function을 통해 수행한다.
 - 기존 `/api/internal/events/import`는 2MB 미만의 수동 import와 하위 호환용이다. 자동 수집 게시에는 배치/finalize API를 사용한다.
+- 예약 수집은 공통 `collect` job의 artifact를 `publish-events`와 `publish-redemption-codes`가 독립적으로 소비한다. 한 게시 job의 실패가 다른 게시 job의 실행을 취소하도록 의존성을 연결하지 않는다.
+- 이벤트와 리딤 코드는 서로 다른 임시 배치 경로와 finalize 기록을 사용하며, 한 도메인의 finalize가 다른 도메인의 운영 JSON을 변경하지 않는다.
 - `/api/v1/events`는 기존 배열 응답 계약이며 `/api/v2/events`는 게임별 cursor 계약이다. 응답 모양을 같은 버전에서 바꾸지 않는다.
 - v2 cursor를 임의 offset으로 해석하거나 현재 manifest로 다시 매핑하지 않는다. cursor에 포함된 generation의 manifest와 페이지를 읽어 pagination 도중 데이터가 섞이지 않게 한다.
 - 운영 이벤트, 현재 페이지 manifest, 수집 상태는 generation 페이지 준비가 끝난 뒤 순서대로 갱신하며 `collection-status.json`은 마지막에 쓴다.
@@ -184,7 +186,7 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - `AGENTS.md`와 `README.md`가 같은 내용을 다루는 경우 두 문서가 서로 모순되지 않도록 변경 사항을 동기화한다.
 - 기존 이벤트 이력이나 사용자의 작업물을 임의로 삭제하지 않는다.
 - 데이터 파일을 갱신할 때는 임시 파일 작성 후 rename하는 원자적 방식을 유지한다.
-- 배치 import를 변경할 때 임시 part를 운영 조회에 직접 노출하거나 part별로 운영 `events.json`에 병합하지 않는다.
+- 배치 import를 변경할 때 임시 part를 운영 조회에 직접 노출하거나 part별로 운영 `events.json` 또는 `redemption-codes.json`에 병합하지 않는다.
 - 배치 크기, checksum 직렬화 방식 또는 페이지 크기를 변경할 때 클라이언트와 서버 상수를 함께 갱신하고 경계값 테스트를 추가한다.
 - finalize 완료 기록과 성공한 part 정리를 유지하며, 네트워크 응답 유실 후 같은 `runId`로 재시도 가능한지 확인한다.
 - 수집 대상 사이트의 응답 구조가 바뀌었다면 실제 공개 응답을 확인한 뒤 파서를 수정한다.

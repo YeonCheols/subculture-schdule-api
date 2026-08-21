@@ -98,26 +98,32 @@ curl http://localhost:5000/api/v1/redemption-codes
 7. 환경 변수를 적용해 Vercel을 재배포합니다.
 8. Actions의 `Collect and publish official schedules`를 한 번 수동 실행해 최초 데이터를 적재합니다.
 
-이후 `.github/workflows/collect-schedules.yml`이 매시간 다음 명령을 실행합니다.
+이후 `.github/workflows/collect-schedules.yml`은 매시간 `collect` job에서 기존 이력을 내려받아 한 번만 수집하고 결과 JSON을 짧게 보관하는 artifact로 전달합니다. `publish-events`와 `publish-redemption-codes` job은 이 artifact를 각각 내려받아 독립적으로 게시하므로 한쪽 게시가 실패해도 다른 쪽 게시 작업은 계속 실행됩니다.
 
 ```bash
 npm run api:pull
 xvfb-run -a npm run collect
-npm run api:publish
+npm run api:publish:events
+npm run api:publish:redemption-codes
 ```
 
-예약 작업은 API에서 기존 이력을 내려받고 새 수집 결과를 병합한 다음, 1MB 이하의 이벤트 배치를 run ID별 임시 Blob에 전송합니다. 모든 배치의 수량과 checksum 검증이 성공한 경우에만 운영 JSON과 게임별 페이지 manifest를 갱신합니다. GitHub Actions는 Blob 토큰을 가지지 않으며 Vercel Function만 Blob을 읽고 씁니다. 데이터 갱신 시 Vercel 재배포는 필요하지 않습니다.
+이벤트와 리딤 코드는 각각 1MB 이하를 목표로 run ID별 임시 Blob에 분할 전송합니다. 각 도메인의 모든 배치 수량과 checksum 검증이 성공한 경우에만 해당 운영 JSON을 갱신합니다. GitHub Actions는 Blob 토큰을 가지지 않으며 Vercel Function만 Blob을 읽고 씁니다. 데이터 갱신 시 Vercel 재배포는 필요하지 않습니다.
 
 ### Blob 저장 구조
 
 ```text
 schedule-api/
 ├── events.json                         # v1 호환 전체 이벤트
+├── redemption-codes.json               # 공개 리딤 코드
 ├── collection-status.json
 ├── imports/
 │   └── {runId}/
 │       ├── completed.json              # finalize 멱등성 기록
 │       └── events/part-NNNN.json       # finalize 성공 후 삭제되는 임시 배치
+├── redemption-code-imports/
+│   └── {runId}/
+│       ├── completed.json              # 리딤 코드 finalize 멱등성 기록
+│       └── parts/part-NNNN.json        # finalize 성공 후 삭제되는 임시 배치
 └── event-pages/
     ├── manifest.json                   # 새 v2 조회가 사용할 현재 generation
     └── {version}/
@@ -125,7 +131,7 @@ schedule-api/
         └── {gameId}/page-NNNN.json     # 게임별 최대 100개 이벤트
 ```
 
-`api:publish`는 `EVENT_IMPORT_BATCH_BYTES`를 지정하지 않으면 UTF-8 JSON 기준 1,000,000 bytes를 목표로 분할합니다. 서버는 이벤트 배열이 1,250,000 bytes를 넘는 배치를 거부합니다. 이는 NestJS의 2MB JSON body 제한과 [Vercel Function의 4.5MB request/response 상한](https://vercel.com/docs/functions/limitations#request-body-size)보다 충분한 여유를 두기 위한 값입니다.
+`api:publish:events`와 `api:publish:redemption-codes`는 `EVENT_IMPORT_BATCH_BYTES`를 지정하지 않으면 UTF-8 JSON 기준 1,000,000 bytes를 목표로 분할합니다. 서버는 이벤트 또는 리딤 코드 배열이 1,250,000 bytes를 넘는 배치를 거부합니다. 이는 NestJS의 2MB JSON body 제한과 [Vercel Function의 4.5MB request/response 상한](https://vercel.com/docs/functions/limitations#request-body-size)보다 충분한 여유를 두기 위한 값입니다.
 
 finalize는 모든 part의 존재와 순서, 개별·전체 SHA-256 checksum, 예상 이벤트 수, 이벤트 스키마, ID와 `sourceUrl` 유일성을 확인합니다. 검증에 실패하면 기존 운영 JSON은 유지됩니다. 성공한 part는 삭제하고 `completed.json`을 남겨 응답 유실 후 같은 `runId`의 finalize 재시도를 처리합니다.
 
@@ -135,7 +141,7 @@ finalize는 모든 part의 존재와 순서, 개별·전체 SHA-256 checksum, �
 
 ## 수동 import
 
-수집기 외에 2MB 미만의 검수된 JSON을 직접 넣어야 할 때만 기존 단일 import를 사용합니다. 자동 수집 게시에는 `npm run api:publish`의 배치/finalize 경로를 사용합니다.
+수집기 외에 2MB 미만의 검수된 JSON을 직접 넣어야 할 때만 기존 단일 import를 사용합니다. 자동 수집 게시에는 도메인별 `api:publish:events`와 `api:publish:redemption-codes`의 배치/finalize 경로를 사용합니다. 하위 호환용 `npm run api:publish`는 두 게시 과정을 한 프로세스에서 순서대로 실행합니다.
 
 ```bash
 curl -X POST https://YOUR_PROJECT.vercel.app/api/internal/events/import \

@@ -175,7 +175,7 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).post('/api/internal/event-imports/incomplete-run/batches').set(headers)
       .send({ part: 1, totalParts: 2, checksum: checksum(batches[0]), events: batches[0] }).expect(201);
     await request(app.getHttpServer()).post('/api/internal/event-imports/incomplete-run/finalize').set(headers)
-      .send({ totalParts: 2, expectedEventCount: events.length, checksum: checksum(events), redemptionCodes: [] }).expect(404);
+      .send({ totalParts: 2, expectedEventCount: events.length, checksum: checksum(events) }).expect(404);
     await request(app.getHttpServer()).get('/api/v1/events').expect(200, before.body);
     const adminHeaders = { Authorization: 'Bearer admin-test-token' };
     const page = await request(app.getHttpServer()).get('/admin/imports').expect(200);
@@ -200,13 +200,12 @@ describe('schedule API', () => {
       totalParts: batches.length,
       expectedEventCount: events.length,
       checksum: checksum(events),
-      redemptionCodes: [redemptionCode],
       collectionStatus: { retrievedAt: event.retrievedAt, eventCount: 0, collectedEventCount: 205, sources: [] },
     };
     await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/finalize').set(headers)
       .send(finalizeBody)
       .expect(201)
-      .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', totalParts: 2, eventCount: 205, redemptionCodeCount: 1 }));
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', totalParts: 2, eventCount: 205 }));
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', status: 'completed', totalParts: 2, temporaryBatchesDeleted: true }));
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/batches/1').set(adminHeaders).expect(404);
@@ -252,6 +251,38 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/v2/events?gameId=genshin&cursor=invalid').expect(400);
     await request(app.getHttpServer()).get('/api/v1/collection-status').expect(200)
       .expect(({ body }) => expect(body.eventCount).toBe(205));
+  });
+
+  it('stages and finalizes redemption codes independently from events', async () => {
+    const headers = { Authorization: 'Bearer test-token' };
+    const secondCode = {
+      ...redemptionCode,
+      id: 'monster-code-batch',
+      gameId: 'monster',
+      code: 'MONSTER2026',
+      sourceUrl: 'https://example.com/code/2',
+    };
+    const codes = [redemptionCode, secondCode];
+    const batches = [[redemptionCode], [secondCode]];
+
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/batches')
+      .send({ part: 1, totalParts: 2, checksum: checksum(batches[0]), redemptionCodes: batches[0] }).expect(401);
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/batches').set(headers)
+      .send({ part: 1, totalParts: 2, checksum: checksum(batches[0]), redemptionCodes: batches[0] }).expect(201);
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
+      .send({ totalParts: 2, expectedRedemptionCodeCount: codes.length, checksum: checksum(codes) }).expect(404);
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/batches').set(headers)
+      .send({ part: 2, totalParts: 2, checksum: checksum(batches[1]), redemptionCodes: batches[1] }).expect(201);
+    const finalizeBody = { totalParts: 2, expectedRedemptionCodeCount: codes.length, checksum: checksum(codes) };
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
+      .send(finalizeBody).expect(201)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', totalParts: 2, redemptionCodeCount: 2, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).get('/api/v1/redemption-codes').expect(200, codes);
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
+      .send(finalizeBody).expect(201)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', redemptionCodeCount: 2, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
+      .send({ ...finalizeBody, expectedRedemptionCodeCount: 1 }).expect(400);
   });
 
   it('imports, filters, and reviews OCR redemption candidates', async () => {
