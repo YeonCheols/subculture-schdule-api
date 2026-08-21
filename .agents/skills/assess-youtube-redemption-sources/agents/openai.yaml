@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assess YouTube Redemption Sources"
+  short_description: "공식 유튜브 채널의 리딤코드 수집 가능성을 게임별로 판정합니다"
+  default_prompt: "Use $assess-youtube-redemption-sources to assess official YouTube redemption-code sources for all supported games."
