@@ -63,6 +63,24 @@ describe('schedule API', () => {
 
   it('checks health', () => request(app.getHttpServer()).get('/health').expect(200, { ok: true }));
 
+  it('serves the public game catalog with v2-compatible IDs', async () => {
+    const response = await request(app.getHttpServer()).get('/api/v1/games').expect(200);
+    expect(response.headers['cache-control']).toBe('public, max-age=300, stale-while-revalidate=3600');
+    expect(response.body.updatedAt).toBe('2026-08-21T09:00:00+09:00');
+    expect(response.body.items).toEqual([
+      { id: 'monster', name: '몬길: STAR DIVE', shortName: '몬길: STAR DIVE', enabled: true, sortOrder: 10, icon: null },
+      { id: 'wuthering', name: '명조: 워더링 웨이브', shortName: '명조', enabled: true, sortOrder: 20, icon: null },
+      { id: 'genshin', name: '원신', shortName: '원신', enabled: true, sortOrder: 30, icon: null },
+      { id: 'nte', name: '이환', shortName: '이환', enabled: true, sortOrder: 40, icon: null },
+    ]);
+
+    await Promise.all(response.body.items.filter((item: { enabled: boolean }) => item.enabled).map(({ id }: { id: string }) => (
+      request(app.getHttpServer()).get(`/api/v2/events?gameId=${id}`).expect((pageResponse) => {
+        expect(pageResponse.status).not.toBe(400);
+      })
+    )));
+  });
+
   it('protects imports', () => request(app.getHttpServer()).post('/api/internal/events/import').send([event]).expect(401));
 
   it('imports and serves events', async () => {

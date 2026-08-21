@@ -18,6 +18,7 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | Method | Route | 설명 |
 |---|---|---|
 | `GET` | `/health` | 배포 상태 확인 |
+| `GET` | `/api/v1/games` | 지원 게임 카탈로그 및 v2 일정 탐색 정보 조회 |
 | `GET` | `/api/v1/events` | 전체 일정 조회 |
 | `GET` | `/api/v1/events?gameId=genshin&status=active&date=2026-08-08` | 게임·상태·날짜 필터 |
 | `GET` | `/api/v2/events?gameId=genshin&cursor=...` | 게임별 cursor 페이지 조회(페이지당 100개) |

@@ -2,18 +2,37 @@
 
 이 문서는 게임타임 Electron 클라이언트에서 운영 일정 API를 읽기 위한 공개 계약을 정리한다. 클라이언트에는 `INGEST_TOKEN`, `ADMIN_TOKEN` 또는 Blob 자격 증명을 포함하지 않는다.
 
-## 기본 주소와 게임 ID
+## 기본 주소와 게임 카탈로그
 
 ```text
 https://subculture-schdule-api.vercel.app
 ```
 
-| 게임 | `gameId` |
-|---|---|
-| 몬길: STAR DIVE | `monster` |
-| 명조: 워더링 웨이브 | `wuthering` |
-| 원신 | `genshin` |
-| 이환 | `nte` |
+새 클라이언트는 게임 ID를 고정하지 말고 앱 시작 시 다음 카탈로그를 조회한다.
+
+```http
+GET /api/v1/games
+```
+
+```ts
+interface GameCatalogItem {
+  id: string;
+  name: string;
+  shortName: string;
+  enabled: boolean;
+  sortOrder: number;
+  icon: { url: string; version: string } | null;
+}
+
+interface GamesResponse {
+  items: GameCatalogItem[];
+  updatedAt: string;
+}
+```
+
+`id`는 `/api/v2/events`의 `gameId`와 같으며, `enabled: true`인 항목을 `sortOrder` 오름차순으로 순회한다. 비활성 게임은 기존 캐시와 구독 식별을 위해 카탈로그에 남는다. 공식 아이콘이 아직 제공되지 않은 게임은 `icon: null`이며 클라이언트의 번들 아이콘 또는 placeholder로 표시한다.
+
+카탈로그 요청이 실패하면 마지막 성공 카탈로그를 사용하고, 캐시가 없을 때만 번들 기본 목록으로 fallback한다. 성공한 카탈로그만 원자적으로 캐시한다.
 
 모든 공개 조회 API는 인증이 필요 없다. 알 수 없는 `gameId`, `status`, 잘못된 날짜 또는 cursor는 `400`을 반환한다.
 
@@ -178,7 +197,7 @@ GET /api/v1/redemption-codes/expiring?withinHours=24&gameId=genshin
 
 ## 캐시와 오류 처리
 
-공개 이벤트·캐릭터·리딤 코드 응답은 `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, 수집 상태는 `max-age=60, stale-while-revalidate=300`을 사용한다.
+공개 카탈로그·이벤트·캐릭터·리딤 코드 응답은 `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, 수집 상태는 `max-age=60, stale-while-revalidate=300`을 사용한다.
 
 클라이언트 권장 동작:
 
@@ -194,6 +213,7 @@ GET /api/v1/redemption-codes/expiring?withinHours=24&gameId=genshin
 
 ```text
 Health:            https://subculture-schdule-api.vercel.app/health
+게임 카탈로그:     https://subculture-schdule-api.vercel.app/api/v1/games
 v1 전체 일정:      https://subculture-schdule-api.vercel.app/api/v1/events
 v1 이환 일정:      https://subculture-schdule-api.vercel.app/api/v1/events?gameId=nte
 v2 이환 일정:      https://subculture-schdule-api.vercel.app/api/v2/events?gameId=nte
