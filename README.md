@@ -175,6 +175,12 @@ npm run collect:backfill -- --from=2026-04-08 --to=2026-08-08 --write
 
 `BACKFILL_MAX_PAGES`(기본 50), `BACKFILL_PAGE_SIZE`(기본 30), `COLLECT_TIMEOUT_MS`로 실행 범위를 조정할 수 있습니다.
 
+## 문서 동기화 정책
+
+프로젝트 정책 또는 AI 작업 원칙이 변경되면 같은 변경에서 `AGENTS.md`를 갱신합니다. 해당 변경이 사용자·운영자에게 영향을 주는 API 계약, 환경 변수, 인증, 저장소, 수집·배포 workflow 또는 실행 절차를 포함하면 `README.md`도 함께 갱신합니다.
+
+`AGENTS.md`는 에이전트가 따라야 할 프로젝트 정책의 기준이고, `README.md`는 사용자와 운영자를 위한 설정·사용·운영 안내의 기준입니다. 두 문서가 같은 내용을 다루면 서로 모순되지 않도록 함께 검토하고 동기화합니다.
+
 ## 검증
 
 ```bash
