@@ -13,14 +13,14 @@ export class EventImportsAdminPageController {
 
   @Get('imports/app.js')
   @Header('Content-Type', 'application/javascript; charset=utf-8')
-  @Header('Cache-Control', 'public, max-age=3600')
+  @Header('Cache-Control', 'no-cache')
   script() {
     return ADMIN_IMPORTS_JS;
   }
 
   @Get('imports/app.css')
   @Header('Content-Type', 'text/css; charset=utf-8')
-  @Header('Cache-Control', 'public, max-age=3600')
+  @Header('Cache-Control', 'no-cache')
   style() {
     return ADMIN_IMPORTS_CSS;
   }
