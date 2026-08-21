@@ -62,6 +62,7 @@ export const ADMIN_IMPORTS_JS = `(() => {
       item.addEventListener('click', async () => { $('results-section').classList.remove('hidden'); showResult(await request(config.base + '/' + encodeURIComponent(runId) + '/batches/' + part.part)); }); $('parts').append(item);
     });
     if (domain === 'events' && run.status === 'completed') await loadResults(run.runId);
+    if (domain === 'redemption-codes' && run.resultSnapshotAvailable) await loadRedemptionCodeResult(run.runId, run.result?.redemptionCodeCount);
   }
   async function loadResults(runId) {
     const manifest = await request('/api/internal/admin/event-imports/' + encodeURIComponent(runId) + '/results');
@@ -74,6 +75,11 @@ export const ADMIN_IMPORTS_JS = `(() => {
         $('result-files').append(button);
       }
     });
+  }
+  async function loadRedemptionCodeResult(runId, count) {
+    $('results-section').classList.remove('hidden');
+    const button = document.createElement('button'); button.className = 'file'; button.textContent = 'result.json · ' + (count ?? '-') + '건';
+    button.addEventListener('click', async () => showResult(await request('/api/internal/admin/redemption-code-imports/' + encodeURIComponent(runId) + '/results'))); $('result-files').append(button);
   }
   function showResult(value) {
     $('result-json').textContent = JSON.stringify(value, null, 2); $('result-json').classList.remove('hidden');

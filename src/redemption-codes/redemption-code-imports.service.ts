@@ -33,6 +33,7 @@ interface CompletedImport {
   expectedRedemptionCodeCount: number;
   checksum: string;
   result: { runId: string; totalParts: number; redemptionCodeCount: number; retrievedAt: string };
+  resultSnapshotAvailable?: true;
 }
 
 interface BatchMetadata {
@@ -53,6 +54,7 @@ export interface RedemptionCodeImportManifest {
   totalParts: number;
   uploadedParts: BatchMetadata[];
   result?: CompletedImport['result'];
+  resultSnapshotAvailable?: true;
   temporaryBatchesDeleted?: boolean;
 }
 
@@ -111,16 +113,17 @@ export class RedemptionCodeImportsService {
     if (codes.length !== expectedRedemptionCodeCount) throw new BadRequestException(`expected ${expectedRedemptionCodeCount} redemption codes but received ${codes.length}`);
     if (sha256(JSON.stringify(codes)) !== checksum) throw new BadRequestException('final redemption code checksum does not match');
 
+    await this.storage.writeJson(resultPath(runId), codes);
     const imported = await this.redemptionCodes.import(codes);
     const result = { runId, totalParts, ...imported };
-    await this.storage.writeJson(completionPath(runId), { totalParts, expectedRedemptionCodeCount, checksum, result } satisfies CompletedImport);
+    await this.storage.writeJson(completionPath(runId), { totalParts, expectedRedemptionCodeCount, checksum, result, resultSnapshotAvailable: true } satisfies CompletedImport);
     const cleanup = await Promise.allSettled([this.storage.deleteFiles(Array.from({ length: totalParts }, (_, index) => batchPath(runId, index + 1)))]);
     const temporaryBatchesDeleted = cleanup[0].status === 'fulfilled';
     const previous = await this.storage.tryReadJson<RedemptionCodeImportManifest>(manifestPath(runId));
     const now = new Date().toISOString();
     await this.storage.writeJson(manifestPath(runId), {
       version: 1, runId, status: 'completed', createdAt: previous?.createdAt ?? now, updatedAt: now, totalParts,
-      uploadedParts: previous?.uploadedParts ?? [], result, temporaryBatchesDeleted,
+      uploadedParts: previous?.uploadedParts ?? [], result, resultSnapshotAvailable: true, temporaryBatchesDeleted,
     } satisfies RedemptionCodeImportManifest);
     return { ...result, temporaryBatchesDeleted };
   }
@@ -144,7 +147,7 @@ export class RedemptionCodeImportsService {
       const updatedAt = files[0]?.uploadedAt ?? completed.result.retrievedAt;
       return {
         version: 1, runId, status: 'completed', createdAt: updatedAt, updatedAt, totalParts: completed.totalParts,
-        uploadedParts: [], result: completed.result, temporaryBatchesDeleted: true,
+        uploadedParts: [], result: completed.result, resultSnapshotAvailable: completed.resultSnapshotAvailable, temporaryBatchesDeleted: true,
       };
     }
     const files = await this.storage.listFiles(`schedule-api/redemption-code-imports/${runId}/parts/`);
@@ -165,6 +168,12 @@ export class RedemptionCodeImportsService {
     const part = positiveInteger(Number(partValue), 'part');
     if (adminReadProxyUrl()) return this.readAdminProxyJson<StoredRedemptionCodeBatch>(`/api/internal/admin/redemption-code-imports/${encodeURIComponent(runId)}/batches/${part}`);
     return this.storage.readJson<StoredRedemptionCodeBatch>(batchPath(runId, part));
+  }
+
+  async getRunResult(runId: string): Promise<RedemptionCode[]> {
+    validateRunId(runId);
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<RedemptionCode[]>(`/api/internal/admin/redemption-code-imports/${encodeURIComponent(runId)}/results`);
+    return this.storage.readJson<RedemptionCode[]>(resultPath(runId));
   }
 
   private async readAdminProxyJson<T>(pathname: string): Promise<T> {
@@ -196,6 +205,10 @@ function completionPath(runId: string): string {
 
 function manifestPath(runId: string): string {
   return `schedule-api/redemption-code-imports/${runId}/manifest.json`;
+}
+
+function resultPath(runId: string): string {
+  return `schedule-api/redemption-code-pages/${runId}/result.json`;
 }
 
 function adminReadProxyUrl(): string | undefined {

@@ -287,8 +287,10 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body.map((item: { runId: string }) => item.runId)).toContain('code-run'));
     await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run').set(adminHeaders).expect(200)
-      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', status: 'completed', result: { redemptionCodeCount: 2 }, temporaryBatchesDeleted: true }));
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', status: 'completed', result: { redemptionCodeCount: 2 }, resultSnapshotAvailable: true, temporaryBatchesDeleted: true }));
     await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run/batches/1').set(adminHeaders).expect(404);
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run/results').expect(401);
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run/results').set(adminHeaders).expect(200, codes);
     await request(app.getHttpServer()).get('/api/v1/redemption-codes').expect(200, codes);
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
       .send(finalizeBody).expect(201)

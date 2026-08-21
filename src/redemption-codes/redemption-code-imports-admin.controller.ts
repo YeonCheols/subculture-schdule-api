@@ -24,4 +24,10 @@ export class RedemptionCodeImportsAdminController {
   getBatch(@Param('runId') runId: string, @Param('part') part: string) {
     return this.imports.getBatch(runId, part);
   }
+
+  @Get(':runId/results')
+  @Header('Cache-Control', 'private, no-store')
+  getRunResult(@Param('runId') runId: string) {
+    return this.imports.getRunResult(runId);
+  }
 }
