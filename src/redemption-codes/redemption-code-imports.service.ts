@@ -1,4 +1,4 @@
-import { BadGatewayException, BadRequestException, GatewayTimeoutException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, GatewayTimeoutException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import type { RedemptionCode } from '../domain/redemption-code';
 import { StorageService } from '../storage/storage.service';
@@ -59,8 +59,8 @@ export interface RedemptionCodeImportManifest {
 @Injectable()
 export class RedemptionCodeImportsService {
   constructor(
-    private readonly storage: StorageService,
-    private readonly redemptionCodes: RedemptionCodesService,
+    @Inject(StorageService) private readonly storage: StorageService,
+    @Inject(RedemptionCodesService) private readonly redemptionCodes: RedemptionCodesService,
   ) {}
 
   async storeBatch(runId: string, body: BatchBody) {
