@@ -22,6 +22,13 @@ interface FinalizeBody {
   collectionStatus?: CollectionStatus;
 }
 
+interface FailureBody {
+  stage?: unknown;
+  message?: unknown;
+  code?: unknown;
+  totalParts?: unknown;
+}
+
 export interface StoredEventBatch {
   part: number;
   totalParts: number;
@@ -41,13 +48,19 @@ interface EventBatchMetadata {
 export interface EventImportManifest {
   version: 1;
   runId: string;
-  status: 'uploading' | 'completed';
+  status: 'uploading' | 'completed' | 'failed';
   createdAt: string;
   updatedAt: string;
   totalParts: number;
   uploadedParts: EventBatchMetadata[];
   result?: CompletedEventImport['result'];
   temporaryBatchesDeleted?: boolean;
+  failure?: {
+    stage: 'batch' | 'finalize';
+    message: string;
+    code?: string;
+    failedAt: string;
+  };
 }
 
 interface CompletedEventImport {
@@ -93,6 +106,25 @@ export class EventImportsService {
       version: 1, runId, status: 'uploading', createdAt: previous?.createdAt ?? now, updatedAt: now, totalParts, uploadedParts,
     } satisfies EventImportManifest);
     return { runId, part, totalParts, eventCount: events.length, byteLength, checksum: body.checksum };
+  }
+
+  async recordFailure(runId: string, body: FailureBody) {
+    validateRunId(runId);
+    if (await this.storage.tryReadJson<CompletedEventImport>(completionPath(runId))) throw new BadRequestException('completed import cannot be marked as failed');
+    if (body.stage !== 'batch' && body.stage !== 'finalize') throw new BadRequestException('stage must be batch or finalize');
+    if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 500) throw new BadRequestException('message must be a non-empty string of at most 500 characters');
+    if (body.code !== undefined && (typeof body.code !== 'string' || !/^[A-Za-z0-9_.-]{1,64}$/.test(body.code))) throw new BadRequestException('code must contain only safe identifier characters');
+    const totalParts = positiveInteger(body.totalParts, 'totalParts');
+    const stage = body.stage as 'batch' | 'finalize';
+    const previous = await this.storage.tryReadJson<EventImportManifest>(manifestPath(runId));
+    if (previous && previous.totalParts !== totalParts) throw new BadRequestException('totalParts does not match the existing import');
+    const now = new Date().toISOString();
+    const failure = { stage, message: body.message.trim(), ...(body.code ? { code: body.code } : {}), failedAt: now };
+    await this.storage.writeJson(manifestPath(runId), {
+      version: 1, runId, status: 'failed', createdAt: previous?.createdAt ?? now, updatedAt: now, totalParts,
+      uploadedParts: previous?.uploadedParts ?? [], failure,
+    } satisfies EventImportManifest);
+    return { runId, status: 'failed', failure };
   }
 
   async finalize(runId: string, body: FinalizeBody) {

@@ -16,4 +16,9 @@ export class EventImportsController {
   finalize(@Param('runId') runId: string, @Body() body: unknown) {
     return this.imports.finalize(runId, body as Record<string, unknown>);
   }
+
+  @Post(':runId/failure')
+  recordFailure(@Param('runId') runId: string, @Body() body: unknown) {
+    return this.imports.recordFailure(runId, body as Record<string, unknown>);
+  }
 }

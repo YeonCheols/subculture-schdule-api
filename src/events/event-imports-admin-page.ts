@@ -26,7 +26,7 @@ export const ADMIN_IMPORTS_JS = `(() => {
   const showLogin = () => { login.classList.remove('hidden'); dashboard.classList.add('hidden'); logout.classList.add('hidden'); };
   const showDashboard = () => { login.classList.add('hidden'); dashboard.classList.remove('hidden'); logout.classList.remove('hidden'); };
   const formatDate = (value) => value ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value)) : '-';
-  const statusText = (status) => status === 'completed' ? '성공' : '미완료';
+  const statusText = (status) => status === 'completed' ? '성공' : status === 'failed' ? '실패' : '미완료';
   async function loadRuns() {
     const requestedDomain = domain, config = domainConfig(); showDashboard();
     $('runs').replaceChildren(); $('empty').classList.add('hidden'); $('loading').classList.remove('hidden'); $('loading').textContent = config.label + ' 실행 기록을 불러오는 중입니다.'; $('loading-message').textContent = config.label + ' 실행 기록을 불러오는 중입니다.'; $('loading-overlay').classList.remove('hidden'); $('summary').textContent = '불러오는 중…'; dashboard.setAttribute('aria-busy', 'true');
@@ -52,7 +52,7 @@ export const ADMIN_IMPORTS_JS = `(() => {
     const run = await request(config.base + '/' + encodeURIComponent(runId));
     if (domain !== requestedDomain) return;
     $('detail-run').textContent = run.runId; $('detail-status').textContent = statusText(run.status); $('detail-status').className = 'badge ' + run.status;
-    const metadata = [['종류', config.label], ['상태', statusText(run.status)], ['전체 배치', String(run.totalParts)], ['업로드 배치', String(run.uploadedParts.length)], ['최종 건수', run.result?.[config.countKey] === undefined ? '-' : String(run.result[config.countKey])], ['생성', formatDate(run.createdAt)], ['갱신', formatDate(run.updatedAt)], ['임시 파일 삭제', run.temporaryBatchesDeleted === undefined ? '-' : run.temporaryBatchesDeleted ? '완료' : '실패']];
+    const metadata = [['종류', config.label], ['상태', statusText(run.status)], ['전체 배치', String(run.totalParts)], ['업로드 배치', String(run.uploadedParts.length)], ['최종 건수', run.result?.[config.countKey] === undefined ? '-' : String(run.result[config.countKey])], ['실패 단계', run.failure?.stage || '-'], ['오류 코드', run.failure?.code || '-'], ['오류 내용', run.failure?.message || '-'], ['생성', formatDate(run.createdAt)], ['갱신', formatDate(run.updatedAt)], ['임시 파일 삭제', run.temporaryBatchesDeleted === undefined ? '-' : run.temporaryBatchesDeleted ? '완료' : '실패']];
     $('metadata').replaceChildren(); metadata.forEach(([key, value]) => { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = key; dd.textContent = value; $('metadata').append(dt, dd); });
     $('parts').replaceChildren();
     $('results-section').classList.add('hidden'); $('result-files').replaceChildren(); $('result-json').classList.add('hidden');

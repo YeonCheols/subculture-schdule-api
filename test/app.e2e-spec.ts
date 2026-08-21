@@ -178,6 +178,13 @@ describe('schedule API', () => {
       .send({ totalParts: 2, expectedEventCount: events.length, checksum: checksum(events) }).expect(404);
     await request(app.getHttpServer()).get('/api/v1/events').expect(200, before.body);
     const adminHeaders = { Authorization: 'Bearer admin-test-token' };
+    await request(app.getHttpServer()).post('/api/internal/event-imports/pre-storage-failure/failure').set(headers)
+      .send({ stage: 'batch', totalParts: 1, code: 'HTTP_413', message: 'Cannot publish JSON: HTTP 413 request entity too large' }).expect(201)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'pre-storage-failure', status: 'failed', failure: { stage: 'batch', code: 'HTTP_413' } }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/pre-storage-failure').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ status: 'failed', totalParts: 1, uploadedParts: [], failure: { message: 'Cannot publish JSON: HTTP 413 request entity too large' } }));
+    await request(app.getHttpServer()).post('/api/internal/event-imports/pre-storage-failure/failure').set(headers)
+      .send({ stage: 'unknown', totalParts: 1, message: 'unsafe' }).expect(400);
     const page = await request(app.getHttpServer()).get('/admin/imports').expect(200);
     expect(page.headers['content-security-policy']).toContain("default-src 'self'");
     expect(page.text).toContain('Import runs');
@@ -236,6 +243,8 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/finalize').set(headers)
       .send(finalizeBody).expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', eventCount: 205, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/failure').set(headers)
+      .send({ stage: 'finalize', totalParts: 2, message: 'late failure' }).expect(400);
     await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/finalize').set(headers)
       .send({ ...finalizeBody, expectedEventCount: 204 }).expect(400);
 

@@ -65,6 +65,7 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - finalize는 모든 part의 존재, part/totalParts 일치, 개별 및 전체 SHA-256 checksum, 예상 이벤트 수, 전체 `validateEvents`, ID와 `sourceUrl` 유일성을 확인한다.
 - finalize 검증이 실패하면 운영 파일 쓰기를 시작하지 않으며 기존 운영 데이터를 삭제하거나 빈 배열로 교체하지 않는다.
 - finalize 성공 결과는 `schedule-api/imports/{runId}/completed.json`에 남겨 동일 실행 재시도를 멱등하게 처리하고, 성공한 임시 part 파일은 삭제한다.
+- 이벤트 게시 요청이 첫 part 저장 전 또는 finalize에서 실패하면 인증된 실패 기록 API로 `manifest.json`에 `failed` 상태, 실패 단계, 안전하게 축약한 오류 코드·요약과 시각을 best-effort 기록한다. 토큰, 요청 본문 또는 자격 증명을 오류 기록에 포함하지 않는다.
 - 운영 호환 파일은 `schedule-api/events.json`이며 `/api/v1/events`가 사용한다.
 - v2 페이지는 `schedule-api/event-pages/{version}/{gameId}/page-NNNN.json`에 게임별 최대 100개씩 저장한다.
 - 각 generation의 `manifest.json`은 cursor가 시작한 버전을 끝까지 읽게 하며, `schedule-api/event-pages/manifest.json`은 새 조회가 사용할 현재 generation을 가리킨다.
@@ -190,6 +191,7 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - 배치 import를 변경할 때 임시 part를 운영 조회에 직접 노출하거나 part별로 운영 `events.json` 또는 `redemption-codes.json`에 병합하지 않는다.
 - 배치 크기, checksum 직렬화 방식 또는 페이지 크기를 변경할 때 클라이언트와 서버 상수를 함께 갱신하고 경계값 테스트를 추가한다.
 - finalize 완료 기록과 성공한 part 정리를 유지하며, 네트워크 응답 유실 후 같은 `runId`로 재시도 가능한지 확인한다.
+- import 실패 기록을 변경할 때 첫 배치 이전 실패가 관리자 목록에 나타나고, 완료된 run을 실패로 덮어쓸 수 없으며, 실패 보고 자체가 불가능한 네트워크 장애는 원래 오류를 가리지 않는지 확인한다.
 - 수집 대상 사이트의 응답 구조가 바뀌었다면 실제 공개 응답을 확인한 뒤 파서를 수정한다.
 - 새로운 게임을 추가할 때는 `GAME_IDS`, 소스 설정, 수집기, validator 테스트, API 필터 테스트를 함께 갱신한다.
 - 새로운 이벤트 유형을 추가할 때는 enum, 분류 로직, validator 및 테스트를 함께 갱신한다.

@@ -55,27 +55,34 @@ if (mode === 'push' || mode === 'push-events' || mode === 'push-redemption-codes
   const runId = process.env.IMPORT_RUN_ID || randomUUID();
   if (mode === 'push' || mode === 'push-events') {
     const eventBatches = nonEmptyBatches(events, eventBatchTargetBytes);
-    for (const [index, batch] of eventBatches.entries()) {
-      const serialized = JSON.stringify(batch);
-      const response = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/batches`, token, {
-        part: index + 1,
+    let failureStage = 'batch';
+    try {
+      for (const [index, batch] of eventBatches.entries()) {
+        const serialized = JSON.stringify(batch);
+        const response = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/batches`, token, {
+          part: index + 1,
+          totalParts: eventBatches.length,
+          checksum: sha256(serialized),
+          events: batch,
+        });
+        console.log(`Uploaded event batch ${index + 1}/${eventBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} event(s), response=${await response.text()}`);
+      }
+      failureStage = 'finalize';
+      const eventResponse = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/finalize`, token, {
         totalParts: eventBatches.length,
-        checksum: sha256(serialized),
-        events: batch,
+        expectedEventCount: events.length,
+        checksum: sha256(JSON.stringify(events)),
+        collectionStatus,
       });
-      console.log(`Uploaded event batch ${index + 1}/${eventBatches.length}: ${Buffer.byteLength(serialized)} bytes, ${batch.length} event(s), response=${await response.text()}`);
+      console.log(`Published schedules: ${await eventResponse.text()}`);
+    } catch (error) {
+      await reportEventImportFailure(apiUrl, token, runId, eventBatches.length, failureStage, error);
+      throw error;
     }
-    const eventResponse = await postJsonWithRetry(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/finalize`, token, {
-      totalParts: eventBatches.length,
-      expectedEventCount: events.length,
-      checksum: sha256(JSON.stringify(events)),
-      collectionStatus,
-    });
     const characterResponse = await fetch(`${apiUrl}/api/internal/characters/import`, {
       method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(characters), signal: AbortSignal.timeout(60_000),
     });
     if (!characterResponse.ok) throw new Error(`Cannot publish characters: HTTP ${characterResponse.status} ${await characterResponse.text()}`);
-    console.log(`Published schedules: ${await eventResponse.text()}`);
   }
   if (mode === 'push' || mode === 'push-redemption-codes') {
     const codeBatches = nonEmptyBatches(redemptionCodes, eventBatchTargetBytes);
@@ -134,3 +141,28 @@ async function postJsonWithRetry(url, token, body) {
 }
 
 class NonRetryableHttpError extends Error {}
+
+async function reportEventImportFailure(apiUrl, token, runId, totalParts, stage, error) {
+  const message = sanitizeFailureMessage(error instanceof Error ? error.message : String(error));
+  try {
+    const response = await fetch(`${apiUrl}/api/internal/event-imports/${encodeURIComponent(runId)}/failure`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ stage, totalParts, message, code: failureCode(message) }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.error(`Recorded failed event import ${runId} at stage=${stage}`);
+  } catch (reportError) {
+    console.error(`Could not record failed event import ${runId}: ${reportError instanceof Error ? reportError.message : String(reportError)}`);
+  }
+}
+
+function sanitizeFailureMessage(message) {
+  return message.replace(/Bearer\s+\S+/gi, 'Bearer [redacted]').replace(/https?:\/\/[^\s]+/g, '[url]').slice(0, 500) || 'Unknown import failure';
+}
+
+function failureCode(message) {
+  const status = message.match(/HTTP\s+(\d{3})/i)?.[1];
+  return status ? `HTTP_${status}` : 'REQUEST_FAILED';
+}
