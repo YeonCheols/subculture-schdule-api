@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { del, get, put } from '@vercel/blob';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { del, get, list, put } from '@vercel/blob';
+import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 @Injectable()
@@ -57,4 +57,40 @@ export class StorageService {
     }
     await del(pathnames);
   }
+
+  async listFiles(prefix: string): Promise<Array<{ pathname: string; size: number; uploadedAt: string }>> {
+    if (this.localDirectory) {
+      const root = join(this.localDirectory, prefix);
+      try {
+        const relativePaths = await listLocalFiles(root);
+        const files = await Promise.all(relativePaths.map(async (relativePath) => {
+          const pathname = join(prefix, relativePath).replaceAll('\\', '/');
+          const metadata = await stat(join(this.localDirectory!, pathname));
+          return { pathname, size: metadata.size, uploadedAt: metadata.mtime.toISOString() };
+        }));
+        return files.sort((left, right) => right.uploadedAt.localeCompare(left.uploadedAt));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+        throw error;
+      }
+    }
+
+    const files: Array<{ pathname: string; size: number; uploadedAt: string }> = [];
+    let cursor: string | undefined;
+    do {
+      const result = await list({ prefix, cursor });
+      files.push(...result.blobs.map((blob) => ({ pathname: blob.pathname, size: blob.size, uploadedAt: blob.uploadedAt.toISOString() })));
+      cursor = result.hasMore ? result.cursor : undefined;
+    } while (cursor);
+    return files.sort((left, right) => right.uploadedAt.localeCompare(left.uploadedAt));
+  }
+}
+
+async function listLocalFiles(directory: string, relativeDirectory = ''): Promise<string[]> {
+  const entries = await readdir(join(directory, relativeDirectory), { withFileTypes: true });
+  const paths = await Promise.all(entries.map((entry) => {
+    const relativePath = join(relativeDirectory, entry.name);
+    return entry.isDirectory() ? listLocalFiles(directory, relativePath) : [relativePath];
+  }));
+  return paths.flat();
 }

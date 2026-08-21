@@ -25,11 +25,32 @@ interface FinalizeBody {
   redemptionCodes?: unknown;
 }
 
-interface StoredEventBatch {
+export interface StoredEventBatch {
   part: number;
   totalParts: number;
   checksum: string;
   events: ScheduleEvent[];
+}
+
+interface EventBatchMetadata {
+  part: number;
+  totalParts: number;
+  eventCount: number;
+  byteLength: number;
+  checksum: string;
+  uploadedAt: string;
+}
+
+export interface EventImportManifest {
+  version: 1;
+  runId: string;
+  status: 'uploading' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+  totalParts: number;
+  uploadedParts: EventBatchMetadata[];
+  result?: CompletedEventImport['result'];
+  temporaryBatchesDeleted?: boolean;
 }
 
 interface CompletedEventImport {
@@ -66,8 +87,16 @@ export class EventImportsService {
     if (byteLength > MAX_BATCH_BYTES) throw new BadRequestException(`event batch exceeds ${MAX_BATCH_BYTES} bytes`);
     if (sha256(serialized) !== body.checksum) throw new BadRequestException('event batch checksum does not match');
 
+    const now = new Date().toISOString();
+    const previous = await this.storage.tryReadJson<EventImportManifest>(manifestPath(runId));
+    if (previous && previous.totalParts !== totalParts) throw new BadRequestException('totalParts does not match the existing import');
     const stored: StoredEventBatch = { part, totalParts, checksum: body.checksum, events };
     await this.storage.writeJson(batchPath(runId, part), stored);
+    const metadata = { part, totalParts, eventCount: events.length, byteLength, checksum: body.checksum, uploadedAt: now };
+    const uploadedParts = [...(previous?.uploadedParts ?? []).filter((item) => item.part !== part), metadata].sort((left, right) => left.part - right.part);
+    await this.storage.writeJson(manifestPath(runId), {
+      version: 1, runId, status: 'uploading', createdAt: previous?.createdAt ?? now, updatedAt: now, totalParts, uploadedParts,
+    } satisfies EventImportManifest);
     return { runId, part, totalParts, eventCount: events.length, byteLength, checksum: body.checksum };
   }
 
@@ -105,7 +134,55 @@ export class EventImportsService {
     await this.storage.writeJson(completionPath(runId), { totalParts, expectedEventCount, checksum: body.checksum, result } satisfies CompletedEventImport);
     const temporaryPaths = Array.from({ length: totalParts }, (_, index) => batchPath(runId, index + 1));
     const cleanup = await Promise.allSettled([this.storage.deleteFiles(temporaryPaths)]);
-    return { ...result, temporaryBatchesDeleted: cleanup[0].status === 'fulfilled' };
+    const temporaryBatchesDeleted = cleanup[0].status === 'fulfilled';
+    const previous = await this.storage.tryReadJson<EventImportManifest>(manifestPath(runId));
+    const now = new Date().toISOString();
+    await this.storage.writeJson(manifestPath(runId), {
+      version: 1, runId, status: 'completed', createdAt: previous?.createdAt ?? now, updatedAt: now, totalParts,
+      uploadedParts: previous?.uploadedParts ?? [], result, temporaryBatchesDeleted,
+    } satisfies EventImportManifest);
+    return { ...result, temporaryBatchesDeleted };
+  }
+
+  async listRuns() {
+    const files = await this.storage.listFiles('schedule-api/imports/');
+    const runIds = [...new Set(files.map((file) => file.pathname.split('/')[2]).filter(Boolean))];
+    const runs = await Promise.all(runIds.map((runId) => this.getRun(runId)));
+    return runs.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+  }
+
+  async getRun(runId: string): Promise<EventImportManifest> {
+    validateRunId(runId);
+    const manifest = await this.storage.tryReadJson<EventImportManifest>(manifestPath(runId));
+    if (manifest) return manifest;
+
+    const completed = await this.storage.tryReadJson<CompletedEventImport>(completionPath(runId));
+    if (completed) {
+      const files = await this.storage.listFiles(`schedule-api/imports/${runId}/`);
+      const updatedAt = files[0]?.uploadedAt ?? completed.result.retrievedAt;
+      return {
+        version: 1, runId, status: 'completed', createdAt: updatedAt, updatedAt, totalParts: completed.totalParts,
+        uploadedParts: [], result: completed.result, temporaryBatchesDeleted: true,
+      };
+    }
+
+    const files = await this.storage.listFiles(`schedule-api/imports/${runId}/events/`);
+    if (!files.length) await this.storage.readJson(manifestPath(runId));
+    const batches = await Promise.all(files.map((file) => this.storage.readJson<StoredEventBatch>(file.pathname).then((batch) => ({
+      part: batch.part, totalParts: batch.totalParts, eventCount: batch.events.length, byteLength: file.size,
+      checksum: batch.checksum, uploadedAt: file.uploadedAt,
+    }))));
+    const updatedAt = files[0].uploadedAt;
+    return {
+      version: 1, runId, status: 'uploading', createdAt: files.at(-1)?.uploadedAt ?? updatedAt, updatedAt,
+      totalParts: batches[0].totalParts, uploadedParts: batches.sort((left, right) => left.part - right.part),
+    };
+  }
+
+  async getBatch(runId: string, partValue: string) {
+    validateRunId(runId);
+    const part = positiveInteger(Number(partValue), 'part');
+    return this.storage.readJson<StoredEventBatch>(batchPath(runId, part));
   }
 }
 
@@ -115,6 +192,10 @@ function batchPath(runId: string, part: number): string {
 
 function completionPath(runId: string): string {
   return `schedule-api/imports/${runId}/completed.json`;
+}
+
+function manifestPath(runId: string): string {
+  return `schedule-api/imports/${runId}/manifest.json`;
 }
 
 function validateRunId(runId: string): void {

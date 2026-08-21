@@ -163,6 +163,8 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - Vercel 환경에서는 private Vercel Blob을 사용한다.
 - 공개 API는 읽기 전용이다.
 - import API는 `INGEST_TOKEN` Bearer 인증을 유지한다.
+- import 실행 목록·메타데이터·미완료 배치 조회 API는 별도의 `ADMIN_TOKEN` Bearer 인증을 유지하며 공개 API로 노출하지 않는다.
+- 관리자 화면은 `GET /api/internal/admin/event-imports`에서 run ID를 탐색하고, 성공 실행은 완료 메타데이터만, 미완료 실행은 남은 임시 part만 조회한다. 관리자 토큰을 브라우저 번들에 포함하지 않는다.
 - GitHub Actions에 Vercel Blob 장기 자격 증명을 제공하지 않는다. Blob 읽기·쓰기·임시 파일 삭제는 인증된 Vercel Function을 통해 수행한다.
 - 기존 `/api/internal/events/import`는 2MB 미만의 수동 import와 하위 호환용이다. 자동 수집 게시에는 배치/finalize API를 사용한다.
 - `/api/v1/events`는 기존 배열 응답 계약이며 `/api/v2/events`는 게임별 cursor 계약이다. 응답 모양을 같은 버전에서 바꾸지 않는다.

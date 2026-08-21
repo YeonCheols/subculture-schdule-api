@@ -49,6 +49,7 @@ describe('schedule API', () => {
     dataDirectory = await mkdtemp(join(tmpdir(), 'schedule-api-'));
     process.env.LOCAL_DATA_DIR = dataDirectory;
     process.env.INGEST_TOKEN = 'test-token';
+    process.env.ADMIN_TOKEN = 'admin-test-token';
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = module.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
@@ -176,6 +177,12 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).post('/api/internal/event-imports/incomplete-run/finalize').set(headers)
       .send({ totalParts: 2, expectedEventCount: events.length, checksum: checksum(events), redemptionCodes: [] }).expect(404);
     await request(app.getHttpServer()).get('/api/v1/events').expect(200, before.body);
+    const adminHeaders = { Authorization: 'Bearer admin-test-token' };
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run').expect(401);
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'incomplete-run', status: 'uploading', totalParts: 2, uploadedParts: [{ part: 1, eventCount: 100 }] }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run/batches/1').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body.events).toHaveLength(100));
 
     for (const [index, batch] of batches.entries()) {
       await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/batches').set(headers)
@@ -192,6 +199,11 @@ describe('schedule API', () => {
       .send(finalizeBody)
       .expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', totalParts: 2, eventCount: 205, redemptionCodeCount: 1 }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', status: 'completed', totalParts: 2, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/batches/1').set(adminHeaders).expect(404);
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body.map((item: { runId: string }) => item.runId)).toEqual(expect.arrayContaining(['incomplete-run', 'complete-run'])));
     await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/finalize').set(headers)
       .send(finalizeBody).expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', eventCount: 205, temporaryBatchesDeleted: true }));

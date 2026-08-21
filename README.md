@@ -30,6 +30,9 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `POST` | `/api/internal/events/import` | 수동/외부 데이터 저장(Bearer 인증) |
 | `POST` | `/api/internal/event-imports/:runId/batches` | workflow 이벤트 임시 배치 저장(Bearer 인증) |
 | `POST` | `/api/internal/event-imports/:runId/finalize` | 전체 배치 검증 및 운영 데이터 확정(Bearer 인증) |
+| `GET` | `/api/internal/admin/event-imports` | 관리자용 import 실행 목록(`ADMIN_TOKEN` 인증) |
+| `GET` | `/api/internal/admin/event-imports/:runId` | 관리자용 import 실행 메타데이터(`ADMIN_TOKEN` 인증) |
+| `GET` | `/api/internal/admin/event-imports/:runId/batches/:part` | 남아 있는 미완료 배치 조회(`ADMIN_TOKEN` 인증) |
 | `POST` | `/api/internal/redemption-codes/import` | 리딤코드 저장(Bearer 인증) |
 | `POST` | `/api/internal/characters/import` | 캐릭터 프로필 저장(Bearer 인증) |
 
@@ -80,9 +83,10 @@ curl http://localhost:5000/api/v1/redemption-codes
 2. Vercel Storage에서 **private Blob store**를 생성하고 프로젝트에 연결합니다. Vercel Function은 OIDC로 Blob에 접근합니다.
 3. `openssl rand -hex 32`로 수집 업로드용 비밀 값을 생성합니다.
 4. 생성한 값을 Vercel 환경 변수와 GitHub Actions Secret 양쪽에 `INGEST_TOKEN`으로 등록합니다.
-5. GitHub Actions Secret `SCHEDULE_API_URL`에 배포 주소를 등록합니다. 예: `https://subculture-schdule-api.vercel.app`
-6. 환경 변수를 적용해 Vercel을 재배포합니다.
-7. Actions의 `Collect and publish official schedules`를 한 번 수동 실행해 최초 데이터를 적재합니다.
+5. 관리자 조회용으로 별도의 충분히 긴 `ADMIN_TOKEN`을 생성해 Vercel 환경 변수에만 등록합니다. 관리자 클라이언트에 토큰을 직접 포함하지 말고 관리자 서버 또는 보호된 프록시에서 사용합니다.
+6. GitHub Actions Secret `SCHEDULE_API_URL`에 배포 주소를 등록합니다. 예: `https://subculture-schdule-api.vercel.app`
+7. 환경 변수를 적용해 Vercel을 재배포합니다.
+8. Actions의 `Collect and publish official schedules`를 한 번 수동 실행해 최초 데이터를 적재합니다.
 
 이후 `.github/workflows/collect-schedules.yml`이 매시간 다음 명령을 실행합니다.
 
@@ -114,6 +118,8 @@ schedule-api/
 `api:publish`는 `EVENT_IMPORT_BATCH_BYTES`를 지정하지 않으면 UTF-8 JSON 기준 1,000,000 bytes를 목표로 분할합니다. 서버는 이벤트 배열이 1,250,000 bytes를 넘는 배치를 거부합니다. 이는 NestJS의 2MB JSON body 제한과 [Vercel Function의 4.5MB request/response 상한](https://vercel.com/docs/functions/limitations#request-body-size)보다 충분한 여유를 두기 위한 값입니다.
 
 finalize는 모든 part의 존재와 순서, 개별·전체 SHA-256 checksum, 예상 이벤트 수, 이벤트 스키마, ID와 `sourceUrl` 유일성을 확인합니다. 검증에 실패하면 기존 운영 JSON은 유지됩니다. 성공한 part는 삭제하고 `completed.json`을 남겨 응답 유실 후 같은 `runId`의 finalize 재시도를 처리합니다.
+
+각 실행은 `manifest.json`에 run ID, 상태, 전체 part 수, 업로드된 part의 수량·크기·checksum을 기록합니다. 관리자는 `GET /api/internal/admin/event-imports`에서 run ID를 포함한 최근 실행 목록을 확인할 수 있습니다. 성공 실행은 완료 메타데이터만 조회되고 배치 본문은 삭제됩니다. 미완료 실행은 남아 있는 part의 메타데이터와 내용을 관리자 API로 확인할 수 있습니다. 관리자 응답은 `private, no-store`이며 공개 API로 제공하지 않습니다.
 
 ## 수동 import
 
