@@ -121,6 +121,8 @@ finalize는 모든 part의 존재와 순서, 개별·전체 SHA-256 checksum, �
 
 각 실행은 `manifest.json`에 run ID, 상태, 전체 part 수, 업로드된 part의 수량·크기·checksum을 기록합니다. 관리자는 `GET /api/internal/admin/event-imports`에서 run ID를 포함한 최근 실행 목록을 확인할 수 있습니다. 성공 실행은 완료 메타데이터만 조회되고 배치 본문은 삭제됩니다. 미완료 실행은 남아 있는 part의 메타데이터와 내용을 관리자 API로 확인할 수 있습니다. 관리자 응답은 `private, no-store`이며 공개 API로 제공하지 않습니다.
 
+별도 관리자 프런트엔드 없이 배포 도메인의 `/admin/imports`에서 실행 목록과 상태를 확인할 수 있습니다. 최초 접근 시 `ADMIN_TOKEN`을 입력하면 서버가 1시간짜리 `HttpOnly`, `SameSite=Strict` 세션 쿠키를 발급하며 토큰을 브라우저 저장소나 URL에 보관하지 않습니다. 이 화면과 관리자 API는 운영 진단 전용이며 Electron 클라이언트와 공개 `/api/v1`, `/api/v2` 응답에는 배치 정보를 포함하지 않습니다.
+
 ## 수동 import
 
 수집기 외에 2MB 미만의 검수된 JSON을 직접 넣어야 할 때만 기존 단일 import를 사용합니다. 자동 수집 게시에는 `npm run api:publish`의 배치/finalize 경로를 사용합니다.

@@ -178,6 +178,14 @@ describe('schedule API', () => {
       .send({ totalParts: 2, expectedEventCount: events.length, checksum: checksum(events), redemptionCodes: [] }).expect(404);
     await request(app.getHttpServer()).get('/api/v1/events').expect(200, before.body);
     const adminHeaders = { Authorization: 'Bearer admin-test-token' };
+    const page = await request(app.getHttpServer()).get('/admin/imports').expect(200);
+    expect(page.headers['content-security-policy']).toContain("default-src 'self'");
+    expect(page.text).toContain('Import runs');
+    await request(app.getHttpServer()).post('/api/internal/admin/session').send({ token: 'wrong-token' }).expect(401);
+    const login = await request(app.getHttpServer()).post('/api/internal/admin/session').send({ token: 'admin-test-token' }).expect(201);
+    expect(login.headers['set-cookie'][0]).toContain('HttpOnly');
+    const adminCookie = login.headers['set-cookie'][0].split(';')[0];
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run').set('Cookie', adminCookie).expect(200);
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run').expect(401);
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/incomplete-run').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'incomplete-run', status: 'uploading', totalParts: 2, uploadedParts: [{ part: 1, eventCount: 100 }] }));

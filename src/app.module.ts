@@ -17,9 +17,11 @@ import { EventImportsService } from './events/event-imports.service';
 import { EventsV2Controller } from './events/events-v2.controller';
 import { EventImportsAdminController } from './events/event-imports-admin.controller';
 import { AdminAuthGuard } from './auth/admin-auth.guard';
+import { EventImportsAdminSessionController } from './events/event-imports-admin-session.controller';
+import { EventImportsAdminPageController } from './events/event-imports-admin-page.controller';
 
 @Module({
-  controllers: [HealthController, EventsController, EventsV2Controller, ImportController, EventImportsController, EventImportsAdminController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeCandidatesController, CharactersController],
+  controllers: [HealthController, EventsController, EventsV2Controller, ImportController, EventImportsController, EventImportsAdminController, EventImportsAdminSessionController, EventImportsAdminPageController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeCandidatesController, CharactersController],
   providers: [StorageService, EventsService, EventImportsService, RedemptionCodesService, RedemptionCodeCandidatesService, CharactersService, IngestAuthGuard, AdminAuthGuard],
 })
 export class AppModule {}
