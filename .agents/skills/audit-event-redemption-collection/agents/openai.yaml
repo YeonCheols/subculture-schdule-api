@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Event & Redemption Collection"
+  short_description: "이벤트와 리딤 코드의 공식 수집 상태를 독립적으로 점검합니다"
+  default_prompt: "Use $audit-event-redemption-collection to audit official event and redemption-code collection."
