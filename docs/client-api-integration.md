@@ -34,6 +34,8 @@ interface GamesResponse {
 
 카탈로그 요청이 실패하면 마지막 성공 카탈로그를 사용하고, 캐시가 없을 때만 번들 기본 목록으로 fallback한다. 성공한 카탈로그만 원자적으로 캐시한다.
 
+서버가 새 게임을 추가하면 카탈로그 `items`에 항목이 추가되고 해당 `id`가 v2·v1 일정 및 게임 ID 필터 API에서 허용된다. 각 API의 기존 응답 모양은 바뀌지 않는다. 따라서 클라이언트는 `id`를 고정 union으로 선언하지 않고 카탈로그에서 받은 문자열을 사용해야 한다.
+
 모든 공개 조회 API는 인증이 필요 없다. 알 수 없는 `gameId`, `status`, 잘못된 날짜 또는 cursor는 `400`을 반환한다.
 
 ## 권장 연동: v2 일정 API
@@ -112,7 +114,7 @@ v1의 응답이 계속 커질 수 있으므로 신규 구현과 마이그레이�
 ## 일정 데이터 타입
 
 ```ts
-type GameId = 'monster' | 'wuthering' | 'genshin' | 'nte';
+type GameId = string; // GET /api/v1/games의 GameCatalogItem.id
 type EventType = 'event' | 'update' | 'maintenance' | 'banner' | 'broadcast' | 'notice';
 type EventStatus = 'upcoming' | 'active' | 'ended' | 'unknown';
 type Confidence = 'confirmed' | 'probable' | 'unverified';
