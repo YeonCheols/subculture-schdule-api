@@ -65,6 +65,12 @@ npm run dev
 
 개발 서버는 기본적으로 `127.0.0.1:5000`에서 실행됩니다. 포트가 사용 중이면 `PORT=5100 npm run dev`처럼 변경할 수 있습니다.
 
+Vercel 환경과 Blob 연결을 사용해 개발할 때도 다음 명령으로 5000번 포트를 사용합니다.
+
+```bash
+npm run dev:vercel
+```
+
 수집기는 `data/schedule-api/events.json`과 `collection-status.json`을 생성하고 로컬 API는 같은 파일을 즉시 읽습니다.
 v2 페이지와 manifest는 인증된 단일 import 또는 배치 finalize가 성공할 때 생성되므로, collector만 실행한 새 로컬 데이터 디렉터리에서는 최초 import 전까지 v2가 404를 반환할 수 있습니다.
 

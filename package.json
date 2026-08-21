@@ -12,6 +12,7 @@
     "api:pull": "node scripts/api-sync.mjs pull",
     "api:publish": "node scripts/api-sync.mjs push",
     "dev": "nest start --watch",
+    "dev:vercel": "npx --yes vercel dev --listen 5000",
     "start": "node dist/main.js",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "node --test test/collector.test.mjs && jest --config test/jest-e2e.json --runInBand",

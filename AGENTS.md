@@ -280,6 +280,7 @@ AI 코딩 에이전트는 사용자가 요청한 변경을 완료하고 아래 �
 
 ```bash
 npm run dev
+npm run dev:vercel
 npm run collect
 npm run collect:dry
 npm run collect:backfill -- --from=2026-04-08 --to=2026-08-08
