@@ -165,6 +165,7 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - import API는 `INGEST_TOKEN` Bearer 인증을 유지한다.
 - import 실행 목록·메타데이터·미완료 배치 조회 API는 별도의 `ADMIN_TOKEN` Bearer 인증을 유지하며 공개 API로 노출하지 않는다.
 - 관리자 화면은 `GET /api/internal/admin/event-imports`에서 run ID를 탐색하고, 성공 실행은 완료 메타데이터와 최종 결과 페이지를, 미완료 실행은 남은 임시 part를 조회한다. 관리자 토큰을 브라우저 번들에 포함하지 않는다.
+- 관리자 화면의 리딤 코드 탭은 `GET /api/internal/admin/redemption-code-imports`에서 별도 run 상태와 배치 메타데이터를 조회한다. 성공한 임시 part는 삭제하고 완료 건수만 표시하며, 미완료 part 본문은 인증된 관리자 API에서만 조회한다.
 - 성공 실행의 관리자 상세는 해당 run ID의 `event-pages/{runId}/manifest.json`과 게임별 `page-NNNN.json`을 인증된 API로 조회할 수 있으며 Blob URL이나 자격 증명을 직접 노출하지 않는다.
 - 로컬 관리자 화면의 운영 기록 조회는 `ADMIN_READ_PROXY_URL`에 지정한 HTTPS 운영 도메인의 관리자 GET API만 서버 측에서 프록시한다. 로컬에 운영 Blob OIDC 권한을 부여하거나 import POST를 프록시하지 않는다.
 - GitHub Actions에 Vercel Blob 장기 자격 증명을 제공하지 않는다. Blob 읽기·쓰기·임시 파일 삭제는 인증된 Vercel Function을 통해 수행한다.

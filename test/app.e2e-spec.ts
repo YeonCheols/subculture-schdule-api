@@ -181,6 +181,7 @@ describe('schedule API', () => {
     const page = await request(app.getHttpServer()).get('/admin/imports').expect(200);
     expect(page.headers['content-security-policy']).toContain("default-src 'self'");
     expect(page.text).toContain('Import runs');
+    expect(page.text).toContain('리딤 코드');
     await request(app.getHttpServer()).post('/api/internal/admin/session').send({ token: 'wrong-token' }).expect(401);
     const login = await request(app.getHttpServer()).post('/api/internal/admin/session').send({ token: 'admin-test-token' }).expect(201);
     expect(login.headers['set-cookie'][0]).toContain('HttpOnly');
@@ -255,6 +256,7 @@ describe('schedule API', () => {
 
   it('stages and finalizes redemption codes independently from events', async () => {
     const headers = { Authorization: 'Bearer test-token' };
+    const adminHeaders = { Authorization: 'Bearer admin-test-token' };
     const secondCode = {
       ...redemptionCode,
       id: 'monster-code-batch',
@@ -269,6 +271,11 @@ describe('schedule API', () => {
       .send({ part: 1, totalParts: 2, checksum: checksum(batches[0]), redemptionCodes: batches[0] }).expect(401);
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/batches').set(headers)
       .send({ part: 1, totalParts: 2, checksum: checksum(batches[0]), redemptionCodes: batches[0] }).expect(201);
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run').expect(401);
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', status: 'uploading', totalParts: 2, uploadedParts: [{ part: 1, redemptionCodeCount: 1 }] }));
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run/batches/1').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body.redemptionCodes).toEqual([redemptionCode]));
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
       .send({ totalParts: 2, expectedRedemptionCodeCount: codes.length, checksum: checksum(codes) }).expect(404);
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/batches').set(headers)
@@ -277,12 +284,29 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
       .send(finalizeBody).expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', totalParts: 2, redemptionCodeCount: 2, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body.map((item: { runId: string }) => item.runId)).toContain('code-run'));
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', status: 'completed', result: { redemptionCodeCount: 2 }, temporaryBatchesDeleted: true }));
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports/code-run/batches/1').set(adminHeaders).expect(404);
     await request(app.getHttpServer()).get('/api/v1/redemption-codes').expect(200, codes);
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
       .send(finalizeBody).expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'code-run', redemptionCodeCount: 2, temporaryBatchesDeleted: true }));
     await request(app.getHttpServer()).post('/api/internal/redemption-code-imports/code-run/finalize').set(headers)
       .send({ ...finalizeBody, expectedRedemptionCodeCount: 1 }).expect(400);
+    process.env.ADMIN_READ_PROXY_URL = 'https://production.example/';
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify([{
+      version: 1, runId: 'production-code-run', status: 'completed', totalParts: 1, uploadedParts: [],
+      createdAt: redemptionCode.retrievedAt, updatedAt: redemptionCode.retrievedAt,
+    }]), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    await request(app.getHttpServer()).get('/api/internal/admin/redemption-code-imports').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toEqual([expect.objectContaining({ runId: 'production-code-run' })]));
+    expect(fetchMock).toHaveBeenCalledWith(new URL('/api/internal/admin/redemption-code-imports', 'https://production.example/'), expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer admin-test-token' }),
+    }));
+    fetchMock.mockRestore();
+    delete process.env.ADMIN_READ_PROXY_URL;
   });
 
   it('imports, filters, and reviews OCR redemption candidates', async () => {

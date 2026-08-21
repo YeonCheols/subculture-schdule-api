@@ -21,9 +21,10 @@ import { EventImportsAdminSessionController } from './events/event-imports-admin
 import { EventImportsAdminPageController } from './events/event-imports-admin-page.controller';
 import { RedemptionCodeImportsController } from './redemption-codes/redemption-code-imports.controller';
 import { RedemptionCodeImportsService } from './redemption-codes/redemption-code-imports.service';
+import { RedemptionCodeImportsAdminController } from './redemption-codes/redemption-code-imports-admin.controller';
 
 @Module({
-  controllers: [HealthController, EventsController, EventsV2Controller, ImportController, EventImportsController, EventImportsAdminController, EventImportsAdminSessionController, EventImportsAdminPageController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeImportsController, RedemptionCodeCandidatesController, CharactersController],
+  controllers: [HealthController, EventsController, EventsV2Controller, ImportController, EventImportsController, EventImportsAdminController, EventImportsAdminSessionController, EventImportsAdminPageController, RedemptionCodesController, RedemptionCodesImportController, RedemptionCodeImportsController, RedemptionCodeImportsAdminController, RedemptionCodeCandidatesController, CharactersController],
   providers: [StorageService, EventsService, EventImportsService, RedemptionCodesService, RedemptionCodeImportsService, RedemptionCodeCandidatesService, CharactersService, IngestAuthGuard, AdminAuthGuard],
 })
 export class AppModule {}
