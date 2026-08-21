@@ -212,6 +212,18 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/batches/1').set(adminHeaders).expect(404);
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body.map((item: { runId: string }) => item.runId)).toEqual(expect.arrayContaining(['incomplete-run', 'complete-run'])));
+    process.env.ADMIN_READ_PROXY_URL = 'https://production.example/';
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify([{
+      runId: 'production-run', status: 'completed', totalParts: 1, uploadedParts: [],
+      createdAt: event.retrievedAt, updatedAt: event.retrievedAt, version: 1,
+    }]), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toEqual([expect.objectContaining({ runId: 'production-run' })]));
+    expect(fetchMock).toHaveBeenCalledWith(new URL('/api/internal/admin/event-imports', 'https://production.example/'), expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer admin-test-token' }),
+    }));
+    fetchMock.mockRestore();
+    delete process.env.ADMIN_READ_PROXY_URL;
     await request(app.getHttpServer()).post('/api/internal/event-imports/complete-run/finalize').set(headers)
       .send(finalizeBody).expect(201)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', eventCount: 205, temporaryBatchesDeleted: true }));

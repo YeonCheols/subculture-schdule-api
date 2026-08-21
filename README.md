@@ -71,6 +71,8 @@ Vercel 환경과 Blob 연결을 사용해 개발할 때도 다음 명령으로 5
 npm run dev:vercel
 ```
 
+로컬 관리자 화면에서 운영 실행 기록을 읽을 때는 Development 환경에 `ADMIN_READ_PROXY_URL=https://subculture-schdule-api.vercel.app`을 설정합니다. 로컬 서버는 Blob OIDC 권한을 받지 않고 운영 관리자 GET API만 프록시하며 import POST는 전달하지 않습니다.
+
 수집기는 `data/schedule-api/events.json`과 `collection-status.json`을 생성하고 로컬 API는 같은 파일을 즉시 읽습니다.
 v2 페이지와 manifest는 인증된 단일 import 또는 배치 finalize가 성공할 때 생성되므로, collector만 실행한 새 로컬 데이터 디렉터리에서는 최초 import 전까지 v2가 404를 반환할 수 있습니다.
 

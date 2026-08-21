@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, GatewayTimeoutException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import type { CollectionStatus, ScheduleEvent } from '../domain/event';
 import { StorageService } from '../storage/storage.service';
@@ -145,6 +145,7 @@ export class EventImportsService {
   }
 
   async listRuns() {
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<EventImportManifest[]>('/api/internal/admin/event-imports');
     const files = await this.storage.listFiles('schedule-api/imports/');
     const runIds = [...new Set(files.map((file) => file.pathname.split('/')[2]).filter(Boolean))];
     const runs = await Promise.all(runIds.map((runId) => this.getRun(runId)));
@@ -153,6 +154,7 @@ export class EventImportsService {
 
   async getRun(runId: string): Promise<EventImportManifest> {
     validateRunId(runId);
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<EventImportManifest>(`/api/internal/admin/event-imports/${encodeURIComponent(runId)}`);
     const manifest = await this.storage.tryReadJson<EventImportManifest>(manifestPath(runId));
     if (manifest) return manifest;
 
@@ -182,7 +184,40 @@ export class EventImportsService {
   async getBatch(runId: string, partValue: string) {
     validateRunId(runId);
     const part = positiveInteger(Number(partValue), 'part');
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<StoredEventBatch>(`/api/internal/admin/event-imports/${encodeURIComponent(runId)}/batches/${part}`);
     return this.storage.readJson<StoredEventBatch>(batchPath(runId, part));
+  }
+
+  private async readAdminProxyJson<T>(pathname: string): Promise<T> {
+    const baseUrl = adminReadProxyUrl();
+    const token = process.env.ADMIN_TOKEN;
+    if (!baseUrl || !token) throw new BadGatewayException('admin read proxy is not configured');
+    try {
+      const response = await fetch(new URL(pathname, baseUrl), {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (response.status === 404) throw new NotFoundException('upstream import record was not found');
+      if (!response.ok) throw new BadGatewayException(`admin read proxy returned ${response.status}`);
+      return await response.json() as T;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadGatewayException) throw error;
+      if (error instanceof DOMException && error.name === 'TimeoutError') throw new GatewayTimeoutException('admin read proxy timed out');
+      throw new BadGatewayException('admin read proxy request failed');
+    }
+  }
+}
+
+function adminReadProxyUrl(): string | undefined {
+  if (process.env.VERCEL) return undefined;
+  const value = process.env.ADMIN_READ_PROXY_URL;
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
   }
 }
 
