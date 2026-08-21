@@ -11,6 +11,8 @@
 
 Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하기만 하면 됩니다.
 
+클라이언트 구현에 필요한 v1/v2 계약, TypeScript 타입, cursor 순회와 캐시 전략은 [Electron 클라이언트 API 연동 가이드](docs/client-api-integration.md)를 참고하세요.
+
 ## API
 
 | Method | Route | 설명 |
