@@ -11,6 +11,7 @@
 - `monster`: 몬길: STAR DIVE
 - `wuthering`: 명조: 워더링 웨이브
 - `genshin`: 원신
+- `nte`: 이환
 
 Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 책임은 일정 수집과 API 제공까지이며, 데스크톱 UI·로컬 알림·클라이언트 캐시는 Electron 저장소의 책임이다.
 
@@ -27,11 +28,16 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 
 - `src/domain/event.ts`: 일정 및 수집 상태 도메인 모델
 - `src/events/`: 공개 조회 API와 인증된 import API
+- `src/characters/`: 공식 캐릭터 프로필 조회와 import API
+- `src/redemption-codes/`: 공식 리딤코드 및 OCR 검수 후보 API
+- `src/events/event-imports.service.ts`: 임시 이벤트 배치 저장, 전체 검증 및 finalize
+- `src/events/events-v2.controller.ts`: 게임별 cursor 페이지 조회 API
 - `src/storage/storage.service.ts`: 로컬 파일/Vercel Blob 저장 추상화
-- `scripts/collector/index.mjs`: 매일 실행하는 최신 일정 수집기
+- `scripts/collector/index.mjs`: 매시간 실행하는 최신 일정 수집기
 - `scripts/collector/backfill.mjs`: 명시한 날짜 범위의 과거 일정 수집기
 - `scripts/collector/lib.mjs`: HTML·시간 추출, 정규화, 상태 계산, 병합
 - `scripts/api-sync.mjs`: 배포 API의 데이터 pull/push
+- `scripts/api-sync-lib.mjs`: UTF-8 JSON 바이트 기준 배치 분할과 checksum
 - `config/sources.json`: 공식 소스 정의
 - `data/schedule-api/`: 로컬 및 seed 데이터
 - `.github/workflows/`: CI 및 예약 수집
@@ -41,12 +47,30 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 일반 운영 흐름은 다음과 같다.
 
 1. GitHub Actions가 배포 API에서 기존 이벤트 이력을 내려받는다.
-2. 공식 사이트 세 곳에서 최신 게시물을 수집한다.
+2. 등록된 공식 사이트와 공식 API에서 최신 게시물을 수집한다.
 3. 게시물 내용을 `ScheduleEvent`로 정규화하고 기존 이력과 병합한다.
-4. 인증된 import API를 통해 Vercel Blob에 저장한다.
-5. Electron 클라이언트는 공개 API를 주기적으로 조회한다.
+4. `scripts/api-sync.mjs`가 이벤트를 UTF-8 JSON 기준 1MB 이하 배치로 나눈다.
+5. 각 배치를 `runId`별 임시 Blob에 저장하고, finalize에서 전체 수량·checksum·ID·URL 중복을 검증한다.
+6. 검증이 모두 성공한 경우에만 운영 `events.json`, 수집 상태, 게임별 페이지 generation과 현재 manifest를 갱신한다.
+7. Electron 클라이언트는 기존 v1 전체 조회 또는 v2 게임별 cursor API를 주기적으로 조회한다.
 
 일정 데이터 갱신을 위해 Vercel을 다시 배포할 필요는 없다.
+
+## 배치 import 및 페이지 저장 정책
+
+- GitHub Actions는 `github.run_id`와 `github.run_attempt` 조합을 `IMPORT_RUN_ID`로 사용한다. 로컬 실행은 UUID를 사용한다.
+- `scripts/api-sync.mjs`의 기본 이벤트 배치 목표는 1,000,000 bytes이며 개수가 아니라 `JSON.stringify` 결과의 UTF-8 바이트로 분할한다.
+- 서버는 배치 이벤트 배열이 1,250,000 bytes를 넘으면 거부한다. NestJS JSON body 제한은 2MB, Vercel Function request/response 상한은 4.5MB이므로 이 여유를 유지한다.
+- 배치는 `schedule-api/imports/{runId}/events/part-NNNN.json`에 임시 저장하며 공개 API가 이 경로를 읽어서는 안 된다.
+- finalize는 모든 part의 존재, part/totalParts 일치, 개별 및 전체 SHA-256 checksum, 예상 이벤트 수, 전체 `validateEvents`, ID와 `sourceUrl` 유일성을 확인한다.
+- finalize 검증이 실패하면 운영 파일 쓰기를 시작하지 않으며 기존 운영 데이터를 삭제하거나 빈 배열로 교체하지 않는다.
+- finalize 성공 결과는 `schedule-api/imports/{runId}/completed.json`에 남겨 동일 실행 재시도를 멱등하게 처리하고, 성공한 임시 part 파일은 삭제한다.
+- 운영 호환 파일은 `schedule-api/events.json`이며 `/api/v1/events`가 사용한다.
+- v2 페이지는 `schedule-api/event-pages/{version}/{gameId}/page-NNNN.json`에 게임별 최대 100개씩 저장한다.
+- 각 generation의 `manifest.json`은 cursor가 시작한 버전을 끝까지 읽게 하며, `schedule-api/event-pages/manifest.json`은 새 조회가 사용할 현재 generation을 가리킨다.
+- 현재 cursor가 참조할 수 있는 과거 generation을 임의로 삭제하지 않는다. 정리 정책을 추가할 때 cursor 유효 기간과 API 캐시 시간을 함께 정의한다.
+- `/api/v2/events`는 `gameId`가 필수이며 `{ items, nextCursor, total }`을 반환한다. 기존 `/api/v1/events` 배열 계약은 Electron 전환 전까지 유지한다.
+- Vercel의 4.5MB 응답 상한에 접근하면 v1 전체 조회를 계속 확장하지 말고 Electron을 v2로 전환한다.
 
 ## 공식 데이터 정책
 
@@ -85,12 +109,12 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 
 ## 수집기 변경 정책
 
-### 일일 수집기
+### 정기 수집기
 
 `scripts/collector/index.mjs`는 최신 데이터의 가벼운 증분 수집에 사용한다.
 
-- 매일 실행 가능한 요청량과 실행 시간을 유지한다.
-- 과거 전체 페이지 순회 기능을 일일 수집기에 넣지 않는다.
+- 매시간 실행 가능한 요청량과 실행 시간을 유지한다.
+- 과거 전체 페이지 순회 기능을 정기 수집기에 넣지 않는다.
 - 한 소스의 실패가 다른 소스의 성공 결과를 가리지 않도록 한다.
 - 기존 이벤트 이력을 병합 과정에서 유지한다.
 
@@ -127,12 +151,23 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - 과거 수집에서는 `iPage`와 `iPageSize`를 이용해 페이지를 순회한다.
 - 응답의 `retcode`, `data.list`, `iTotal` 구조를 검증한다.
 
+### 이환
+
+- 네이버 게임 라운지의 등록된 공식 게시판을 사용한다.
+- 공식 작성자 닉네임 `이 환`과 `game_manager` 역할을 함께 검사한다.
+- 캐릭터 프로필은 별도 캐릭터 게시판과 `캐릭터 파일 소개丨` 제목 패턴을 사용하며 일정 이벤트와 분리해 저장한다.
+
 ## 저장소 및 API 정책
 
 - 로컬에서는 기본적으로 `data/` 아래 JSON 파일을 읽고 쓴다.
 - Vercel 환경에서는 private Vercel Blob을 사용한다.
 - 공개 API는 읽기 전용이다.
 - import API는 `INGEST_TOKEN` Bearer 인증을 유지한다.
+- GitHub Actions에 Vercel Blob 장기 자격 증명을 제공하지 않는다. Blob 읽기·쓰기·임시 파일 삭제는 인증된 Vercel Function을 통해 수행한다.
+- 기존 `/api/internal/events/import`는 2MB 미만의 수동 import와 하위 호환용이다. 자동 수집 게시에는 배치/finalize API를 사용한다.
+- `/api/v1/events`는 기존 배열 응답 계약이며 `/api/v2/events`는 게임별 cursor 계약이다. 응답 모양을 같은 버전에서 바꾸지 않는다.
+- v2 cursor를 임의 offset으로 해석하거나 현재 manifest로 다시 매핑하지 않는다. cursor에 포함된 generation의 manifest와 페이지를 읽어 pagination 도중 데이터가 섞이지 않게 한다.
+- 운영 이벤트, 현재 페이지 manifest, 수집 상태는 generation 페이지 준비가 끝난 뒤 순서대로 갱신하며 `collection-status.json`은 마지막에 쓴다.
 - 비밀 값, Blob 자격 증명 또는 실제 토큰을 코드·문서·fixture에 넣지 않는다.
 - 공개 조회 응답의 캐시 정책을 변경할 때 데이터 갱신 주기와 stale 허용 시간을 함께 고려한다.
 - 사용자별 데이터나 인증 정보를 현재 JSON 이벤트 파일에 섞지 않는다. 그런 기능에는 별도 데이터 모델과 저장소가 필요하다.
@@ -142,6 +177,9 @@ Electron 애플리케이션 코드는 이 저장소에 없다. 이 저장소의 
 - 요청 범위를 벗어난 리팩터링은 피한다.
 - 기존 이벤트 이력이나 사용자의 작업물을 임의로 삭제하지 않는다.
 - 데이터 파일을 갱신할 때는 임시 파일 작성 후 rename하는 원자적 방식을 유지한다.
+- 배치 import를 변경할 때 임시 part를 운영 조회에 직접 노출하거나 part별로 운영 `events.json`에 병합하지 않는다.
+- 배치 크기, checksum 직렬화 방식 또는 페이지 크기를 변경할 때 클라이언트와 서버 상수를 함께 갱신하고 경계값 테스트를 추가한다.
+- finalize 완료 기록과 성공한 part 정리를 유지하며, 네트워크 응답 유실 후 같은 `runId`로 재시도 가능한지 확인한다.
 - 수집 대상 사이트의 응답 구조가 바뀌었다면 실제 공개 응답을 확인한 뒤 파서를 수정한다.
 - 새로운 게임을 추가할 때는 `GAME_IDS`, 소스 설정, 수집기, validator 테스트, API 필터 테스트를 함께 갱신한다.
 - 새로운 이벤트 유형을 추가할 때는 enum, 분류 로직, validator 및 테스트를 함께 갱신한다.
@@ -194,6 +232,17 @@ npm run test
 - 기존 이력이 유지되는가
 - `collection-status.json`의 `eventCount`가 실제 이벤트 수와 일치하는가
 - 소스 실패가 상태 결과에 명확히 기록되는가
+
+배치 import 또는 페이지 API 변경 시 추가로 확인한다.
+
+- UTF-8 JSON 기준 각 event batch가 클라이언트 목표와 서버 상한 이내인가
+- 일부 part가 누락되거나 checksum이 다르면 finalize가 실패하고 기존 운영 이벤트가 유지되는가
+- finalize 재시도가 같은 결과를 반환하며 다른 metadata를 가진 같은 `runId`를 거부하는가
+- finalize 후 성공한 임시 part가 삭제되고 완료 기록이 남는가
+- v1 전체 이벤트 수와 v2 게임별 `total` 합계가 일치하는가
+- v2의 모든 페이지를 순회했을 때 ID와 `sourceUrl`이 유일하고 누락이 없는가
+- pagination 중 현재 manifest가 바뀌어도 기존 cursor가 같은 generation을 계속 읽는가
+- 운영 `collection-status.json.eventCount`, page manifest의 `eventCount`, 실제 이벤트 수가 일치하는가
 
 네트워크를 사용하는 수집 테스트는 외부 사이트 상태에 영향을 받을 수 있다. 실패 시 파서 오류와 일시적인 네트워크·사이트 오류를 구분해서 보고한다.
 
