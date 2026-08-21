@@ -18,16 +18,16 @@ Treat regional and publisher-wide channels as distinct sources. Verify that each
 Use the strongest available evidence for each sampled recent video, livestream, or short:
 
 - **Publishable:** a code is explicit in an official video's description, together with its game context. Store the canonical video URL as `sourceUrl`; retain quoted surrounding evidence and any stated validity period.
-- **Candidate only:** a code appears in a public official transcript, subtitle, pinned comment, frame, or embedded image but cannot be independently verified as exact public text. Preserve the media location, extraction method, and the original evidence. Do not publish it as a `RedemptionCode`.
+- **Candidate only:** a code appears in an official video's frame or embedded image, an official or generated subtitle/transcript, any video comment, or livestream chat. Preserve the video ID and URL, media timestamp or comment/message ID when available, extraction method, and original evidence. Do not publish it as a `RedemptionCode`.
 - **Not collectable:** the code is spoken only, displayed too briefly, is personalized/single-use, needs a purchase or invitation, or has no reliable extraction path.
 
-Never use generated captions or OCR from video frames as publishable code evidence. A description change must be detected with a content hash and rechecked before changing a stored result.
+Never use generated captions, comments, livestream chat, or OCR from video frames as publishable code evidence. A description change must be detected with a content hash and rechecked before changing a stored result. For comments and chat, retain only the opaque platform message identifier and evidence needed for review; do not store an author's display name or other user profile data.
 
 ## Evaluate collection mechanics
 
 Prefer a channel's public YouTube RSS feed for new-video discovery when it exposes the channel ID. Fetch individual public video pages only as needed to inspect the official description and canonical URL. Treat feeds as discovery metadata, not code evidence.
 
-Evaluate comments, captions, and livestream chat independently: their availability and APIs can require credentials, rendering, or moderation-state handling. Do not scrape authenticated, rate-limited, or access-controlled content to bypass those constraints. State the required API, credential, request budget, and failure isolation before recommending one.
+Include video frames, captions, comments, and livestream chat in the candidate-collection assessment. Evaluate each independently: their availability and APIs can require credentials, rendering, pagination, retention windows, or moderation-state handling. Candidate records must identify `official-video-frame`, `official-video-caption`, `official-video-comment`, or `official-live-chat` so the client can visibly distinguish them from verified codes. Do not scrape authenticated, rate-limited, or access-controlled content to bypass those constraints. State the required API, credential, request budget, and failure isolation before recommending one.
 
 Check that an hourly collector can use bounded recent-video windows, stable video IDs, and source-level failures without losing existing codes. Do not backfill an unbounded channel history in the regular collector.
 
