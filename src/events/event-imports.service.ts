@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import type { CollectionStatus, ScheduleEvent } from '../domain/event';
 import { StorageService } from '../storage/storage.service';
@@ -69,9 +69,9 @@ interface CompletedEventImport {
 @Injectable()
 export class EventImportsService {
   constructor(
-    private readonly storage: StorageService,
-    private readonly eventsService: EventsService,
-    private readonly redemptionCodesService: RedemptionCodesService,
+    @Inject(StorageService) private readonly storage: StorageService,
+    @Inject(EventsService) private readonly eventsService: EventsService,
+    @Inject(RedemptionCodesService) private readonly redemptionCodesService: RedemptionCodesService,
   ) {}
 
   async storeBatch(runId: string, body: EventBatchBody) {

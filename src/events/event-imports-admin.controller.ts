@@ -1,11 +1,11 @@
-import { Controller, Get, Header, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, Inject, Param, UseGuards } from '@nestjs/common';
 import { AdminAuthGuard } from '../auth/admin-auth.guard';
 import { EventImportsService } from './event-imports.service';
 
 @Controller('api/internal/admin/event-imports')
 @UseGuards(AdminAuthGuard)
 export class EventImportsAdminController {
-  constructor(private readonly imports: EventImportsService) {}
+  constructor(@Inject(EventImportsService) private readonly imports: EventImportsService) {}
 
   @Get()
   @Header('Cache-Control', 'private, no-store')
