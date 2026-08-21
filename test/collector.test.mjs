@@ -48,6 +48,19 @@ test('normalizes, deduplicates, classifies, and calculates status', () => {
   assert.equal(classify('특별 방송 안내'), 'broadcast');
 });
 
+test('assigns a 30-day KST collection window to official candidates without schedule times', () => {
+  const event = normalize(source, {
+    title: '공식 이벤트 안내', canonical: 'https://example.com/detail/no-time', description: '',
+    published: '2026-08-19T14:23:00+09:00', text: '공식 이벤트의 상세 내용은 안내를 참고해 주세요.',
+  }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-21T08:00:00Z'));
+
+  assert.equal(event.startsAt, '2026-08-21T00:00:00+09:00');
+  assert.equal(event.endsAt, '2026-09-20T23:59:59+09:00');
+  assert.equal(event.sourceTimeText, '원문에 일정 시각 없음; 수집 기준 추정 기간 (2026-08-21 ~ 2026-09-20, KST)');
+  assert.equal(event.confidence, 'probable');
+  assert.equal(event.status, 'active');
+});
+
 test('extracts multiple official character and weapon banners with rarity and phase', () => {
   const page = {
     title: '7.0 버전 이벤트 기원 알림 제1회',
@@ -205,7 +218,7 @@ test('exposes an official Monster character showcase as a pickup candidate', () 
   }]);
 });
 
-test('retains an official timeless Monster pickup as a public banner event', () => {
+test('assigns a collection window to an official Monster pickup without schedule times', () => {
   const event = normalize({ gameId: 'monster', locale: 'ko-KR' }, {
     title: '운명의 힘을 품은 구미호, 미나 등장! - 몬길: STAR DIVE',
     canonical: 'https://forum.netmarble.com/stardive_ko/view/20/2268',
@@ -214,8 +227,10 @@ test('retains an official timeless Monster pickup as a public banner event', () 
   }, '2026-08-16T00:00:00Z');
 
   assert.equal(event.type, 'banner');
-  assert.equal(event.startsAt, null);
-  assert.equal(event.status, 'unknown');
+  assert.equal(event.startsAt, '2026-08-16T00:00:00+09:00');
+  assert.equal(event.endsAt, '2026-09-15T23:59:59+09:00');
+  assert.equal(event.status, 'active');
+  assert.equal(event.confidence, 'probable');
   assert.deepEqual(mergeEventHistory([], [event]), [event]);
 });
 

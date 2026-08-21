@@ -166,7 +166,7 @@ const status = {
 };
 
 if (dryRun) {
-  console.log(JSON.stringify({ status: { ...status, characterCount: characters.length, collectedCharacterCount: collectedCharacters.length }, events, characters, redemptionCodes, redemptionCodeCandidates }, null, 2));
+  await new Promise((resolve, reject) => process.stdout.write(`${JSON.stringify({ status: { ...status, characterCount: characters.length, collectedCharacterCount: collectedCharacters.length }, events, characters, redemptionCodes, redemptionCodeCandidates }, null, 2)}\n`, (error) => error ? reject(error) : resolve()));
   process.exit(status.sources.some((source) => !source.ok) ? 1 : 0);
 }
 

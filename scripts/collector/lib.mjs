@@ -343,7 +343,10 @@ export function extractTime(text, referenceYear = null) {
 
 export function normalize(source, page, retrievedAt, now = Date.now()) {
   const referenceYear = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).getFullYear() : null;
-  const timing = extractTime(page.text, referenceYear);
+  const extractedTiming = extractTime(page.text, referenceYear);
+  const timing = extractedTiming.startsAt || extractedTiming.endsAt
+    ? extractedTiming
+    : collectionWindowTiming(retrievedAt);
   const digest = createHash('sha256').update(page.canonical).digest('hex').slice(0, 14);
   const banners = extractBannerInfo(page);
   return {
@@ -351,9 +354,22 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
     title: page.title.replace(/\s*-\s*몬길:\s*STAR DIVE$/i, ''), sourceTitle: page.title, sourceUrl: page.canonical,
     sourceLocale: source.locale, publishedAt: page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null,
     startsAt: timing.startsAt, endsAt: timing.endsAt, sourceTimeText: timing.sourceTimeText,
-    status: getEventStatus(timing, now), confidence: timing.startsAt || timing.endsAt ? 'confirmed' : 'probable', retrievedAt,
+    status: getEventStatus(timing, now), confidence: extractedTiming.startsAt || extractedTiming.endsAt ? 'confirmed' : 'probable', retrievedAt,
     version: page.title.match(/(?:버전|Version|v)\s*([0-9]+(?:\.[0-9]+)+)/i)?.[1] || null, summary: page.description.slice(0, 240),
     ...(banners.length ? { banners } : {}),
+  };
+}
+
+function collectionWindowTiming(retrievedAt) {
+  const collectedAt = new Date(retrievedAt);
+  const koreanDate = new Date(collectedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const end = new Date(`${koreanDate}T00:00:00+09:00`);
+  end.setUTCDate(end.getUTCDate() + 30);
+  const endDate = new Date(end.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return {
+    startsAt: `${koreanDate}T00:00:00+09:00`,
+    endsAt: `${endDate}T23:59:59+09:00`,
+    sourceTimeText: `원문에 일정 시각 없음; 수집 기준 추정 기간 (${koreanDate} ~ ${endDate}, KST)`,
   };
 }
 
