@@ -24,4 +24,16 @@ export class EventImportsAdminController {
   getBatch(@Param('runId') runId: string, @Param('part') part: string) {
     return this.imports.getBatch(runId, part);
   }
+
+  @Get(':runId/results')
+  @Header('Cache-Control', 'private, no-store')
+  getRunResults(@Param('runId') runId: string) {
+    return this.imports.getRunResults(runId);
+  }
+
+  @Get(':runId/results/:gameId/pages/:page')
+  @Header('Cache-Control', 'private, no-store')
+  getRunResultPage(@Param('runId') runId: string, @Param('gameId') gameId: string, @Param('page') page: string) {
+    return this.imports.getRunResultPage(runId, gameId, page);
+  }
 }

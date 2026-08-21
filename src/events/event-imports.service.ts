@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import type { CollectionStatus, ScheduleEvent } from '../domain/event';
 import { StorageService } from '../storage/storage.service';
 import { validateEvents } from './event-validator';
-import { EventsService } from './events.service';
+import { EventsService, type EventPagesManifest } from './events.service';
 import { validateRedemptionCodes } from '../redemption-codes/redemption-code-validator';
 import { RedemptionCodesService } from '../redemption-codes/redemption-codes.service';
 
@@ -186,6 +186,19 @@ export class EventImportsService {
     const part = positiveInteger(Number(partValue), 'part');
     if (adminReadProxyUrl()) return this.readAdminProxyJson<StoredEventBatch>(`/api/internal/admin/event-imports/${encodeURIComponent(runId)}/batches/${part}`);
     return this.storage.readJson<StoredEventBatch>(batchPath(runId, part));
+  }
+
+  async getRunResults(runId: string): Promise<EventPagesManifest> {
+    validateRunId(runId);
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<EventPagesManifest>(`/api/internal/admin/event-imports/${encodeURIComponent(runId)}/results`);
+    return this.eventsService.getRunPagesManifest(runId);
+  }
+
+  async getRunResultPage(runId: string, gameId: string, pageValue: string): Promise<ScheduleEvent[]> {
+    validateRunId(runId);
+    const page = positiveInteger(Number(pageValue), 'page');
+    if (adminReadProxyUrl()) return this.readAdminProxyJson<ScheduleEvent[]>(`/api/internal/admin/event-imports/${encodeURIComponent(runId)}/results/${encodeURIComponent(gameId)}/pages/${page}`);
+    return this.eventsService.getRunPage(runId, gameId, page);
   }
 
   private async readAdminProxyJson<T>(pathname: string): Promise<T> {

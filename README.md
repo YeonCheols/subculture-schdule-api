@@ -33,6 +33,8 @@ Electron 저장소는 수집 코드를 실행하지 않고 이 API를 조회하�
 | `GET` | `/api/internal/admin/event-imports` | 관리자용 import 실행 목록(`ADMIN_TOKEN` 인증) |
 | `GET` | `/api/internal/admin/event-imports/:runId` | 관리자용 import 실행 메타데이터(`ADMIN_TOKEN` 인증) |
 | `GET` | `/api/internal/admin/event-imports/:runId/batches/:part` | 남아 있는 미완료 배치 조회(`ADMIN_TOKEN` 인증) |
+| `GET` | `/api/internal/admin/event-imports/:runId/results` | 확정된 run별 페이지 manifest 조회(`ADMIN_TOKEN` 인증) |
+| `GET` | `/api/internal/admin/event-imports/:runId/results/:gameId/pages/:page` | 확정된 run별 게임 페이지 JSON 조회(`ADMIN_TOKEN` 인증) |
 | `POST` | `/api/internal/redemption-codes/import` | 리딤코드 저장(Bearer 인증) |
 | `POST` | `/api/internal/characters/import` | 캐릭터 프로필 저장(Bearer 인증) |
 
@@ -129,7 +131,7 @@ finalize는 모든 part의 존재와 순서, 개별·전체 SHA-256 checksum, �
 
 각 실행은 `manifest.json`에 run ID, 상태, 전체 part 수, 업로드된 part의 수량·크기·checksum을 기록합니다. 관리자는 `GET /api/internal/admin/event-imports`에서 run ID를 포함한 최근 실행 목록을 확인할 수 있습니다. 성공 실행은 완료 메타데이터만 조회되고 배치 본문은 삭제됩니다. 미완료 실행은 남아 있는 part의 메타데이터와 내용을 관리자 API로 확인할 수 있습니다. 관리자 응답은 `private, no-store`이며 공개 API로 제공하지 않습니다.
 
-별도 관리자 프런트엔드 없이 배포 도메인의 `/admin/imports`에서 실행 목록과 상태를 확인할 수 있습니다. 최초 접근 시 `ADMIN_TOKEN`을 입력하면 서버가 1시간짜리 `HttpOnly`, `SameSite=Strict` 세션 쿠키를 발급하며 토큰을 브라우저 저장소나 URL에 보관하지 않습니다. 이 화면과 관리자 API는 운영 진단 전용이며 Electron 클라이언트와 공개 `/api/v1`, `/api/v2` 응답에는 배치 정보를 포함하지 않습니다.
+별도 관리자 프런트엔드 없이 배포 도메인의 `/admin/imports`에서 실행 목록과 상태를 확인할 수 있습니다. 완료된 run은 게임별 최종 `page-NNNN.json` 목록과 JSON 내용도 조회할 수 있습니다. 최초 접근 시 `ADMIN_TOKEN`을 입력하면 서버가 1시간짜리 `HttpOnly`, `SameSite=Strict` 세션 쿠키를 발급하며 토큰을 브라우저 저장소나 URL에 보관하지 않습니다. 이 화면과 관리자 API는 운영 진단 전용이며 Electron 클라이언트와 공개 `/api/v1`, `/api/v2` 응답에는 배치 정보를 포함하지 않습니다.
 
 ## 수동 import
 

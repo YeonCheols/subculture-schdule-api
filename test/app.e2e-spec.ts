@@ -210,6 +210,15 @@ describe('schedule API', () => {
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body).toMatchObject({ runId: 'complete-run', status: 'completed', totalParts: 2, temporaryBatchesDeleted: true }));
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/batches/1').set(adminHeaders).expect(404);
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results').expect(401);
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toMatchObject({ version: 'complete-run', eventCount: 205, games: { genshin: { eventCount: 205, pageCount: 3 } } }));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results/genshin/pages/1').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toHaveLength(100));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results/genshin/pages/3').set(adminHeaders).expect(200)
+      .expect(({ body }) => expect(body).toHaveLength(5));
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results/genshin/pages/4').set(adminHeaders).expect(400);
+    await request(app.getHttpServer()).get('/api/internal/admin/event-imports/complete-run/results/unknown/pages/1').set(adminHeaders).expect(400);
     await request(app.getHttpServer()).get('/api/internal/admin/event-imports').set(adminHeaders).expect(200)
       .expect(({ body }) => expect(body.map((item: { runId: string }) => item.runId)).toEqual(expect.arrayContaining(['incomplete-run', 'complete-run'])));
     process.env.ADMIN_READ_PROXY_URL = 'https://production.example/';

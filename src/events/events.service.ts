@@ -7,7 +7,7 @@ const STATUS_PATH = 'schedule-api/collection-status.json';
 const EVENT_PAGES_MANIFEST_PATH = 'schedule-api/event-pages/manifest.json';
 const EVENT_PAGE_SIZE = 100;
 
-interface EventPagesManifest {
+export interface EventPagesManifest {
   version: string;
   generatedAt: string;
   pageSize: number;
@@ -55,6 +55,18 @@ export class EventsService {
       ? encodeCursor({ gameId, version: manifest.version, page: page + 1 })
       : null;
     return { items, nextCursor, total: game.eventCount };
+  }
+
+  getRunPagesManifest(runId: string): Promise<EventPagesManifest> {
+    return this.storage.readJson<EventPagesManifest>(eventPagesGenerationManifestPath(runId));
+  }
+
+  async getRunPage(runId: string, gameId: string, pageNumber: number): Promise<ScheduleEvent[]> {
+    if (!GAME_IDS.includes(gameId as GameId)) throw new BadRequestException('gameId is unsupported');
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) throw new BadRequestException('page must be a positive integer');
+    const manifest = await this.getRunPagesManifest(runId);
+    if (pageNumber > manifest.games[gameId as GameId].pageCount) throw new BadRequestException('page points beyond the available event pages');
+    return this.storage.readJson<ScheduleEvent[]>(eventPagePath(runId, gameId, pageNumber - 1));
   }
 
   async import(events: ScheduleEvent[], status?: CollectionStatus, version?: string): Promise<{ eventCount: number; retrievedAt: string }> {
