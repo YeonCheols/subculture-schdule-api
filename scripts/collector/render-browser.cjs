@@ -8,7 +8,7 @@ const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mil
 
 async function waitForNetmarbleArticle(window, url) {
   if (!/\/view\/\d+\/\d+(?:[/?#]|$)/.test(url)) return false;
-  const deadline = Date.now() + Number(process.env.NETMARBLE_DETAIL_RENDER_WAIT_MS || 7500);
+  const deadline = Date.now() + Number(process.env.NETMARBLE_DETAIL_RENDER_WAIT_MS || 20000);
   while (Date.now() < deadline) {
     const ready = await window.webContents.executeJavaScript(`Boolean(
       document.querySelector('#contentsDetail')
