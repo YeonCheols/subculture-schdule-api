@@ -496,7 +496,21 @@ export function getEventStatus(event, now = Date.now()) {
 }
 
 export function mergeEventHistory(existingEvents, collectedEvents, now = Date.now()) {
-  return deduplicate([...existingEvents, ...collectedEvents]).filter(isCollectableEvent).map((event) => ({
+  const byUrl = new Map(existingEvents.map((event) => [event.sourceUrl, event]));
+  for (const collected of collectedEvents) {
+    const existing = byUrl.get(collected.sourceUrl);
+    const preservesConfirmedTiming = existing?.confidence === 'confirmed' && collected.confidence === 'probable';
+    byUrl.set(collected.sourceUrl, preservesConfirmedTiming
+      ? {
+        ...collected,
+        startsAt: existing.startsAt,
+        endsAt: existing.endsAt,
+        sourceTimeText: existing.sourceTimeText,
+        confidence: 'confirmed',
+      }
+      : collected);
+  }
+  return deduplicate([...byUrl.values()]).filter(isCollectableEvent).map((event) => ({
     ...event,
     title: decodeHtmlEntities(event.title),
     sourceTitle: decodeHtmlEntities(event.sourceTitle),
