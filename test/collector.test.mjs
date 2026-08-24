@@ -48,42 +48,42 @@ test('normalizes, deduplicates, classifies, and calculates status', () => {
   assert.equal(classify('특별 방송 안내'), 'broadcast');
 });
 
-test('assigns a 30-day KST collection window to official candidates without schedule times', () => {
+test('uses the official publication time for a 30-day probable window without schedule times', () => {
   const event = normalize(source, {
     title: '공식 이벤트 안내', canonical: 'https://example.com/detail/no-time', description: '',
     published: '2026-08-19T14:23:00+09:00', text: '공식 이벤트의 상세 내용은 안내를 참고해 주세요.',
   }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-21T08:00:00Z'));
 
-  assert.equal(event.startsAt, '2026-08-21T00:00:00+09:00');
-  assert.equal(event.endsAt, '2026-09-20T23:59:59+09:00');
-  assert.equal(event.sourceTimeText, '원문에 일정 시각 없음; 수집 기준 추정 기간 (2026-08-21 ~ 2026-09-20, KST)');
+  assert.equal(event.startsAt, '2026-08-19T14:23:00+09:00');
+  assert.equal(event.endsAt, '2026-09-18T23:59:59+09:00');
+  assert.equal(event.sourceTimeText, '원문에 일정 시각 없음; 게시 시각 기준 추정 기간 (2026-08-19 ~ 2026-09-18, KST)');
   assert.equal(event.confidence, 'probable');
   assert.equal(event.status, 'active');
 });
 
-test('uses the collection time as a probable start when only an official end is stated', () => {
+test('uses the official publication time as a probable start when only an official end is stated', () => {
   const event = normalize(source, {
-    title: '버전 이벤트', canonical: 'https://example.com/detail/end-only', description: '', published: null,
+    title: '버전 이벤트', canonical: 'https://example.com/detail/end-only', description: '', published: '2026-08-19T14:23:00+09:00',
     text: '7.0 버전 업데이트 후 ~ 2026/9/1 18:59',
   }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-22T00:00:00Z'));
 
-  assert.equal(event.startsAt, '2026-08-21T07:59:22.049Z');
+  assert.equal(event.startsAt, '2026-08-19T14:23:00+09:00');
   assert.equal(event.endsAt, '2026-09-01T18:59:00+09:00');
   assert.equal(event.confidence, 'probable');
-  assert.match(event.sourceTimeText, /원문에는 종료 시각만 명시됨; 시작 시각은 수집 시각 추정/);
+  assert.match(event.sourceTimeText, /원문에는 종료 시각만 명시됨; 시작 시각은 게시 시각 추정/);
   assert.equal(event.status, 'active');
 });
 
-test('caps an end-only estimated start at the official end when recollected after expiry', () => {
+test('caps an end-only publication-time estimate at the official end after expiry', () => {
   const event = normalize(source, {
-    title: '종료된 버전 이벤트', canonical: 'https://example.com/detail/expired-end-only', description: '', published: null,
+    title: '종료된 버전 이벤트', canonical: 'https://example.com/detail/expired-end-only', description: '', published: '2026-08-20T10:00:00+09:00',
     text: '버전 업데이트 후 ~ 2026/8/1 18:59',
   }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-22T00:00:00Z'));
 
   assert.equal(event.startsAt, '2026-08-01T18:59:00+09:00');
   assert.equal(event.endsAt, '2026-08-01T18:59:00+09:00');
   assert.equal(event.confidence, 'probable');
-  assert.match(event.sourceTimeText, /수집 시각이 공식 종료 시각 이후여서 종료 시각으로 제한/);
+  assert.match(event.sourceTimeText, /게시 시각이 공식 종료 시각 이후여서 종료 시각으로 제한/);
   assert.equal(event.status, 'ended');
 });
 
@@ -202,6 +202,17 @@ test('extracts rendered forum links and Naver document text', () => {
   assert.equal(decodeHtml('&lt;개발자 라이브&gt; 안내'), '<개발자 라이브> 안내');
 });
 
+test('preserves a Netmarble list publication date for probable timing estimates', () => {
+  const [candidate] = extractNetmarbleForumLinks('<a data-router="view/6/4009"><span>Event 여름 이벤트 안내 Aug 19, 2026</span></a>', { url: 'https://forum.netmarble.com/stardive_ko/list/6/1' });
+  assert.equal(candidate.publishedDate, '2026-08-19');
+  const page = extractPage('<p>상세 일정은 안내를 참고해 주세요.</p>', candidate);
+  const event = normalize({ gameId: 'monster', locale: 'ko-KR' }, page, '2026-08-24T01:09:37.942Z');
+  assert.equal(event.publishedAt, null);
+  assert.equal(event.startsAt, '2026-08-19T00:00:00+09:00');
+  assert.equal(event.endsAt, '2026-09-18T23:59:59+09:00');
+  assert.match(event.sourceTimeText, /게시일 기준 추정 기간/);
+});
+
 test('limits Netmarble images to the official article body', () => {
   const page = extractPage([
     '<img src="https://sgimage.netmarble.com/ui.png">',
@@ -244,7 +255,7 @@ test('exposes an official Monster character showcase as a pickup candidate', () 
   }]);
 });
 
-test('assigns a collection window to an official Monster pickup without schedule times', () => {
+test('uses a Monster publication time for a pickup without schedule times', () => {
   const event = normalize({ gameId: 'monster', locale: 'ko-KR' }, {
     title: '운명의 힘을 품은 구미호, 미나 등장! - 몬길: STAR DIVE',
     canonical: 'https://forum.netmarble.com/stardive_ko/view/20/2268',
@@ -253,9 +264,9 @@ test('assigns a collection window to an official Monster pickup without schedule
   }, '2026-08-16T00:00:00Z');
 
   assert.equal(event.type, 'banner');
-  assert.equal(event.startsAt, '2026-08-16T00:00:00+09:00');
-  assert.equal(event.endsAt, '2026-09-15T23:59:59+09:00');
-  assert.equal(event.status, 'active');
+  assert.equal(event.startsAt, '2026-04-29T10:03:00+09:00');
+  assert.equal(event.endsAt, '2026-05-29T23:59:59+09:00');
+  assert.equal(event.status, 'ended');
   assert.equal(event.confidence, 'probable');
   assert.deepEqual(mergeEventHistory([], [event]), [event]);
 });

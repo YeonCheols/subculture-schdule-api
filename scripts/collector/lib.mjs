@@ -125,9 +125,20 @@ export function extractNetmarbleForumLinks(html, source) {
   for (const match of html.matchAll(anchors)) {
     const value = match[1] || `/stardive_ko/view/${match[2]}`;
     const url = absoluteUrl(value, source.url); const title = decodeHtml(match[3]);
-    if (url && title && !seen.has(url)) { seen.add(url); results.push({ url, title }); }
+    if (url && title && !seen.has(url)) {
+      const publishedDate = extractNetmarbleListedDate(title);
+      seen.add(url); results.push({ url, title, ...(publishedDate ? { publishedDate } : {}) });
+    }
   }
   return results;
+}
+
+function extractNetmarbleListedDate(title) {
+  const months = { jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' };
+  const match = title.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),\s*(20\d{2})\b/i);
+  if (!match) return null;
+  const month = months[match[1].slice(0, 3).toLowerCase()];
+  return `${match[3]}-${month}-${match[2].padStart(2, '0')}`;
 }
 
 export function selectNetmarbleForumCandidates(linkGroups, limit = 30) {
@@ -187,7 +198,7 @@ export function extractPage(html, candidate) {
   const published = meta(html, 'article:published_time') || (visiblePublished ? `${visiblePublished[1]}-${visiblePublished[2].padStart(2, '0')}-${visiblePublished[3].padStart(2, '0')}T${visiblePublished[4].padStart(2, '0')}:${visiblePublished[5]}:00+09:00` : null);
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i)?.[1] || candidate.url;
   const articleHtml = html.match(/<div\b[^>]*class=["'][^"']*contents_detail[^"']*["'][^>]*id=["']contentsDetail["'][^>]*>([\s\S]*?)(?=<div\b[^>]*class=["'][^"']*contents_detail[^"']*["'][^>]*id=["']contentsBlock["'])/i)?.[1] || html;
-  return { title, description, published, canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(articleHtml), imageUrls: extractImageUrls(articleHtml) };
+  return { title, description, published, ...(candidate.publishedDate ? { publishedDate: candidate.publishedDate } : {}), canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(articleHtml), imageUrls: extractImageUrls(articleHtml) };
 }
 
 export function classify(title) {
@@ -342,19 +353,27 @@ export function extractTime(text, referenceYear = null) {
 }
 
 export function normalize(source, page, retrievedAt, now = Date.now()) {
-  const referenceYear = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).getFullYear() : null;
+  const publishedAt = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null;
+  const listedPublishedDate = /^20\d{2}-\d{2}-\d{2}$/.test(page.publishedDate || '') ? page.publishedDate : null;
+  const referenceDate = publishedAt || listedPublishedDate;
+  const referenceYear = referenceDate ? new Date(referenceDate).getUTCFullYear() : null;
+  const timingEstimate = publishedAt
+    ? { value: page.published, basis: '게시 시각' }
+    : listedPublishedDate
+      ? { value: `${listedPublishedDate}T00:00:00+09:00`, basis: '게시일' }
+      : { value: retrievedAt, basis: '수집 시각' };
   const extractedTiming = extractTime(page.text, referenceYear);
   const hasOnlyOfficialEnd = !extractedTiming.startsAt && extractedTiming.endsAt;
   const confidence = hasOnlyOfficialEnd || (!extractedTiming.startsAt && !extractedTiming.endsAt) ? 'probable' : 'confirmed';
   const timing = hasOnlyOfficialEnd
-    ? collectionStartForEndOnlyTiming(extractedTiming, retrievedAt)
-    : (extractedTiming.startsAt || extractedTiming.endsAt ? extractedTiming : collectionWindowTiming(retrievedAt));
+    ? collectionStartForEndOnlyTiming(extractedTiming, timingEstimate)
+    : (extractedTiming.startsAt || extractedTiming.endsAt ? extractedTiming : collectionWindowTiming(timingEstimate));
   const digest = createHash('sha256').update(page.canonical).digest('hex').slice(0, 14);
   const banners = extractBannerInfo(page);
   return {
     id: `${source.gameId}-${digest}`, gameId: source.gameId, type: banners.length ? 'banner' : classify(page.title),
     title: page.title.replace(/\s*-\s*몬길:\s*STAR DIVE$/i, ''), sourceTitle: page.title, sourceUrl: page.canonical,
-    sourceLocale: source.locale, publishedAt: page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null,
+    sourceLocale: source.locale, publishedAt,
     startsAt: timing.startsAt, endsAt: timing.endsAt, sourceTimeText: timing.sourceTimeText,
     status: getEventStatus(timing, now), confidence, retrievedAt,
     version: page.title.match(/(?:버전|Version|v)\s*([0-9]+(?:\.[0-9]+)+)/i)?.[1] || null, summary: page.description.slice(0, 240),
@@ -362,30 +381,30 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
   };
 }
 
-function collectionStartForEndOnlyTiming(timing, retrievedAt) {
+function collectionStartForEndOnlyTiming(timing, estimate) {
   const end = Date.parse(timing.endsAt);
-  const collected = Date.parse(retrievedAt);
-  const startsAt = collected <= end ? retrievedAt : timing.endsAt;
-  const estimate = startsAt === retrievedAt
-    ? `수집 시각 추정 (${retrievedAt})`
-    : `수집 시각이 공식 종료 시각 이후여서 종료 시각으로 제한 (${timing.endsAt})`;
+  const estimated = Date.parse(estimate.value);
+  const startsAt = estimated <= end ? estimate.value : timing.endsAt;
+  const reason = startsAt === estimate.value
+    ? `${estimate.basis} 추정 (${estimate.value})`
+    : `${estimate.basis}이 공식 종료 시각 이후여서 종료 시각으로 제한 (${timing.endsAt})`;
   return {
     startsAt,
     endsAt: timing.endsAt,
-    sourceTimeText: `${timing.sourceTimeText}; 원문에는 종료 시각만 명시됨; 시작 시각은 ${estimate}`,
+    sourceTimeText: `${timing.sourceTimeText}; 원문에는 종료 시각만 명시됨; 시작 시각은 ${reason}`,
   };
 }
 
-function collectionWindowTiming(retrievedAt) {
-  const collectedAt = new Date(retrievedAt);
-  const koreanDate = new Date(collectedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+function collectionWindowTiming(estimate) {
+  const estimatedAt = new Date(estimate.value);
+  const koreanDate = new Date(estimatedAt.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const end = new Date(`${koreanDate}T00:00:00+09:00`);
   end.setUTCDate(end.getUTCDate() + 30);
   const endDate = new Date(end.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   return {
-    startsAt: `${koreanDate}T00:00:00+09:00`,
+    startsAt: estimate.value,
     endsAt: `${endDate}T23:59:59+09:00`,
-    sourceTimeText: `원문에 일정 시각 없음; 수집 기준 추정 기간 (${koreanDate} ~ ${endDate}, KST)`,
+    sourceTimeText: `원문에 일정 시각 없음; ${estimate.basis} 기준 추정 기간 (${koreanDate} ~ ${endDate}, KST)`,
   };
 }
 
