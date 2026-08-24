@@ -452,7 +452,10 @@ test('uses only the configured official YouTube RSS channel and description text
   const pages = extractYouTubeOfficialPages(youtube, feed);
   assert.deepEqual(pages.map((page) => page.canonical), ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=12345678901']);
   assert.equal(pages[0].description, '공용 리딤 코드: PUBLIC2026');
-  assert.deepEqual(extractRedemptionCodes(youtube, pages[0], '2026-08-24T02:00:00Z').map((code) => code.code), ['PUBLIC2026']);
+  const codes = extractRedemptionCodes(youtube, pages[0], '2026-08-24T02:00:00Z');
+  assert.deepEqual(codes.map((code) => code.code), ['PUBLIC2026']);
+  assert.equal(codes[0].sourceUrl, 'https://www.youtube.com/watch?v=abcdefghijk');
+  assert.match(codes[0].contentHash, /^[a-f0-9]{64}$/);
   assert.throws(() => extractYouTubeOfficialPages(youtube, feed.replace('UCrn3H0BHw8GfkS1rSxB6VxA', 'UCwrong')) , /channel ID mismatch/);
 });
 
