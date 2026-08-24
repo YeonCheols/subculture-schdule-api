@@ -36,8 +36,9 @@ async function renderUrls(urls, renderWaitMs = null) {
   await writeFile(input, JSON.stringify(urls));
   const isCi = Boolean(process.env.CI || process.env.GITHUB_ACTIONS);
   const chromiumArgs = isCi ? ['--no-sandbox', '--disable-setuid-sandbox'] : [];
+  const detailRenderWaitMs = Number(process.env.NETMARBLE_DETAIL_RENDER_WAIT_MS || 20000);
   await execFileAsync(electronPath, [path.join(import.meta.dirname, 'render-browser.cjs'), input, output, ...chromiumArgs], {
-    timeout: timeoutMs * Math.max(2, urls.length),
+    timeout: (timeoutMs + detailRenderWaitMs) * Math.max(2, urls.length),
     env: { ...process.env, ...(renderWaitMs ? { RENDER_WAIT_MS: String(renderWaitMs) } : {}), ...(isCi ? { ELECTRON_DISABLE_SANDBOX: '1' } : {}) },
   });
   return JSON.parse(await readFile(output, 'utf8'));
