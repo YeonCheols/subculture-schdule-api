@@ -18,6 +18,17 @@ test('extracts metadata and Korean KST ranges', () => {
   assert.deepEqual(extractTime(page.text), { startsAt: '2026-08-07T11:00:00+09:00', endsAt: '2026-08-09T23:59:00+09:00', sourceTimeText: '2026. 8. 7 11:00부터 2026. 8. 9 23:59' });
 });
 
+test('extracts the Netmarble post header publication time, not article-body times', () => {
+  const page = extractPage([
+    '<div class="contents_title"><p class="curr_title sub">백린의 무녀, 나기 등장!</p>',
+    '<div class="register_info"><span class="writer_wrap">몬길: STAR DIVE</span><em>|</em><span>2026. 6. 12. 18:00</span><em>|</em><span>2,403</span></div></div>',
+    '<div class="contents_detail" id="contentsDetail"><p>이벤트 일정: 2026. 6. 19. 10:00 ~ 2026. 7. 3. 08:59</p></div>',
+  ].join(''), { url: 'https://forum.netmarble.com/stardive_ko/view/20/4698', title: 'fallback' });
+
+  assert.equal(page.published, '2026-06-12T18:00:00+09:00');
+  assert.match(page.text, /2026\. 6\. 19\. 10:00/);
+});
+
 test('extracts spaced Korean month and day ranges used by Netmarble posts', () => {
   assert.deepEqual(extractTime('이벤트 진행 기간 - 8 월 12일(수) 09:00 ~ 8월 19일(수) 08:59(KST)', 2026), {
     startsAt: '2026-08-12T09:00:00+09:00', endsAt: '2026-08-19T08:59:00+09:00',
