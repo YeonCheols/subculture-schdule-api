@@ -89,7 +89,7 @@ curl http://localhost:5000/api/v1/collection-status
 curl http://localhost:5000/api/v1/redemption-codes
 ```
 
-몬길 공식 포럼은 브라우저 렌더링이 필요하므로 로컬에서는 Electron Chromium을 사용하고, GitHub Actions에서는 `xvfb-run`으로 실행합니다. 원신과 명조는 공식 JSON API를 직접 조회합니다.
+몬길 공식 포럼은 브라우저 렌더링이 필요하므로 로컬에서는 Electron Chromium을 사용하고, GitHub Actions에서는 `xvfb-run`으로 실행합니다. 원신과 명조는 공식 JSON API를 직접 조회합니다. `config/sources.json`에 소유 근거와 immutable 채널 ID를 등록한 공식 YouTube 채널은 공개 RSS의 최근 최대 15개 영상만 수집합니다. 영상 제목·설명은 일정 원문으로 사용하고, 리딤코드는 영상 설명에 명시된 공용 코드만 자동 저장합니다. 영상 프레임·자막·댓글·라이브 채팅의 코드는 자동 확정하지 않습니다.
 
 ## Vercel 및 자동 수집 설정
 

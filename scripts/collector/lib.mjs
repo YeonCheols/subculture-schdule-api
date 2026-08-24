@@ -472,6 +472,51 @@ export function extractGenshinMainRedemptionCodes(source, html, retrievedAt, now
   return candidates.flatMap((code) => extractRedemptionCodes(source, { ...page, text: `Redeem code: ${code}` }, retrievedAt, now));
 }
 
+function xmlText(fragment) {
+  return decodeHtmlEntities(String(fragment || '')
+    .replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, '$1')
+    .replace(/<[^>]+>/g, '')
+    .trim());
+}
+
+function xmlElementText(xml, name) {
+  const match = String(xml).match(new RegExp(`<${name}\\b[^>]*>([\\s\\S]*?)</${name}>`, 'i'));
+  return match ? xmlText(match[1]) : '';
+}
+
+/**
+ * Turns the bounded public YouTube RSS feed of a configured, verified channel
+ * into the same page shape used by the normal event and redemption parsers.
+ * The feed is discovery only; redemption extraction still accepts explicit
+ * public codes from the official video description, never from media.
+ */
+export function extractYouTubeOfficialPages(source, xml) {
+  // YouTube's feed-level yt:channelId currently omits the leading "UC" on
+  // some feeds, while the canonical channel link retains the immutable ID.
+  const feedHeader = String(xml).split(/<entry\b/i, 1)[0];
+  const channelId = feedHeader.match(/youtube\.com\/channel\/([A-Za-z0-9_-]+)/i)?.[1] || '';
+  if (!channelId || channelId !== source.youtube?.channelId) throw new Error('YouTube RSS channel ID mismatch');
+  const limit = Math.min(Math.max(Number(source.dailyMaxVideos || 15), 1), 15);
+  const pages = [];
+  for (const entry of String(xml).matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/gi)) {
+    if (pages.length >= limit) break;
+    const body = entry[1];
+    const videoId = xmlElementText(body, 'yt:videoId');
+    const title = xmlElementText(body, 'title');
+    const published = xmlElementText(body, 'published');
+    const description = xmlElementText(body, 'media:description');
+    if (!/^[A-Za-z0-9_-]{11}$/.test(videoId) || !title || Number.isNaN(Date.parse(published))) continue;
+    pages.push({
+      title,
+      canonical: `https://www.youtube.com/watch?v=${videoId}`,
+      description,
+      published,
+      text: `${title}\n${description}`.trim(),
+    });
+  }
+  return pages;
+}
+
 export function extractRedemptionCodes(source, page, retrievedAt, now = Date.now()) {
   if (source.redemptionCodes?.enabled !== true) return [];
   const candidates = [];

@@ -147,5 +147,69 @@
       "방송",
       "리딤"
     ]
+  },
+  {
+    "id": "monster-youtube-official",
+    "gameId": "monster",
+    "locale": "ko-KR",
+    "kind": "youtube-rss",
+    "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCrn3H0BHw8GfkS1rSxB6VxA",
+    "allowedHosts": ["www.youtube.com", "youtube.com"],
+    "dailyMaxVideos": 15,
+    "officialOwnershipUrl": "https://play.google.com/store/apps/details?hl=ko&id=com.netmarble.monster2",
+    "youtube": {
+      "channelId": "UCrn3H0BHw8GfkS1rSxB6VxA",
+      "channelUrl": "https://www.youtube.com/@Stardive_KR"
+    },
+    "redemptionCodes": { "enabled": true },
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "방송", "리딤"]
+  },
+  {
+    "id": "wuthering-youtube-official",
+    "gameId": "wuthering",
+    "locale": "ko-KR",
+    "kind": "youtube-rss",
+    "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCKuq0c-RXYaulECSuu5hFug",
+    "allowedHosts": ["www.youtube.com", "youtube.com"],
+    "dailyMaxVideos": 15,
+    "officialOwnershipUrl": "https://play.google.com/store/apps/details?hl=ko&id=com.kurogame.wutheringwaves.global",
+    "youtube": {
+      "channelId": "UCKuq0c-RXYaulECSuu5hFug",
+      "channelUrl": "https://www.youtube.com/@WW_KR_Official"
+    },
+    "redemptionCodes": { "enabled": true },
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "방송", "리딤"]
+  },
+  {
+    "id": "genshin-youtube-official",
+    "gameId": "genshin",
+    "locale": "ko-KR",
+    "kind": "youtube-rss",
+    "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCiS882YPwZt1NfaM0gR0D9Q",
+    "allowedHosts": ["www.youtube.com", "youtube.com"],
+    "dailyMaxVideos": 15,
+    "officialOwnershipUrl": "https://genshin.hoyoverse.com/ko/home",
+    "youtube": {
+      "channelId": "UCiS882YPwZt1NfaM0gR0D9Q",
+      "channelUrl": "https://www.youtube.com/c/GenshinImpact"
+    },
+    "redemptionCodes": { "enabled": true },
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "방송", "리딤"]
+  },
+  {
+    "id": "nte-youtube-official",
+    "gameId": "nte",
+    "locale": "ko-KR",
+    "kind": "youtube-rss",
+    "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC0042GfGERAl0AzXR0j8TPA",
+    "allowedHosts": ["www.youtube.com", "youtube.com"],
+    "dailyMaxVideos": 15,
+    "officialOwnershipUrl": "https://play.google.com/store/apps/details?hl=ko&id=com.hottagames.nte",
+    "youtube": {
+      "channelId": "UC0042GfGERAl0AzXR0j8TPA",
+      "channelUrl": "https://www.youtube.com/@NTE_KO"
+    },
+    "redemptionCodes": { "enabled": true },
+    "keywords": ["공지", "이벤트", "업데이트", "점검", "방송", "리딤"]
   }
 ]

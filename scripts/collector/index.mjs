@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, createNaverFeedUrl, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
+import { USER_AGENT, createNaverFeedUrl, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, extractYouTubeOfficialPages, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
 import { collectRedemptionOcrCandidates, enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 import { discoverUnofficialRedemptionCandidates } from './search-discovery.mjs';
 
@@ -97,6 +97,14 @@ async function collectSource(source) {
     const canonicalUrl = page.finalUrl && new URL(page.finalUrl).hostname === 'genshin.hoyoverse.com' ? page.finalUrl : source.url;
     const redemptionCodes = extractGenshinMainRedemptionCodes({ ...source, canonicalUrl }, page.body, retrievedAt);
     return { source, events: [], redemptionCodes, redemptionCodeCandidates: [], raw: { sourceId: source.id, retrievedAt, page }, candidateCount: redemptionCodes.length };
+  }
+
+  if (source.kind === 'youtube-rss') {
+    const feed = await request(source.url);
+    const pages = extractYouTubeOfficialPages(source, feed.body);
+    const events = pages.map((page) => normalize(source, page, retrievedAt)).filter(isCollectableEvent);
+    const redemptionCodes = pages.flatMap((page) => extractRedemptionCodes(source, page, retrievedAt));
+    return { source, events, redemptionCodes, redemptionCodeCandidates: [], raw: { sourceId: source.id, sourceUrl: feed.finalUrl, retrievedAt, channelId: source.youtube.channelId }, candidateCount: pages.length };
   }
 
   const index = await request(source.url);

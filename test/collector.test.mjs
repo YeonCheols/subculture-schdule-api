@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { splitJsonArray } from '../scripts/api-sync-lib.mjs';
-import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
+import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, extractTime, extractYouTubeOfficialPages, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
 import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
 import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
 
@@ -444,6 +444,16 @@ test('extracts only explicit public redemption codes from official text', () => 
   assert.equal(codes[0].distributionType, 'public');
   assert.equal(codes[0].expiresAt, '2026-08-09T23:59:00+09:00');
   assert.equal(codes[0].status, 'active');
+});
+
+test('uses only the configured official YouTube RSS channel and description text', () => {
+  const youtube = { ...source, gameId: 'monster', kind: 'youtube-rss', dailyMaxVideos: 2, youtube: { channelId: 'UCrn3H0BHw8GfkS1rSxB6VxA' }, redemptionCodes: { enabled: true } };
+  const feed = `<?xml version="1.0"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/"><link rel="alternate" href="https://www.youtube.com/channel/UCrn3H0BHw8GfkS1rSxB6VxA"/><yt:channelId>rn3H0BHw8GfkS1rSxB6VxA</yt:channelId><entry><yt:videoId>abcdefghijk</yt:videoId><title>공식 방송 안내</title><published>2026-08-24T01:00:00+00:00</published><media:group><media:description><![CDATA[공용 리딤 코드: PUBLIC2026]]></media:description></media:group></entry><entry><yt:videoId>12345678901</yt:videoId><title>두 번째 영상</title><published>2026-08-23T01:00:00+00:00</published><media:group><media:description>이미지 속 코드는 확정하지 않습니다.</media:description></media:group></entry></feed>`;
+  const pages = extractYouTubeOfficialPages(youtube, feed);
+  assert.deepEqual(pages.map((page) => page.canonical), ['https://www.youtube.com/watch?v=abcdefghijk', 'https://www.youtube.com/watch?v=12345678901']);
+  assert.equal(pages[0].description, '공용 리딤 코드: PUBLIC2026');
+  assert.deepEqual(extractRedemptionCodes(youtube, pages[0], '2026-08-24T02:00:00Z').map((code) => code.code), ['PUBLIC2026']);
+  assert.throws(() => extractYouTubeOfficialPages(youtube, feed.replace('UCrn3H0BHw8GfkS1rSxB6VxA', 'UCwrong')) , /channel ID mismatch/);
 });
 
 test('extracts a bracketed Wuthering Waves redemption code from official prose', () => {
