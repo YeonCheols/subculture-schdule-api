@@ -344,9 +344,11 @@ export function extractTime(text, referenceYear = null) {
 export function normalize(source, page, retrievedAt, now = Date.now()) {
   const referenceYear = page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).getFullYear() : null;
   const extractedTiming = extractTime(page.text, referenceYear);
-  const timing = extractedTiming.startsAt || extractedTiming.endsAt
-    ? extractedTiming
-    : collectionWindowTiming(retrievedAt);
+  const hasOnlyOfficialEnd = !extractedTiming.startsAt && extractedTiming.endsAt;
+  const confidence = hasOnlyOfficialEnd || (!extractedTiming.startsAt && !extractedTiming.endsAt) ? 'probable' : 'confirmed';
+  const timing = hasOnlyOfficialEnd
+    ? collectionStartForEndOnlyTiming(extractedTiming, retrievedAt)
+    : (extractedTiming.startsAt || extractedTiming.endsAt ? extractedTiming : collectionWindowTiming(retrievedAt));
   const digest = createHash('sha256').update(page.canonical).digest('hex').slice(0, 14);
   const banners = extractBannerInfo(page);
   return {
@@ -354,9 +356,23 @@ export function normalize(source, page, retrievedAt, now = Date.now()) {
     title: page.title.replace(/\s*-\s*몬길:\s*STAR DIVE$/i, ''), sourceTitle: page.title, sourceUrl: page.canonical,
     sourceLocale: source.locale, publishedAt: page.published && !Number.isNaN(Date.parse(page.published)) ? new Date(page.published).toISOString() : null,
     startsAt: timing.startsAt, endsAt: timing.endsAt, sourceTimeText: timing.sourceTimeText,
-    status: getEventStatus(timing, now), confidence: extractedTiming.startsAt || extractedTiming.endsAt ? 'confirmed' : 'probable', retrievedAt,
+    status: getEventStatus(timing, now), confidence, retrievedAt,
     version: page.title.match(/(?:버전|Version|v)\s*([0-9]+(?:\.[0-9]+)+)/i)?.[1] || null, summary: page.description.slice(0, 240),
     ...(banners.length ? { banners } : {}),
+  };
+}
+
+function collectionStartForEndOnlyTiming(timing, retrievedAt) {
+  const end = Date.parse(timing.endsAt);
+  const collected = Date.parse(retrievedAt);
+  const startsAt = collected <= end ? retrievedAt : timing.endsAt;
+  const estimate = startsAt === retrievedAt
+    ? `수집 시각 추정 (${retrievedAt})`
+    : `수집 시각이 공식 종료 시각 이후여서 종료 시각으로 제한 (${timing.endsAt})`;
+  return {
+    startsAt,
+    endsAt: timing.endsAt,
+    sourceTimeText: `${timing.sourceTimeText}; 원문에는 종료 시각만 명시됨; 시작 시각은 ${estimate}`,
   };
 }
 
@@ -499,7 +515,7 @@ export function mergeEventHistory(existingEvents, collectedEvents, now = Date.no
   const byUrl = new Map(existingEvents.map((event) => [event.sourceUrl, event]));
   for (const collected of collectedEvents) {
     const existing = byUrl.get(collected.sourceUrl);
-    const preservesConfirmedTiming = existing?.confidence === 'confirmed' && collected.confidence === 'probable';
+    const preservesConfirmedTiming = existing?.confidence === 'confirmed' && existing.startsAt && collected.confidence === 'probable';
     byUrl.set(collected.sourceUrl, preservesConfirmedTiming
       ? {
         ...collected,

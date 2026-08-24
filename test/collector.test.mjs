@@ -61,6 +61,32 @@ test('assigns a 30-day KST collection window to official candidates without sche
   assert.equal(event.status, 'active');
 });
 
+test('uses the collection time as a probable start when only an official end is stated', () => {
+  const event = normalize(source, {
+    title: '버전 이벤트', canonical: 'https://example.com/detail/end-only', description: '', published: null,
+    text: '7.0 버전 업데이트 후 ~ 2026/9/1 18:59',
+  }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-22T00:00:00Z'));
+
+  assert.equal(event.startsAt, '2026-08-21T07:59:22.049Z');
+  assert.equal(event.endsAt, '2026-09-01T18:59:00+09:00');
+  assert.equal(event.confidence, 'probable');
+  assert.match(event.sourceTimeText, /원문에는 종료 시각만 명시됨; 시작 시각은 수집 시각 추정/);
+  assert.equal(event.status, 'active');
+});
+
+test('caps an end-only estimated start at the official end when recollected after expiry', () => {
+  const event = normalize(source, {
+    title: '종료된 버전 이벤트', canonical: 'https://example.com/detail/expired-end-only', description: '', published: null,
+    text: '버전 업데이트 후 ~ 2026/8/1 18:59',
+  }, '2026-08-21T07:59:22.049Z', Date.parse('2026-08-22T00:00:00Z'));
+
+  assert.equal(event.startsAt, '2026-08-01T18:59:00+09:00');
+  assert.equal(event.endsAt, '2026-08-01T18:59:00+09:00');
+  assert.equal(event.confidence, 'probable');
+  assert.match(event.sourceTimeText, /수집 시각이 공식 종료 시각 이후여서 종료 시각으로 제한/);
+  assert.equal(event.status, 'ended');
+});
+
 test('extracts multiple official character and weapon banners with rarity and phase', () => {
   const page = {
     title: '7.0 버전 이벤트 기원 알림 제1회',
@@ -360,6 +386,22 @@ test('preserves confirmed schedule timing when recollection only has a probable 
   assert.equal(merged.sourceTimeText, existing[0].sourceTimeText);
   assert.equal(merged.confidence, 'confirmed');
   assert.equal(merged.status, 'active');
+});
+
+test('upgrades an existing end-only schedule to a marked probable collection-time estimate', () => {
+  const existing = [{
+    id: 'end-only', sourceUrl: 'https://example.com/end-only', title: '기존 제목', sourceTitle: '기존 제목',
+    startsAt: null, endsAt: '2026-09-01T18:59:00+09:00', sourceTimeText: '버전 업데이트 후 ~ 2026/9/1 18:59', confidence: 'confirmed',
+  }];
+  const recollected = [{
+    ...existing[0], startsAt: '2026-08-21T07:59:22.049Z',
+    sourceTimeText: '버전 업데이트 후 ~ 2026/9/1 18:59; 원문에는 종료 시각만 명시됨; 시작 시각은 수집 시각 추정 (2026-08-21T07:59:22.049Z)', confidence: 'probable',
+  }];
+
+  const [merged] = mergeEventHistory(existing, recollected, Date.parse('2026-08-22T00:00:00Z'));
+  assert.equal(merged.startsAt, recollected[0].startsAt);
+  assert.equal(merged.endsAt, existing[0].endsAt);
+  assert.equal(merged.confidence, 'probable');
 });
 
 test('extracts only explicit public redemption codes from official text', () => {

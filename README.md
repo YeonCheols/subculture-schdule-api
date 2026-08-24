@@ -157,7 +157,7 @@ curl -X POST https://YOUR_PROJECT.vercel.app/api/internal/events/import \
   --data-binary @data/schedule-api/events.json
 ```
 
-이벤트 import는 잘못된 enum, 중복 ID, timezone 없는 시각, HTTP 출처 URL을 거부합니다. 공식 수집 후보에 원문 일정 시각이 없으면 수집일 00:00 KST부터 30일 뒤 23:59:59 KST까지를 `confidence: probable`의 추정 구간으로 저장하며, `sourceTimeText`에 추정 근거를 표시합니다.
+이벤트 import는 잘못된 enum, 중복 ID, timezone 없는 시각, HTTP 출처 URL을 거부합니다. 공식 수집 후보에 원문 일정 시각이 없으면 수집일 00:00 KST부터 30일 뒤 23:59:59 KST까지를 `confidence: probable`의 추정 구간으로 저장하며, `sourceTimeText`에 추정 근거를 표시합니다. 원문에 종료 시각만 있으면 수집 시각을 추정 시작 시각으로 저장하고 `probable`로 표시합니다. 수집 시각이 이미 공식 종료 시각보다 늦으면 종료 시각을 시작 시각의 상한으로 사용합니다.
 
 리딤코드는 일정과 분리된 `redemption-codes.json`에 저장합니다. 공식 원문 본문에 코드 문자열이
 명시된 공용 코드만 자동 수집하며 초대·추천 코드, 구매 또는 개별 지급 쿠폰, 이미지나 방송에만
