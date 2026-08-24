@@ -11,7 +11,8 @@ async function waitForNetmarbleArticle(window, url) {
   const deadline = Date.now() + Number(process.env.NETMARBLE_DETAIL_RENDER_WAIT_MS || 7500);
   while (Date.now() < deadline) {
     const ready = await window.webContents.executeJavaScript(`Boolean(
-      document.querySelector('#contentsDetail') && document.querySelector('.contents_title .register_info')
+      document.querySelector('#contentsDetail')
+      && /20\\d{2}\\.\\s*\\d{1,2}\\.\\s*\\d{1,2}\\.\\s*\\d{1,2}:\\d{2}/.test(document.querySelector('.contents_title .register_info')?.textContent || '')
     )`);
     if (ready) return true;
     await sleep(250);
