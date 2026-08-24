@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { splitJsonArray } from '../scripts/api-sync-lib.mjs';
-import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
+import { classify, collectText, createNaverFeedUrl, decodeHtml, deduplicate, diagnoseNetmarbleCandidate, extractBannerInfo, extractGenshinMainRedemptionCodes, extractImageUrls, extractLinks, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, extractTime, getEventStatus, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from '../scripts/collector/lib.mjs';
 import { extractRedemptionCandidatesFromOcr } from '../scripts/collector/ocr.mjs';
 import { candidatesFromSearchResults } from '../scripts/collector/search-discovery.mjs';
 
@@ -27,6 +27,11 @@ test('extracts the Netmarble post header publication time, not article-body time
 
   assert.equal(page.published, '2026-06-12T18:00:00+09:00');
   assert.match(page.text, /2026\. 6\. 19\. 10:00/);
+});
+
+test('uses the official Netmarble article API registration time', () => {
+  const page = extractNetmarbleOfficialPage({ code: 0, article: { id: 4698, menuSeq: 20, title: '백린의 무녀, 나기 등장!', content: '<p>일정 없음</p>', regDate: 1781254814563 } }, { url: 'https://forum.netmarble.com/stardive_ko/view/20/4698', title: 'fallback' });
+  assert.equal(page.published, '2026-06-12T09:00:14.563Z');
 });
 
 test('extracts spaced Korean month and day ranges used by Netmarble posts', () => {

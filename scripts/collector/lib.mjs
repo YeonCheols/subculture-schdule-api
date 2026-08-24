@@ -201,6 +201,19 @@ export function extractPage(html, candidate) {
   return { title, description, published, ...(candidate.publishedDate ? { publishedDate: candidate.publishedDate } : {}), canonical: absoluteUrl(canonical, candidate.url) || candidate.url, text: decodeHtml(articleHtml), imageUrls: extractImageUrls(articleHtml) };
 }
 
+export function extractNetmarbleOfficialPage(payload, candidate) {
+  const article = payload?.article;
+  const match = String(candidate.url).match(/\/view\/(\d+)\/(\d+)(?:[/?#]|$)/);
+  if (payload?.code !== 0 || !article || !match || Number(article.menuSeq) !== Number(match[1]) || Number(article.id) !== Number(match[2])) {
+    throw new Error('Invalid Netmarble official article response');
+  }
+  const published = Number.isFinite(Number(article.regDate)) ? new Date(Number(article.regDate)).toISOString() : null;
+  return {
+    title: decodeHtml(article.title) || candidate.title, description: '', published,
+    canonical: candidate.url, text: decodeHtml(article.content || ''), imageUrls: extractImageUrls(article.content || ''),
+  };
+}
+
 export function classify(title) {
   if (/점검|maintenance/i.test(title)) return 'maintenance';
   if (/방송|프리뷰|special program|livestream/i.test(title)) return 'broadcast';

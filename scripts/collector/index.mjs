@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import electronPath from 'electron';
-import { USER_AGENT, createNaverFeedUrl, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractPage, extractRedemptionCodes, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
+import { USER_AGENT, createNaverFeedUrl, deduplicate, diagnoseNetmarbleCandidate, extractGenshinMainRedemptionCodes, extractNaverCharacters, extractNaverOfficialPages, extractNetmarbleForumLinks, extractNetmarbleOfficialPage, extractPage, extractRedemptionCodes, mergeCharacterHistory, mergeEventHistory, mergeRedemptionCodeHistory, normalize, selectNetmarbleForumCandidates } from './lib.mjs';
 import { collectRedemptionOcrCandidates, enrichBannerPagesWithOcr, terminateOcrWorker } from './ocr.mjs';
 import { discoverUnofficialRedemptionCandidates } from './search-discovery.mjs';
 
@@ -44,22 +44,38 @@ async function renderUrls(urls, renderWaitMs = null) {
   return JSON.parse(await readFile(output, 'utf8'));
 }
 
+function netmarbleApiUrl(source, candidate) {
+  const match = String(candidate.url).match(/\/view\/(\d+)\/(\d+)(?:[/?#]|$)/);
+  if (!match) throw new Error('Invalid Netmarble article URL');
+  const api = source.officialArticleApi;
+  const url = new URL(`/api/game/${api.gameCode}/official/forum/${api.forumId}/article/${match[2]}`, candidate.url);
+  url.search = new URLSearchParams({ menuSeq: match[1], viewFlag: 'true' });
+  return url;
+}
+
 async function collectSource(source) {
   if (source.kind === 'netmarble-forum') {
     const indexes = await renderUrls(source.urls || [source.url]);
-    const candidates = selectNetmarbleForumCandidates(
+    const recentCandidates = selectNetmarbleForumCandidates(
       indexes.filter((item) => item.body).map((item) => extractNetmarbleForumLinks(item.body, source)),
       Number(source.dailyMaxPosts || maxDetails),
     );
+    const existingCandidates = (await readExistingEvents()).filter((event) => event.gameId === source.gameId && /\/view\/\d+\/\d+(?:[/?#]|$)/.test(event.sourceUrl))
+      .map((event) => ({ url: event.sourceUrl, title: event.sourceTitle || event.title }));
+    const candidates = [...new Map([...recentCandidates, ...existingCandidates].map((candidate) => [candidate.url, candidate])).values()];
     if (!candidates.length) throw new Error('No forum posts found after browser rendering');
-    const details = await renderUrls(candidates.map((candidate) => candidate.url));
+    const details = await Promise.all(candidates.map(async (candidate) => {
+      try {
+        const response = await request(netmarbleApiUrl(source, candidate));
+        return { candidate, page: extractNetmarbleOfficialPage(JSON.parse(response.body), candidate) };
+      } catch (error) { return { candidate, error: error.message }; }
+    }));
     const events = []; const redemptionCodes = []; const rawCandidates = [];
     const pages = [];
-    for (const [index, detail] of details.entries()) {
-      if (!detail.body) { rawCandidates.push({ ...candidates[index], error: detail.error }); continue; }
-      const page = extractPage(detail.body, { ...candidates[index], url: detail.finalUrl });
-      rawCandidates.push({ ...candidates[index], finalUrl: detail.finalUrl, body: detail.body });
-      pages.push(page);
+    for (const detail of details) {
+      if (!detail.page) { rawCandidates.push({ ...detail.candidate, error: detail.error }); continue; }
+      rawCandidates.push({ ...detail.candidate, finalUrl: detail.candidate.url });
+      pages.push(detail.page);
     }
     const enrichedPages = await enrichBannerPagesWithOcr(source, pages);
     for (const page of enrichedPages) {

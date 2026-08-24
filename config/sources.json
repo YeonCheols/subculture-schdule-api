@@ -14,6 +14,10 @@
       "https://forum.netmarble.com/stardive_ko/list/20/1"
     ],
     "dailyMaxPosts": 31,
+    "officialArticleApi": {
+      "gameCode": "monster2",
+      "forumId": "stardive_ko"
+    },
     "allowedHosts": ["forum.netmarble.com"],
     "detailPattern": "/stardive_ko/view/",
     "redemptionCodes": {
